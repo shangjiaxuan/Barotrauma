@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
+using System.Xml.Linq;
+
 namespace Barotrauma
 {
     public enum OrderCategory
@@ -29,7 +31,7 @@ namespace Barotrauma
             Color = element.GetAttributeColor("color", Color.White);
         }
 
-		protected override Identifier DetermineIdentifier(XElement element)
+		protected override Identifier DetermineIdentifier( XElement element)
 		{
             return element.GetAttributeIdentifier("category", "");
 		}
