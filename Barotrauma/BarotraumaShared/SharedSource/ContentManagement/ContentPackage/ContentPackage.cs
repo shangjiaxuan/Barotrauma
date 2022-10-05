@@ -1,6 +1,7 @@
-#nullable enable
+﻿#nullable enable
 using Barotrauma.Extensions;
 using Barotrauma.Steam;
+using Steamworks.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -122,6 +123,9 @@ namespace Barotrauma
         public bool NameMatches(string name)
             => NameMatches(name.ToIdentifier());
         
+        public bool StringMatches(string workshop_id_or_name)
+            => (UgcId.ToString().Equals(workshop_id_or_name)) || NameMatches(workshop_id_or_name);
+
         public static ContentPackage? TryLoad(string path)
         {
             XDocument doc = XMLExtensions.TryLoadXml(path);
