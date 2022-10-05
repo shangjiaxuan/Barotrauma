@@ -21,7 +21,7 @@ namespace Barotrauma
     {
         public readonly static PrefabCollection<OrderCategoryIcon> OrderCategoryIcons = new PrefabCollection<OrderCategoryIcon>();
 
-        public OrderCategoryIcon(ContentXElement element, OrdersFile file) : base(file, element.GetAttributeIdentifier("category", ""))
+        public OrderCategoryIcon(ContentXElement element, OrdersFile file) : base(file, element)
         {
             Category = Enum.Parse<OrderCategory>(Identifier.Value, true);
             var spriteElement = element.GetChildElement("sprite");
@@ -29,7 +29,12 @@ namespace Barotrauma
             Color = element.GetAttributeColor("color", Color.White);
         }
 
-        public readonly OrderCategory Category;
+		protected override Identifier DetermineIdentifier(XElement element)
+		{
+            return element.GetAttributeIdentifier("category", "");
+		}
+
+		public readonly OrderCategory Category;
         public readonly Sprite Sprite;
         public readonly Color Color;
 
@@ -147,7 +152,7 @@ namespace Barotrauma
         public bool ColoredWhenControllingGiver { get; }
         public bool DisplayGiverInTooltip { get; }
 
-        public OrderPrefab(ContentXElement orderElement, OrdersFile file) : base(file, orderElement.GetAttributeIdentifier("identifier", ""))
+        public OrderPrefab(ContentXElement orderElement, OrdersFile file) : base(file, orderElement)
         {
             Name = TextManager.Get($"OrderName.{Identifier}");
             ContextualName = TextManager.Get($"OrderNameContextual.{Identifier}").Fallback(Name);

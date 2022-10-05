@@ -453,7 +453,7 @@ namespace Barotrauma
             }
         }
 
-        public PrefabInstance VariantOf => (Prefab as IImplementsVariants<CharacterPrefab>).InheritParent;
+        public Identifier VariantOf => (Prefab as IImplementsVariants<CharacterPrefab>).VariantOf;
 
         public string Name
         {
@@ -1174,9 +1174,9 @@ namespace Barotrauma
 
             Identifier speciesName = prefab.Identifier;
 
-            if (VariantOf.id == CharacterPrefab.HumanSpeciesName || speciesName == CharacterPrefab.HumanSpeciesName)
+            if (VariantOf == CharacterPrefab.HumanSpeciesName || speciesName == CharacterPrefab.HumanSpeciesName)
             {
-                if (!VariantOf.id.IsEmpty &&  prefab.Identifier != CharacterPrefab.HumanSpeciesName)
+                if (!VariantOf.IsEmpty)
                 {
                     DebugConsole.ThrowError("The variant system does not yet support humans, sorry. It does support other humanoids though!");
                 }
@@ -1280,7 +1280,7 @@ namespace Barotrauma
                 CharacterHealth = new CharacterHealth(selectedHealthElement, this, limbHealthElement);
             }
 
-            if (Params.Husk && speciesName != "husk" && (Prefab as IImplementsVariants<CharacterPrefab>).InheritParent.id != "husk")
+            if (Params.Husk && speciesName != "husk" && (Prefab as IImplementsVariants<CharacterPrefab>).VariantOf != "husk")
             {
                 Identifier nonHuskedSpeciesName = Identifier.Empty;
                 AfflictionPrefabHusk matchingAffliction = null; 

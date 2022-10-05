@@ -87,7 +87,7 @@ namespace Barotrauma
 
         public readonly Identifier NpcSetIdentifier;
 
-        public HumanPrefab(ContentXElement element, ContentFile file, Identifier npcSetIdentifier) : base(file, element.GetAttributeIdentifier("identifier", ""))
+        public HumanPrefab(ContentXElement element, ContentFile file, Identifier npcSetIdentifier) : base(file, element)
         {
             SerializableProperty.DeserializeProperties(this, element);
             Element = element;

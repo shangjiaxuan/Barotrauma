@@ -9,7 +9,7 @@ using Barotrauma.Threading;
 
 namespace Barotrauma
 {
-    public class PrefabSelector<T> : IEnumerable<T> where T : notnull, Prefab
+	public class PrefabSelector<T> : IEnumerable<T> where T : notnull, Prefab
     {
         private readonly ReaderWriterLockSlim rwl = new ReaderWriterLockSlim();
         
