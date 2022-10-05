@@ -6,9 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
-using Barotrauma.Networking;
-using Barotrauma.Extensions;
-using System.Globalization;
 using MoonSharp.Interpreter;
 using Barotrauma.Abilities;
 

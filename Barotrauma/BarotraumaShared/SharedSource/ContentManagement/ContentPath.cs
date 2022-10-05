@@ -69,7 +69,7 @@ namespace Barotrauma
                 {
                     Option<ContentPackageId> ugcId = ContentPackageId.Parse(otherModName.Value);
                     ContentPackage? otherMod =
-                        allPackages.FirstOrDefault(p => ugcId == p.UgcId)
+                        allPackages.FirstOrDefault(p => ugcId.IsSome() && ugcId == p.UgcId)
                         ?? allPackages.FirstOrDefault(p => p.Name == otherModName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(otherModName))
                         ?? throw new MissingContentPackageException(ContentPackage, otherModName.Value);
@@ -99,7 +99,17 @@ namespace Barotrauma
                 {
                     if (!UInt64.TryParse(cachedPackageName, out UInt64 workshopId)) { workshopId = 0; }
                     ContentPackage? otherMod =
-                        allPackages.FirstOrDefault(p => workshopId != 0 && p.SteamWorkshopId != 0 && workshopId == p.SteamWorkshopId)
+                        allPackages.FirstOrDefault(p => {
+                            if (workshopId == 0)
+                            {
+                                return false;
+                            }
+                            if (!p.UgcId.TryUnwrap(out ContentPackageId other_package_id))
+                            {
+                                return false;
+                            }
+                            return other_package_id.ToString().Equals(cachedPackageName);
+                        })
                         ?? allPackages.FirstOrDefault(p => p.Name == cachedPackageName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(cachedPackageName!))
                         ?? throw new MissingContentPackageException(ContentPackage, cachedPackageName);

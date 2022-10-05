@@ -18,7 +18,7 @@ namespace Barotrauma
 
 #if OSX
         //"/*user*/Library/Application Support/Daedalic Entertainment GmbH/" on Mac
-        public static readonly string SaveFolder = Path.Combine(
+        public static string SaveFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.Personal), 
             "Library",
             "Application Support",

@@ -86,9 +86,9 @@ jobs:
             "mac"
           )
           publish_dirs=(
-            "Barotrauma/bin/ReleaseWindows/netcoreapp3.1/win-x64/publish"
-            "Barotrauma/bin/ReleaseLinux/netcoreapp3.1/linux-x64/publish"
-            "Barotrauma/bin/ReleaseMac/netcoreapp3.1/osx-x64/publish"
+            "Barotrauma/bin/ReleaseWindows/net6.0/win-x64/publish"
+            "Barotrauma/bin/ReleaseLinux/net6.0/linux-x64/publish"
+            "Barotrauma/bin/ReleaseMac/net6.0/osx-x64/publish"
           )
 
           mkdir -p "$ARTIFACTS_DIR"

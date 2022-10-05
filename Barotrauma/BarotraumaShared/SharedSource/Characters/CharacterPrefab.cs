@@ -122,7 +122,7 @@ namespace Barotrauma
                 if (Prefabs.AllPrefabs.Any(p => p.Key == identifier)) {
 					res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
 		                .Single().Value
-		                .GetPrevious((ContentPackage.SteamWorkshopId != 0) ? ContentPackage.SteamWorkshopId.ToString() : ContentPackage.Name);
+		                .GetPrevious(ContentPackage.UgcId.TryUnwrap(out ContentPackageId id)? id.ToString() : ContentPackage.Name);
 				}
                 else{
                     res = null;
