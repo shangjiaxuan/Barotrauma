@@ -29,7 +29,23 @@ namespace Barotrauma
             }
         }
 
-        public void Add(T prefab, bool isOverride)
+        public T? GetPrevious(string package_name)
+		{
+            bool found = false;
+			foreach (T prefab in this)
+			{
+                if(found) {
+                    return prefab;
+				}
+				if (prefab.ContentPackage?.StringMatches(package_name)??false)
+				{
+                    found = true;
+                }
+            }
+            return null;
+		}
+
+		public void Add(T prefab, bool isOverride)
         {
             using (new WriteLock(rwl)) { AddInternal(prefab, isOverride); }
         }
@@ -162,11 +178,12 @@ namespace Barotrauma
                 basePrefab = basePrefabInternal;
                 overrideClone = overrides.ToImmutableArray();
             }
-            if (basePrefab != null) { yield return basePrefab; }
+            // should be in reverse load order...
             foreach (T prefab in overrideClone)
             {
                 yield return prefab;
             }
+            if (basePrefab != null) { yield return basePrefab; }
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
