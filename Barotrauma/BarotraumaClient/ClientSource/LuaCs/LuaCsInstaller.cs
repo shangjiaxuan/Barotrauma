@@ -59,7 +59,7 @@ namespace Barotrauma
         {
             if (!File.Exists(LuaCsSetup.VersionFile)) { return; }
 
-            ContentPackage luaPackage = LuaCsSetup.GetPackage("Lua For Barotrauma");
+            ContentPackage luaPackage = LuaCsSetup.GetPackage("Lua For Barotrauma (with xpath patch)");
             string luaCsPath = Path.GetDirectoryName(luaPackage.Path);
 
             if (luaPackage == null) { return; }
@@ -93,7 +93,8 @@ namespace Barotrauma
                 };
 
                 filesToUpdate = filesToUpdate.Concat(Directory.EnumerateFiles(luaCsPath, "*.dll", SearchOption.AllDirectories)
-                        .Where(s => s.Contains("mscordaccore_amd64_amd64_4.")).Select(s => Path.GetFileName(s))).ToArray();
+                        .Concat(Directory.EnumerateFiles(luaCsPath, "*.json", SearchOption.TopDirectoryOnly))
+                        /*.Where(s => s.Contains("mscordaccore_amd64_amd64_4."))*/.Select(s => Path.GetFileName(s))).ToArray();
 
                 try
                 {

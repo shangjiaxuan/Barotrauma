@@ -124,7 +124,7 @@ namespace Barotrauma
             => NameMatches(name.ToIdentifier());
         
         public bool StringMatches(string workshop_id_or_name)
-            => (UgcId.ToString().Equals(workshop_id_or_name)) || NameMatches(workshop_id_or_name);
+            => (UgcId.Fallback(ContentPackageId.NULL).ToString().Equals(workshop_id_or_name)) || NameMatches(workshop_id_or_name);
 
         public static ContentPackage? TryLoad(string path)
         {

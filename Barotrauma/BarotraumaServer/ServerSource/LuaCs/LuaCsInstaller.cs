@@ -9,7 +9,7 @@ namespace Barotrauma
     {
         public static void Install()
         {
-            ContentPackage luaPackage = LuaCsSetup.GetPackage("Lua For Barotrauma");
+            ContentPackage luaPackage = LuaCsSetup.GetPackage("Lua For Barotrauma (with xpath patch)");
 
             if (luaPackage == null)
             {
@@ -37,7 +37,8 @@ namespace Barotrauma
                         "System.Runtime.CompilerServices.Unsafe.dll"
                 };
                 filesToCopy = filesToCopy.Concat(Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories)
-                    .Where(s => s.Contains("mscordaccore_amd64_amd64_4.")).Select(s => Path.GetFileName(s))).ToArray();
+                     .Concat(Directory.EnumerateFiles(path, "*.json", SearchOption.TopDirectoryOnly))
+                    /*.Where(s => s.Contains("mscordaccore_amd64_amd64_4."))*/.Select(s => Path.GetFileName(s))).ToArray();
 
                 CreateMissingDirectory();
 
@@ -58,7 +59,7 @@ namespace Barotrauma
                 }
 
                 File.WriteAllText(LuaCsSetup.VersionFile, luaPackage.ModVersion);
-                File.WriteAllText("LuaDedicatedServer.bat", "\"%LocalAppData%/Daedalic Entertainment GmbH/Barotrauma/WorkshopMods/Installed/2559634234/Binary/DedicatedServer.exe\"");
+                File.WriteAllText("LuaDedicatedServer.bat", "\"%LocalAppData%/Daedalic Entertainment GmbH/Barotrauma/WorkshopMods/Installed/2856758496/Binary/DedicatedServer.exe\"");
             }
             catch (UnauthorizedAccessException e)
             {
