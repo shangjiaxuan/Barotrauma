@@ -16,6 +16,7 @@ defaultLib["Int64"] = CreateStatic("Barotrauma.LuaInt64", true)
 defaultLib["UInt64"] = CreateStatic("Barotrauma.LuaUInt64", true)
 defaultLib["Single"] = CreateStatic("Barotrauma.LuaSingle", true)
 defaultLib["Double"] = CreateStatic("Barotrauma.LuaDouble", true)
+defaultLib["none"] = CreateStatic("Barotrauma.LuaNone", true)()
 
 -- Backward compatibility
 defaultLib["Float"] = CreateStatic("Barotrauma.LuaSingle", true)
@@ -112,6 +113,9 @@ defaultLib["XDocument"] = CreateStatic("System.Xml.Linq.XDocument", true)
 defaultLib["XNode"] = CreateStatic("System.Xml.Linq.XNode", true)
 defaultLib["SoundsFile"] = CreateStatic("Barotrauma.SoundsFile", true)
 
+defaultLib["ContentPackageId"] = CreateStatic("Barotrauma.ContentPackageId")
+defaultLib["IPAddress"] = CreateStatic("System.Net.IPAddress")
+defaultLib["Address"] = CreateStatic("Barotrauma.Networking.Address")
 
 defaultLib["Explosion"] = CreateStatic("Barotrauma.Explosion", true)
 

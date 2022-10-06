@@ -1,7 +1,12 @@
-using System;
+﻿using System;
 
 namespace Barotrauma
 {
+    public struct LuaNone
+    {
+
+    }
+
     public struct LuaSByte
     {
         private readonly sbyte value;

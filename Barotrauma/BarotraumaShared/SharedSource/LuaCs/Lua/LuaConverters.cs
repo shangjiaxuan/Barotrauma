@@ -3,6 +3,7 @@ using MoonSharp.Interpreter;
 using Microsoft.Xna.Framework;
 using FarseerPhysics.Dynamics;
 using LuaCsCompatPatchFunc = Barotrauma.LuaCsPatch;
+using Barotrauma.Networking;
 
 namespace Barotrauma
 {
@@ -187,12 +188,57 @@ namespace Barotrauma
                     ? (double)v
                     : throw new ScriptRuntimeException("use Double(value) to pass primitive type 'double' to C#"));
 
-            RegisterOption<Character>();
-            RegisterOption<Barotrauma.Networking.AccountId>();
-            RegisterOption<int>();
+            RegisterOption<Character>(DataType.UserData);
+            RegisterOption<AccountId>(DataType.UserData);
+            RegisterOption<ContentPackageId>(DataType.UserData);
+            RegisterOption<SteamId>(DataType.UserData);
+            RegisterOption<DateTime>(DataType.UserData);
+            RegisterOption<BannedPlayer>(DataType.UserData);
+
+            RegisterOption<int>(DataType.Number);
+
+            RegisterEither<Address, AccountId>();
         }
 
-        private void RegisterOption<T>()
+        private void RegisterEither<T1, T2>()
+        {
+            DynValue convertEitherIntoDynValue(Either<T1, T2> either)
+            {
+                if (either.TryGet(out T1 value1))
+                {
+                    return UserData.Create(value1);
+                }
+
+                if (either.TryGet(out T2 value2))
+                {
+                    return UserData.Create(value2);
+                }
+
+                return null;
+            }
+
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion(typeof(EitherT<T1, T2>), (Script v, object obj) =>
+            {
+                if (obj is EitherT<T1, T2> either)
+                {
+                    return convertEitherIntoDynValue(either);
+                }
+
+                return null;
+            });
+
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion(typeof(EitherU<T1, T2>), (Script v, object obj) =>
+            {
+                if (obj is EitherU<T1, T2> either)
+                {
+                    return convertEitherIntoDynValue(either);
+                }
+
+                return null;
+            });
+        }
+
+        private void RegisterOption<T>(DataType dataType)
         {
             Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion(typeof(Option<T>), (Script v, object obj) =>
             {
@@ -200,16 +246,40 @@ namespace Barotrauma
                 {
                     if (option.TryUnwrap(out T outValue))
                     {
-                        return UserData.Create(outValue);
+                        return outValue == null ? DynValue.Nil : UserData.Create(outValue);
                     }
                 }
 
                 return null;
             });
 
-            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(DataType.UserData, typeof(Option<T>), v =>
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion(typeof(None<T>), (Script v, object obj) =>
             {
-                return Option<T>.Some(v.ToObject<T>());
+                return UserData.Create(default(LuaNone));
+            });
+
+            Script.GlobalOptions.CustomConverters.SetClrToScriptCustomConversion(typeof(Some<T>), (Script v, object obj) =>
+            {
+                if (obj is Some<T> some)
+                {
+                    return some.Value == null ? DynValue.Nil : UserData.Create(some.Value);
+                }
+
+                return null;
+            });
+
+            Script.GlobalOptions.CustomConverters.SetScriptToClrCustomConversion(dataType, typeof(Option<T>), v =>
+            {
+                if (v.UserData.Object is LuaNone)
+                {
+                    return Option<T>.None();
+                }
+                else
+                {
+                    Option<T>.Some(v.ToObject<T>());
+                }
+
+                return null;
             });
         }
 
