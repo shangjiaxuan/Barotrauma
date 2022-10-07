@@ -15,6 +15,7 @@ RegisterBarotrauma("EventEditorScreen")
 RegisterBarotrauma("CharacterEditor.CharacterEditorScreen")
 RegisterBarotrauma("SpriteEditorScreen")
 RegisterBarotrauma("LevelEditorScreen")
+RegisterBarotrauma("SettingsMenu")
 
 RegisterBarotrauma("Networking.ClientPeer")
 RegisterBarotrauma("Networking.GameClient")
