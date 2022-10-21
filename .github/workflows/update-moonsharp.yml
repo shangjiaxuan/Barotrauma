@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: Update MoonSharp
+
+on:
+  workflow_dispatch:
+
+env:
+  SUBMODULE_PATH: Libraries/moonsharp
+  GIT_USER_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
+  GIT_USER_NAME: "github-actions[bot]"
+
+jobs:
+  update-moonsharp:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Update submodule
+        run: git submodule update --recursive --remote "$SUBMODULE_PATH"
+
+      - name: Create commit
+        run: |
+          git config user.name "$GIT_USER_NAME"
+          git config user.email "$GIT_USER_EMAIL"
+          git commit -am "Update submodule: $SUBMODULE_PATH"
+
+      - name: Push
+        run: git push

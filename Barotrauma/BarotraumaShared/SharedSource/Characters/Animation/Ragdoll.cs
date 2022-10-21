@@ -1345,7 +1345,7 @@ namespace Barotrauma
             bool limbsValid = true;
             foreach (Limb limb in limbs)
             {
-                if (limb.body == null || !limb.body.Enabled) { continue; }
+                if (limb?.body == null || !limb.body.Enabled) { continue; }
                 if (!CheckValidity(limb.body))
                 {
                     limbsValid = false;
@@ -1967,7 +1967,7 @@ namespace Barotrauma
             {
                 foreach (Limb l in Limbs)
                 {
-                    l.Remove();
+                    l?.Remove();
                 }
                 limbs = null;
             }
@@ -1976,7 +1976,7 @@ namespace Barotrauma
             {
                 foreach (PhysicsBody b in collider)
                 {
-                    b.Remove();
+                    b?.Remove();
                 }
                 collider = null;
             }
@@ -1985,7 +1985,7 @@ namespace Barotrauma
             {
                 foreach (var joint in LimbJoints)
                 {
-                    var j = joint.Joint;
+                    var j = joint?.Joint;
                     if (GameMain.World.JointList.Contains(j))
                     {
                         GameMain.World.Remove(j);

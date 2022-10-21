@@ -246,7 +246,7 @@ namespace Barotrauma
                 {
                     if (option.TryUnwrap(out T outValue))
                     {
-                        return outValue == null ? DynValue.Nil : UserData.Create(outValue);
+                        return UserData.Create(outValue);
                     }
                 }
 
@@ -262,7 +262,7 @@ namespace Barotrauma
             {
                 if (obj is Some<T> some)
                 {
-                    return some.Value == null ? DynValue.Nil : UserData.Create(some.Value);
+                    return UserData.Create(some.Value);
                 }
 
                 return null;
@@ -276,10 +276,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    Option<T>.Some(v.ToObject<T>());
+                    return Option<T>.Some(v.ToObject<T>());
                 }
-
-                return null;
             });
         }
 
