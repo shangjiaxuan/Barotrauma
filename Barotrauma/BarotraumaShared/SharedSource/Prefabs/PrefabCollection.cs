@@ -16,9 +16,15 @@ namespace Barotrauma
         /// </summary>
         public PrefabCollection()
         {
-            var interfaces = typeof(T).GetInterfaces();
-            implementsVariants = interfaces.Any(i => i.Name.Contains(nameof(IImplementsVariants<T>)));
-        }
+
+
+		}
+
+        static PrefabCollection() {
+			var interfaces = typeof(T).GetInterfaces();
+			implementsVariants = interfaces.Any(i => i.Name.Contains(nameof(IImplementsVariants<T>)));
+			implementsPartialOverride = !implementsVariants && interfaces.Any(i => i.Name.Contains(nameof(IImplementsInherit<T>)));
+		}
 
         // an instance of prefab that the collection keeps track of.
         // used in ienumerable<T>
@@ -100,9 +106,10 @@ namespace Barotrauma
         private readonly HashSet<ContentFile> overrideFiles = new HashSet<ContentFile>();
         private ContentFile? topMostOverrideFile = null;
 
-        private readonly bool implementsVariants;
+        public static readonly bool implementsVariants;
+		public static readonly bool implementsPartialOverride;
 
-        private bool IsPrefabOverriddenByFile(T prefab)
+		private bool IsPrefabOverriddenByFile(T prefab)
         {
             return topMostOverrideFile != null &&
                     topMostOverrideFile.ContentPackage.Index > prefab.ContentFile.ContentPackage.Index;
