@@ -7,3 +7,4 @@
 	specify preprocess to be "literal", relative path referering to parent's location?
 5. package name to package instance resolution should be consistent (workshopid->name->alias)
 	initial loading still cannot ensure package created, but later name evaluation should be consistent everywhere.
+6. important: check one package can only have one override of one identifier, or will silently stack overflow.
