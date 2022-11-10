@@ -1262,7 +1262,7 @@ namespace Barotrauma
                     GameMain.LuaCs.HandleException(ex, LuaCsMessageOrigin.LuaMod);
                 }
             }));
-            commands.Add(new Command("cs", "cs: runs a string", (string[] args) =>
+            commands.Add(new Command("cs", "cs: Runs a string", (string[] args) =>
             {
                 if (LuaCsSetup.GetPackage("CsForBarotrauma", false, true) == null) { return; }
 
@@ -1270,13 +1270,13 @@ namespace Barotrauma
                 GameMain.LuaCs.RecreateCsScript();
             }));
 
-            commands.Add(new Command("reloadlua", "reloads lua", (string[] args) =>
+            commands.Add(new Command("reloadlua|reloadcs|reloadluacs", "Re-initializes the LuaCs environment.", (string[] args) =>
             {
                 GameMain.LuaCs.Initialize();
             }));
 
 #if WINDOWS
-            commands.Add(new Command("install_cl_lua", "Installs Client-Side Lua into your client.", (string[] args) =>
+            commands.Add(new Command("install_cl_lua|install_cl|install_cl_cs|install_cl_luacs", "Installs Client-Side LuaCs into your client.", (string[] args) =>
             {
                 LuaCsInstaller.Install();
             }));

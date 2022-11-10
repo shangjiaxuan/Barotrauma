@@ -116,9 +116,12 @@ defaultLib["XDocument"] = CreateStatic("System.Xml.Linq.XDocument", true)
 defaultLib["XNode"] = CreateStatic("System.Xml.Linq.XNode", true)
 defaultLib["SoundsFile"] = CreateStatic("Barotrauma.SoundsFile", true)
 
-defaultLib["ContentPackageId"] = CreateStatic("Barotrauma.ContentPackageId")
+defaultLib["TimeSpan"] = CreateStatic("System.TimeSpan")
 defaultLib["IPAddress"] = CreateStatic("System.Net.IPAddress")
+defaultLib["ContentPackageId"] = CreateStatic("Barotrauma.ContentPackageId")
 defaultLib["Address"] = CreateStatic("Barotrauma.Networking.Address")
+defaultLib["AccountId"] = CreateStatic("Barotrauma.Networking.AccountId")
+defaultLib["Endpoint"] = CreateStatic("Barotrauma.Networking.Endpoint")
 
 defaultLib["Explosion"] = CreateStatic("Barotrauma.Explosion", true)
 

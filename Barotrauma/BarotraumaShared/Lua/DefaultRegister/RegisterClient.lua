@@ -21,6 +21,8 @@ RegisterBarotrauma("Networking.ClientPeer")
 RegisterBarotrauma("Networking.GameClient")
 RegisterBarotrauma("Networking.VoipCapture")
 
+RegisterBarotrauma("Media.Video")
+
 RegisterBarotrauma("SoundsFile")
 RegisterBarotrauma("SoundPrefab")
 RegisterBarotrauma("PrefabCollection`1[[Barotrauma.SoundPrefab]]")
@@ -102,5 +104,6 @@ RegisterBarotrauma("GUISpriteSheetPrefab")
 RegisterBarotrauma("GUISpriteSheet")
 RegisterBarotrauma("GUICursorPrefab")
 RegisterBarotrauma("GUICursor")
+RegisterBarotrauma("VideoPlayer")
 
 RegisterBarotrauma("Inventory+SlotReference")

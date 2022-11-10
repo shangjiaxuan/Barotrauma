@@ -2,6 +2,7 @@ local defaultLib = {}
 
 local CreateStatic = LuaSetup.LuaUserData.CreateStatic
 local CreateEnum = LuaSetup.LuaUserData.CreateEnumTable
+local AddCallMetaTable = LuaSetup.LuaUserData.AddCallMetaTable
 
 local localizedStrings = {
     "LocalizedString", "LimitLString", "WrappedLString", "AddedPunctuationLString", "CapitalizeLString", "ConcatLString", "FallbackLString", "FormattedLString", "InputTypeLString", "JoinLString", "LowerLString", "RawLString", "ReplaceLString", "ServerMsgLString", "SplitLString", "TagLString", "TrimLString", "UpperLString", "StripRichTagsLString",
@@ -54,6 +55,7 @@ defaultLib["GUI"] = {
     ProgressBar = CreateStatic("Barotrauma.GUIProgressBar", true),
     CustomComponent = CreateStatic("Barotrauma.GUICustomComponent", true),
     ScissorComponent = CreateStatic("Barotrauma.GUIScissorComponent", true),
+    VideoPlayer = CreateStatic("Barotrauma.VideoPlayer", true),
 
     Screen = CreateStatic("Barotrauma.Screen"),
 
@@ -61,5 +63,8 @@ defaultLib["GUI"] = {
     Alignment = CreateStatic("Barotrauma.Alignment"),
     Pivot = CreateStatic("Barotrauma.Pivot"),
 }
+
+AddCallMetaTable(defaultLib["GUI"].VideoPlayer.VideoSettings)
+AddCallMetaTable(defaultLib["GUI"].VideoPlayer.TextSettings)
 
 return defaultLib

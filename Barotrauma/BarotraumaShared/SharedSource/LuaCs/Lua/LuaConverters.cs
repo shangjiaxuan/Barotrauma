@@ -194,6 +194,7 @@ namespace Barotrauma
             RegisterOption<SteamId>(DataType.UserData);
             RegisterOption<DateTime>(DataType.UserData);
             RegisterOption<BannedPlayer>(DataType.UserData);
+            RegisterOption<Address>(DataType.UserData);
 
             RegisterOption<int>(DataType.Number);
 
