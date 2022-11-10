@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -515,7 +515,7 @@ namespace Barotrauma
 			}
 
 
-			ContentPackage luaPackage = GetPackage("Lua For Barotrauma");
+			ContentPackage luaPackage = GetPackage("Lua For Barotrauma (with xpath patch)");
 
 			if (File.Exists(LuaSetupFile))
 			{
