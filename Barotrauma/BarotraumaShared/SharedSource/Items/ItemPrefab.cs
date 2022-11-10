@@ -1339,16 +1339,10 @@ namespace Barotrauma
 			{
 				if (Prefabs.AllPrefabs.Any(p => p.Key == identifier))
 				{
-                    string best_rep;
-                    if (ContentPackage.UgcId.TryUnwrap(out ContentPackageId id)) {
-                        best_rep = id.ToString();
-                    }
-                    else {
-                        best_rep = ContentPackage.Name;
-                    }
-                    res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
+					string best_effort_package_id = ContentPackage.GetBestEffortId();
+					res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
 						.Single().Value
-						.GetPrevious(best_rep);
+						.GetPrevious(best_effort_package_id);
 				}
 				else
 				{

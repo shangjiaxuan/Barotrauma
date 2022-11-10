@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Barotrauma.IO;
 using System.Xml.Linq;
+using System.Diagnostics;
 
 namespace Barotrauma
 {
@@ -20,6 +21,8 @@ namespace Barotrauma
 
         public readonly string? RawValue;
 
+        // the package that current path originates
+        // context of the package
         public readonly ContentPackage? ContentPackage;
 
         private string? cachedValue;
@@ -49,7 +52,8 @@ namespace Barotrauma
                     .Select(m => m.Groups[1].Value.Trim().ToIdentifier())
                     .Distinct().Where(id => !id.IsEmpty && id != modName).ToHashSet();
                 cachedValue = RawValue!;
-                if (!(ContentPackage is null))
+                // vanilla package's filelist.xml is not at package root.
+                if (!(ContentPackage is null) && !(ContentPackage is CorePackage))
                 {
                     string modPath = Path.GetDirectoryName(ContentPackage.Path)!;
                     cachedValue = cachedValue
@@ -73,8 +77,9 @@ namespace Barotrauma
                         ?? allPackages.FirstOrDefault(p => p.Name == otherModName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(otherModName))
                         ?? throw new MissingContentPackageException(ContentPackage, otherModName.Value);
-                    cachedValue = cachedValue.Replace(string.Format(OtherModDirFmt, otherModName.Value), Path.GetDirectoryName(otherMod.Path));
-                }
+                    Debug.Assert(!(otherMod is CorePackage));
+					cachedValue = cachedValue.Replace(string.Format(OtherModDirFmt, otherModName.Value), Path.GetDirectoryName(otherMod.Path));
+				}
                 cachedValue = cachedValue.CleanUpPath();
                 return cachedValue;
             }
@@ -202,7 +207,18 @@ namespace Barotrauma
                 cachedRelativePath = cleanvalue;
                 isVanilla = false;
             }
-            else if (cleanvalue.StartsWith(ModDirStr + "/", StringComparison.OrdinalIgnoreCase))
+            // .sub file loading does not trace the .sub file location, and
+            // some dead code uses the filepath="xxx" part that have no use in typical sub
+            // They now typically have "Mods/" starting
+			else if (cleanvalue.StartsWith("Mods/"))
+			{
+				// typically only used when loading filelist.xml.
+				// mod internal use should never use this.
+				cachedPackageName = "";
+				cachedRelativePath = cleanvalue;
+				isVanilla = false;
+			}
+			else if (cleanvalue.StartsWith(ModDirStr + "/", StringComparison.OrdinalIgnoreCase))
             {
                 cachedPackageName = modName;
                 cachedRelativePath = cleanvalue.Substring(ModDirStr.Length + 1);

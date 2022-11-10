@@ -19,7 +19,7 @@ namespace Barotrauma
         public static NullPackageId NULL = new();
     }
 
-    public sealed class NullPackageId :ContentPackageId {
+    public sealed class NullPackageId : ContentPackageId {
         public override string StringRepresentation => "";
 
         public override bool Equals(object? obj) {

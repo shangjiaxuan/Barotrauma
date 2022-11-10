@@ -120,9 +120,10 @@ namespace Barotrauma
             }
             else {
                 if (Prefabs.AllPrefabs.Any(p => p.Key == identifier)) {
+                    string best_effort_package_id = ContentPackage.GetBestEffortId();
 					res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
 		                .Single().Value
-		                .GetPrevious(ContentPackage.UgcId.TryUnwrap(out ContentPackageId id)? id.ToString() : ContentPackage.Name);
+		                .GetPrevious(best_effort_package_id);
 				}
                 else{
                     res = null;
