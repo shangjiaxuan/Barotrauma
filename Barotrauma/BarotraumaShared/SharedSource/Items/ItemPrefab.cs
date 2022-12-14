@@ -429,7 +429,7 @@ namespace Barotrauma
         /// </summary>
         public bool IsOverride => Prefabs.IsOverride(this);
 
-        private readonly XElement originalElement;
+        public XElement originalElement { get; }
         public ContentXElement ConfigElement { get; private set; }
 
         public ImmutableArray<DeconstructItem> DeconstructItems { get; private set; }
@@ -794,17 +794,15 @@ namespace Barotrauma
 
             OriginalName = element.GetAttributeString("name", "");
             name = OriginalName;
-
-            VariantOf = element.VariantOf();
             
-            if (!VariantOf.IsEmpty) { return; } //don't even attempt to read the XML until the PrefabCollection readies up the parent to inherit from
+            if (!element.InheritParent().id.IsEmpty) { return; } //don't even attempt to read the XML until the PrefabCollection readies up the parent to inherit from
 
             ParseConfigElement(variantOf: null);
         }
 
         private string GetTexturePath(ContentXElement subElement, ItemPrefab variantOf)
             => subElement.DoesAttributeReferenceFileNameAlone("texture")
-                ? Path.GetDirectoryName(variantOf?.ContentFile.Path ?? ContentFile.Path)
+                ? Path.GetDirectoryName(ContentFile.Path.IsNullOrEmpty()?variantOf?.ContentFile.Path : ContentFile.Path)
                 : "";
 
         private void ParseConfigElement(ItemPrefab variantOf)
@@ -1323,13 +1321,47 @@ namespace Barotrauma
             Item.RemoveByPrefab(this);
         }
 
-        public Identifier VariantOf { get; }
-        
         public void InheritFrom(ItemPrefab parent)
         {
-            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement).FromPackage(ConfigElement.ContentPackage);
+            ConfigElement = (this as IImplementsVariants<ItemPrefab>).DoInherit(null);
             ParseConfigElement(parent);
         }
+
+        public ItemPrefab FindByPrefabInstance(PrefabInstance instance){
+            Prefabs.TryGet(instance, out ItemPrefab res);
+            return res;
+        }
+        public ItemPrefab GetPrevious(Identifier identifier)
+        {
+            ItemPrefab res;
+			if (identifier != Identifier)
+			{
+				if (Prefabs.Any(p => p.Identifier == identifier))
+				{
+					res = Prefabs[identifier];
+				}
+				else
+				{
+					res = null;
+				}
+			}
+			else
+			{
+				if (Prefabs.AllPrefabs.Any(p => p.Key == identifier))
+				{
+					string best_effort_package_id = ContentPackage.GetBestEffortId();
+					res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
+						.Single().Value
+						.GetPrevious(best_effort_package_id);
+				}
+				else
+				{
+					res = null;
+				}
+			}
+			return res;
+        }
+
 
         public override string ToString()
         {

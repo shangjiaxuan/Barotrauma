@@ -161,6 +161,20 @@ namespace Barotrauma
         public bool NameMatches(string name)
             => NameMatches(name.ToIdentifier());
         
+        public bool StringMatches(string workshop_id_or_name)
+            => (UgcId.Fallback(ContentPackageId.NULL).ToString().Equals(workshop_id_or_name) || NameMatches(workshop_id_or_name));
+
+        public string GetBestEffortId() {
+			if (UgcId.TryUnwrap(out ContentPackageId id))
+			{
+				return id.ToString();
+			}
+			else
+			{
+				return Name;
+			}
+		}
+
         public static Result<ContentPackage, Exception> TryLoad(string path)
         {
             var (success, failure) = Result<ContentPackage, Exception>.GetFactoryMethods();
