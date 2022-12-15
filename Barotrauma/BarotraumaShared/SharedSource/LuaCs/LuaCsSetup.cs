@@ -200,7 +200,16 @@ namespace Barotrauma
         {
             Timer?.Update();
             Steam?.Update();
+
+#if CLIENT
+            Stopwatch luaSw = new Stopwatch();
+            luaSw.Start();
+#endif
             Hook?.Call("think");
+#if CLIENT
+            luaSw.Stop();
+            GameMain.PerformanceCounter.AddElapsedTicks("Think Hook", luaSw.ElapsedTicks);
+#endif
         }
 
         public void Stop()
