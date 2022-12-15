@@ -93,7 +93,7 @@ namespace Barotrauma
                 };
 
                 filesToUpdate = filesToUpdate.Concat(Directory.EnumerateFiles(luaCsPath, "*.dll", SearchOption.AllDirectories)
-                        .Where(s => s.Contains("mscordaccore_amd64_amd64")).Select(s => Path.GetFileName(s))).ToArray();
+                        /*.Where(s => s.Contains("mscordaccore_amd64_amd64"))*/.Select(s => Path.GetFileName(s))).ToArray();
 
                 try
                 {
