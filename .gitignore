@@ -20,6 +20,7 @@ bld/
 *.csproj.user
 *.shproj.user
 *.vcxproj.user
+*.pubxml.user
 
 # Rider
 .idea/
