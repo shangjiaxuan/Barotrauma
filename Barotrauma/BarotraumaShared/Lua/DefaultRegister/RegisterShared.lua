@@ -373,7 +373,13 @@ RegisterBarotrauma("TraitorMissionResult")
 Register("FarseerPhysics.Dynamics.Body")
 Register("FarseerPhysics.Dynamics.World")
 Register("FarseerPhysics.Dynamics.Fixture")
+Register("FarseerPhysics.ConvertUnits")
 RegisterBarotrauma("Physics")
+
+local toolBox = RegisterBarotrauma("ToolBox")
+if CLIENT then
+    LuaUserData.RemoveMember(toolBox, "OpenFileWithShell")
+end
 
 RegisterBarotrauma("Camera")
 RegisterBarotrauma("Key")

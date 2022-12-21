@@ -60,10 +60,10 @@ namespace Barotrauma
             if (!File.Exists(LuaCsSetup.VersionFile)) { return; }
 
             ContentPackage luaPackage = LuaCsSetup.GetPackage(LuaCsSetup.LuaForBarotraumaId);
-            string luaCsPath = Path.GetDirectoryName(luaPackage.Path);
 
             if (luaPackage == null) { return; }
 
+            string luaCsPath = Path.GetDirectoryName(luaPackage.Path);
             string clientVersion = File.ReadAllText(LuaCsSetup.VersionFile);
             string workshopVersion = luaPackage.ModVersion;
 
