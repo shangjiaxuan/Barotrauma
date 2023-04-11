@@ -58,9 +58,9 @@ namespace Barotrauma
 				throw new InvalidOperationException("PrefabActivator<T> currently does not handle variant logic!");
 			}
 		}
-        public PrefabActivator(ContentFile file, ContentXElement element, Func<ContentXElement, T> constructorLambda, Func<PrefabActivator<T>, PrefabActivator<T>?> locator,
+        public PrefabActivator(Identifier identifier, ContentFile file, ContentXElement element, Func<ContentXElement, T> constructorLambda, Func<PrefabActivator<T>, PrefabActivator<T>?> locator,
 		    VariantExtensions.VariantXMLChecker? create_callback = null, Action<T>? onAdd = null) 
-            : base(file, element)
+            : base(file, identifier)
         {
 			originalElement = element;
             CurrentElement = element;

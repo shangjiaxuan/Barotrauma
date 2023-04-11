@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace Barotrauma
 {
-    internal sealed class TalentTree : Prefab
+    internal sealed class TalentTree : Prefab, IImplementsInherit
     {
         public enum TalentStages
         {
@@ -14,6 +15,10 @@ namespace Barotrauma
             Unlocked,
             Available,
             Highlighted
+        }
+
+        protected override Identifier DetermineIdentifier(XElement element) {
+            return element.GetAttributeIdentifier("jobIdentifier", "");
         }
 
         public static readonly PrefabCollection<TalentTree> JobTalentTrees = new PrefabCollection<TalentTree>();
@@ -31,7 +36,7 @@ namespace Barotrauma
             private set;
         }
 
-        public TalentTree(ContentXElement element, TalentTreesFile file) : base(file, element.GetAttributeIdentifier("jobIdentifier", ""))
+        public TalentTree(ContentXElement element, TalentTreesFile file) : base(file, element)
         {
             ConfigElement = element;
 

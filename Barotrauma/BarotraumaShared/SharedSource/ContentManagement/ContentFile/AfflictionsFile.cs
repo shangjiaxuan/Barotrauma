@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -79,7 +79,7 @@ namespace Barotrauma
                         return CreatePrefab(elem, type);
                     },
                     (current) => PrefabActivator<AfflictionPrefab>.GetParent_Collection(current, AfflictionPrefab.Prefabs),
-                    null, overriding
+                    null, null, overriding
                 );
                 /*
                 var prefab = CreatePrefab(element, type);

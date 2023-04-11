@@ -456,7 +456,7 @@ namespace Barotrauma
         }
 
 		public void AddDefered(Identifier identifier, 
-            ContentFile file, ContentXElement element, Func<ContentXElement, T> constructorLambda, Func<PrefabActivator<T>, PrefabActivator<T>?> locator, VariantExtensions.VariantXMLChecker? inherit_callback, bool isOverride)
+            ContentFile file, ContentXElement element, Func<ContentXElement, T> constructorLambda, Func<PrefabActivator<T>, PrefabActivator<T>?> locator, VariantExtensions.VariantXMLChecker? inherit_callback, Action<T>? OnAdd_outside, bool isOverride)
 		{
 			Prefab.DisallowCallFromConstructor();
             
@@ -470,8 +470,8 @@ namespace Barotrauma
 			//Add to list
 			selector ??= new PrefabSelector<T>();
 
-            selector.AddDefered(file, element, constructorLambda, locator, inherit_callback,
-				(prefab) => {
+            selector.AddDefered(identifier, file, element, constructorLambda, locator, inherit_callback,
+				(((prefab) => {
 					if (prefab is PrefabWithUintIdentifier prefabWithUintIdentifier)
 					{
 						if (!selector.isEmptyInternal)
@@ -500,7 +500,7 @@ namespace Barotrauma
 					}
 
 					OnAdd?.Invoke(prefab, isOverride);
-				}, isOverride);
+				}) + OnAdd_outside), isOverride);
 			if (!selectorExists)
 			{
 				if (!prefabs.TryAdd(identifier, selector)) { throw new Exception($"Failed to add selector for \"{identifier}\""); }

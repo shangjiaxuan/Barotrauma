@@ -13,11 +13,19 @@ namespace Barotrauma
     {
         private readonly ReaderWriterLockSlim rwl = new ReaderWriterLockSlim();
 
-        private readonly PrefabSelector<PrefabActivator<T>>? activator =
-            (typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsInherit)))
-            && !typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsActivator)))
-            && !typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsVariants<T>))))
-            ? new PrefabSelector<PrefabActivator<T>>() : null;
+        private readonly PrefabSelector<PrefabActivator<T>>? activator;
+
+        public PrefabSelector(){
+            if (typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsInherit)))
+                && !typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsActivator)))
+                && !typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsVariants<T>))))
+            {
+                activator = new PrefabSelector<PrefabActivator<T>>();
+            }
+            else {
+                activator = null;
+            }
+        }
 
         public T? BasePrefab
         {
@@ -92,11 +100,11 @@ namespace Barotrauma
         }
 
 
-        public void AddDefered(ContentFile file, ContentXElement element, 
+        public void AddDefered(Identifier id, ContentFile file, ContentXElement element, 
             Func<ContentXElement, T> constructorLambda,  Func<PrefabActivator<T>, PrefabActivator<T>?> locator,
             VariantExtensions.VariantXMLChecker? inherit_callback, Action<T>? OnAdd, bool isOverride)
         {
-            activator!.Add(new PrefabActivator<T>(file, element, constructorLambda, locator,  inherit_callback, OnAdd), isOverride);
+            activator!.Add(new PrefabActivator<T>(id, file, element, constructorLambda, locator,  inherit_callback, OnAdd), isOverride);
         }
 
         public void RemoveIfContains(T prefab)

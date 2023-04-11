@@ -11,7 +11,11 @@ namespace Barotrauma
         protected abstract bool MatchesPlural(Identifier identifier);
         protected abstract PrefabCollection<T> Prefabs { get; }
         protected abstract T CreatePrefab(ContentXElement element);
-        
+
+        protected virtual Identifier GetIdentifier(ContentXElement element) {
+            return element.GetAttributeIdentifier("identifier", Identifier.Empty);
+        }
+
         private void LoadFromXElement(ContentXElement parentElement, bool overriding)
         {
             Identifier elemName = parentElement.NameAsIdentifier();
@@ -33,17 +37,27 @@ namespace Barotrauma
             }
             else if (MatchesSingular(elemName))
             {
-                T prefab = CreatePrefab(parentElement);
-                try
+                if ((typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsInherit)))
+                    && !typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsActivator)))
+                    && !typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsVariants<T>)))))
                 {
-                    Prefabs.Add(prefab, overriding);
+                    Prefabs.AddDefered(GetIdentifier(parentElement), this, parentElement, CreatePrefab,
+                        (prev) => PrefabActivator<T>.GetParent_Collection(prev, Prefabs),
+                        null, null, overriding);
                 }
-                catch
-                {
-                    //clean up before rethrowing, since some prefab types might lock resources
-                    prefab.Dispose();
-                    Prefabs.Remove(prefab);
-                    throw;
+                else {
+                    T prefab = CreatePrefab(parentElement);
+                    try
+                    {
+                        Prefabs.Add(prefab, overriding);
+                    }
+                    catch
+                    {
+                        //clean up before rethrowing, since some prefab types might lock resources
+                        prefab.Dispose();
+                        Prefabs.Remove(prefab);
+                        throw;
+                    }
                 }
             }
             else if (MatchesPlural(elemName))

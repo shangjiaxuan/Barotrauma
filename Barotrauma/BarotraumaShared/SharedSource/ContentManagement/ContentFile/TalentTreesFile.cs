@@ -14,5 +14,10 @@ namespace Barotrauma
         {
             return new TalentTree(element, this);
         }
+
+        protected override Identifier GetIdentifier(ContentXElement element)
+        {
+            return element.GetAttributeIdentifier("jobIdentifier", Identifier.Empty);
+        }
     }
 }
