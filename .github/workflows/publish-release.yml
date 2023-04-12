@@ -27,6 +27,7 @@ env:
     0Harmony.dll
     Sigil.dll
     MoonSharp.Interpreter.dll
+    MoonSharp.VsCodeDebugger.dll
     MonoMod.Common.dll
     Mono.Cecil.dll
     Mono.Cecil.Mdb.dll

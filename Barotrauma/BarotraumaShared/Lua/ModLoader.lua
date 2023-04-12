@@ -78,12 +78,19 @@ end
 local QueueAutorun       = ExecutionQueue()
 local QueueForcedAutorun = ExecutionQueue()
 
+local function nocase(s)
+    s = string.gsub(s, "%a", function(c)
+        return string.format("[%s%s]", string.lower(c), string.upper(c))
+    end)
+    return s
+end
+
 local function ProcessPackages(packages, fn)
     for pkg in packages do
         if pkg then
             local pkgPath = pkg.Path
                 :gsub("\\", "/")
-                :gsub("/filelist.xml", "")
+                :gsub(nocase("/filelist.xml"), "")
             fn(pkg, pkgPath)
         end
     end
@@ -165,7 +172,7 @@ elseif Game.IsMultiplayer then
         local id = package.UgcId
         local hash = package.Hash and package.Hash.StringRepresentation or ""
 
-        if id == none then id = 0 end
+        if id == nil then id = 0 end
 
         message.WriteString(package.Name)
         message.WriteString(package.ModVersion)

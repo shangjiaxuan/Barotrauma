@@ -10,6 +10,8 @@ for key, value in pairs(localizedStrings) do
     RegisterBarotrauma(value)
 end
 
+Register("Steamworks.SteamServer")
+
 RegisterBarotrauma("Character+TeamChangeEventData")
 
 RegisterBarotrauma("Networking.GameServer")

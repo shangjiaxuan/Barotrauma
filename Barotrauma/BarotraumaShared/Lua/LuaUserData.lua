@@ -5,6 +5,7 @@ luaUserData.Descriptors = {}
 
 LuaSetup.LuaUserData = luaUserData
 
+luaUserData.IsRegistered = clrLuaUserData.IsRegistered
 luaUserData.UnregisterType = clrLuaUserData.UnregisterType
 luaUserData.RegisterGenericType = clrLuaUserData.RegisterGenericType
 luaUserData.UnregisterGenericType = clrLuaUserData.UnregisterGenericType
@@ -14,6 +15,7 @@ luaUserData.GetType = clrLuaUserData.GetType
 luaUserData.CreateEnumTable = clrLuaUserData.CreateEnumTable
 luaUserData.MakeFieldAccessible = clrLuaUserData.MakeFieldAccessible
 luaUserData.MakeMethodAccessible = clrLuaUserData.MakeMethodAccessible
+luaUserData.MakePropertyAccessible = clrLuaUserData.MakePropertyAccessible
 luaUserData.AddMethod = clrLuaUserData.AddMethod
 luaUserData.AddField = clrLuaUserData.AddField
 luaUserData.RemoveMember = clrLuaUserData.RemoveMember

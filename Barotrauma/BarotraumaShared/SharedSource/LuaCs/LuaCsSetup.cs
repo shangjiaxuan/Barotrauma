@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using LuaCsCompatPatchFunc = Barotrauma.LuaCsPatch;
 using System.Diagnostics;
+using MoonSharp.VsCodeDebugger;
 
 [assembly: InternalsVisibleTo(Barotrauma.CsScriptBase.CsScriptAssembly, AllInternalsVisible = true)]
 namespace Barotrauma
@@ -62,6 +63,7 @@ namespace Barotrauma
 
         public CsScriptLoader CsScriptLoader { get; private set; }
         public LuaCsSetupConfig Config { get; private set; }
+        public MoonSharpVsCodeDebugServer DebugServer { get; private set; }
 
         private bool ShouldRunCs
         {
@@ -79,6 +81,8 @@ namespace Barotrauma
             Game = new LuaGame();
             Networking = new LuaCsNetworking();
 
+            DebugServer = new MoonSharpVsCodeDebugServer();
+
             if (File.Exists(configFileName))
             {
                 using (var file = File.Open(configFileName, FileMode.Open, FileAccess.Read))
@@ -91,6 +95,38 @@ namespace Barotrauma
                 Config = new LuaCsSetupConfig();
             }
         }
+
+        public void ToggleDebugger(int port = 41912)
+        {
+            if (!GameMain.LuaCs.DebugServer.IsStarted)
+            {
+                DebugServer.Start();
+                AttachDebugger();
+
+                LuaCsLogger.Log($"Lua Debug Server started on port {port}.");
+            }
+            else
+            {
+                DetachDebugger();
+                DebugServer.Stop();
+
+                LuaCsLogger.Log($"Lua Debug Server stopped.");
+            }
+        }
+
+        public void AttachDebugger()
+        {
+            DebugServer.AttachToScript(Lua, "Script", s =>
+            {
+                if (s.Name.StartsWith("LocalMods") || s.Name.StartsWith("Lua"))
+                {
+                    return Environment.CurrentDirectory + "/" + s.Name;
+                }
+                return s.Name;
+            });
+        }
+
+        public void DetachDebugger() => DebugServer.Detach(Lua);
 
         public void UpdateConfig()
         {
@@ -178,7 +214,7 @@ namespace Barotrauma
         {
             // XXX: `lua` might be null if `LuaCsSetup.Stop()` is called while
             // a patched function is still running.
-            if (Lua == null) return null;
+            if (Lua == null) { return null; }
 
             lock (Lua)
             {
@@ -232,6 +268,11 @@ namespace Barotrauma
             if (Thread.CurrentThread == GameMain.MainThread) 
             {
                 Hook?.Call("stop");
+            }
+
+            if (Lua != null && DebugServer.IsStarted)
+            {
+                DebugServer.Detach(Lua);
             }
 
             Game?.Stop();
@@ -328,6 +369,11 @@ namespace Barotrauma
 
             Lua.Globals["SERVER"] = IsServer;
             Lua.Globals["CLIENT"] = IsClient;
+
+            if (DebugServer.IsStarted)
+            {
+                AttachDebugger();
+            }
 
             if (csActive)
             {

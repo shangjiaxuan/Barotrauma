@@ -13,6 +13,8 @@ namespace Barotrauma.Networking
         {
             get
             {
+                if (GameMain.IsSingleplayer) { return new List<Client>(); }
+
 #if SERVER
                 return GameMain.Server.ConnectedClients;
 #else

@@ -483,7 +483,7 @@ local {type.Name} = {{}}".ReplaceLineEndings("\n");
             return baseLuaText;
         }
 
-        public static void GenerateDocs(Type type, string baseFile, string outFile, string? categoryName = null)
+        public static void GenerateDocs(Type type, string baseFile, string outFile, string? categoryName = null, string realm = "shared")
         {
             categoryName ??= type.Name;
             var sb = new StringBuilder();
@@ -503,21 +503,21 @@ local {type.Name} = {{}}".ReplaceLineEndings("\n");
                 {
                     case MemberTypes.Method:
                     {
-                        sb.Append(ConvertAnnotation(type, (MethodInfo)member, "shared"));
+                        sb.Append(ConvertAnnotation(type, (MethodInfo)member, realm));
                         sb.AppendLine();
                         break;
                     }
 
                     case MemberTypes.Field:
                     {
-                        sb.Append(ConvertAnnotation(type, (FieldInfo)member, "shared"));
+                        sb.Append(ConvertAnnotation(type, (FieldInfo)member, realm));
                         sb.AppendLine();
                         break;
                     }
 
                     case MemberTypes.Property:
                     {
-                        sb.Append(ConvertAnnotation(type, (PropertyInfo)member, "shared"));
+                        sb.Append(ConvertAnnotation(type, (PropertyInfo)member, realm));
                         sb.AppendLine();
                         break;
                     }

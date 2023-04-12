@@ -4,5 +4,6 @@
     <PackageReference Include="Lib.Harmony" Version="2.2.2" />
     <PackageReference Include="Sigil" Version="5.0.0" />
     <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\Libraries\moonsharp\MoonSharp.Interpreter\MoonSharp.Interpreter.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\Libraries\moonsharp\MoonSharp.VsCodeDebugger\MoonSharp.VsCodeDebugger.csproj" />
   </ItemGroup>
 </Project>

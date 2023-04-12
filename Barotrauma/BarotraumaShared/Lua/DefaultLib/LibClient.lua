@@ -64,7 +64,15 @@ defaultLib["GUI"] = {
     Anchor = CreateStatic("Barotrauma.Anchor"),
     Alignment = CreateStatic("Barotrauma.Alignment"),
     Pivot = CreateStatic("Barotrauma.Pivot"),
+    SoundType = CreateEnum("Barotrauma.GUISoundType"),
+    CursorState = CreateEnum("Barotrauma.CursorState"),
 }
+
+setmetatable(defaultLib["GUI"], {
+    __index = function (table, key)
+        return defaultLib["GUI"].GUI[key]
+    end
+})
 
 AddCallMetaTable(defaultLib["GUI"].VideoPlayer.VideoSettings)
 AddCallMetaTable(defaultLib["GUI"].VideoPlayer.TextSettings)

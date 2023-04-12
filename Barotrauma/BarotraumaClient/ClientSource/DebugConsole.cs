@@ -3380,6 +3380,18 @@ namespace Barotrauma
             {
                 GameMain.LuaCs.Initialize();
             }));
+
+            commands.Add(new Command("cl_toggleluadebug", "Toggles the MoonSharp Debug Server.", (string[] args) =>
+            {
+                int port = 41912;
+
+                if (args.Length > 0)
+                {
+                    int.TryParse(args[0], out port);
+                }
+
+                GameMain.LuaCs.ToggleDebugger(port);
+            }));
         }
 
         private static void ReloadWearables(Character character, int variant = 0)

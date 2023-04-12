@@ -12,11 +12,11 @@ Item = {}
 
 --- Gets a component from an item by a string name.
 -- @treturn Component component
--- @realm server 
+-- @realm shared 
 function GetComponentString(componentName) end
 
 --- Sends a signal.
--- @realm server 
+-- @realm shared 
 function SendSignal(signalOrString, connectionOrConnectionName) end
 
 ---

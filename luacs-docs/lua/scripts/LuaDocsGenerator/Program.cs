@@ -10,9 +10,9 @@ namespace LuaDocsGenerator
         private static string generatedDir = "";
         private static string baseLuaDir = "";
 
-        private static void GenerateDocs<T>(string file, string? categoryName = null)
+        private static void GenerateDocs<T>(string file, string? categoryName = null, string realm = "shared")
         {
-            DocsGenerator.GenerateDocs(typeof(T), $"{baseLuaDir}/{file}", $"{generatedDir}/{file}", categoryName);
+            DocsGenerator.GenerateDocs(typeof(T), $"{baseLuaDir}/{file}", $"{generatedDir}/{file}", categoryName, realm);
         }
 
         private static void GenerateDocs<T1, T2>(string file, string? categoryName = null)
@@ -87,6 +87,7 @@ namespace LuaDocsGenerator
             GenerateDocs<BarotraumaClient::Barotrauma.StructurePrefab, BarotraumaServer::Barotrauma.StructurePrefab>("StructurePrefab.lua");
             GenerateDocs<BarotraumaClient::Barotrauma.PhysicsBody, BarotraumaServer::Barotrauma.PhysicsBody>("PhysicsBody.lua");
             GenerateDocs<BarotraumaClient::Barotrauma.Limb, BarotraumaServer::Barotrauma.Limb>("Limb.lua");
+            GenerateDocs<BarotraumaClient::Barotrauma.PlayerInput>("PlayerInput.lua", "PlayerInput", "client");
 
             GenerateEnum<BarotraumaClient.Barotrauma.CauseOfDeathType>("CauseOfDeathType.lua");
             GenerateEnum<BarotraumaClient.Barotrauma.CharacterTeamType>("CharacterTeamType.lua");

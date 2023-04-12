@@ -29,7 +29,7 @@ function Kick(reason) end
 function Ban(reason, range, seconds) end
 
 --- Checks permissions, Client.Permissions.
--- @realm server 
+-- @realm shared 
 function CheckPermission(permissions) end
 
 --- Unban a client.

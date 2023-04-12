@@ -2,11 +2,6 @@
 
 namespace Barotrauma
 {
-    public struct LuaNone
-    {
-
-    }
-
     public struct LuaSByte
     {
         public readonly sbyte Value;

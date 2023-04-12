@@ -227,6 +227,10 @@ function item.deconstructed(item, otherItem, userCharacter) end
 -- @realm shared
 function item.created(item) end
 
+--- Gets called every time an item is removed.
+-- @realm shared
+function item.removed(item) end
+
 --- Gets called every time an item is moved from one inventory slot to another, return true to cancel
 -- @realm shared
 function inventoryPutItem(inventory, item, characterUser, index, removeItemBool) end

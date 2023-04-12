@@ -1260,6 +1260,18 @@ namespace Barotrauma
                 GameMain.LuaCs.Initialize();
             }));
 
+            commands.Add(new Command("toggleluadebug", "Toggles the MoonSharp Debug Server.", (string[] args) =>
+            {
+                int port = 41912;
+
+                if (args.Length > 0)
+                {
+                    int.TryParse(args[0], out port);
+                }
+
+                GameMain.LuaCs.ToggleDebugger(port);
+            }));
+
 #if WINDOWS
             commands.Add(new Command("install_cl_lua|install_cl|install_cl_cs|install_cl_luacs", "Installs Client-Side LuaCs into your client.", (string[] args) =>
             {
