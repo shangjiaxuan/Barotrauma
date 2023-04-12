@@ -144,7 +144,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           automatic_release_tag: latest-${{ inputs.tag }}
           prerelease: false
-          title: Automatic Build
+          title: Automatic Build (${{ inputs.tag }})
           files: |
             ${{ env.ARTIFACTS_DIR }}/${{ env.ARCHIVE_BASE_NAME }}_build_windows.zip
             ${{ env.ARTIFACTS_DIR }}/${{ env.ARCHIVE_BASE_NAME }}_patch_windows_client.zip
