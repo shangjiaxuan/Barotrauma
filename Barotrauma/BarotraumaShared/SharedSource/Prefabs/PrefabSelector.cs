@@ -272,7 +272,7 @@ namespace Barotrauma
             else
             {
                 if (basePrefabInternal == prefab) { basePrefabInternal = null; }
-                else if (overrides.Contains(prefab)) { overrides.Remove(prefab); }
+                if (overrides.Contains(prefab)) { overrides.Remove(prefab); }
                 else { throw new InvalidOperationException($"Can't remove prefab from PrefabSelector ({typeof(T)}, {prefab.Identifier}, {prefab.ContentFile.ContentPackage.Name})"); }
                 prefab.Dispose();
             }
