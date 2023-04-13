@@ -103,7 +103,9 @@ namespace Barotrauma
 			}
         }
 
-		public PrefabInstance InheritParent => originalElement.InheritParent();
+        public T? Current { get => cached; }
+
+        public PrefabInstance InheritParent => originalElement.InheritParent();
 
 		public IEnumerable<PrefabActivator<T>> InheritHistory {
             get {
@@ -199,9 +201,7 @@ namespace Barotrauma
 
         VariantExtensions.VariantXMLChecker? inherit_callback;
 		public override void Dispose(){
-            if (cached != null) { 
-                cached.Dispose();
-            }
+            InvalidateCache();
         }
 
         private Action<T>? OnAdd;

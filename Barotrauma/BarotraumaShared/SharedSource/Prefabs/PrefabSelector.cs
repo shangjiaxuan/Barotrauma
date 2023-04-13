@@ -118,18 +118,22 @@ namespace Barotrauma
             else if (activator != null) {
                 using (new WriteLock(rwl))
                 {
-                    for (int i = activator.overrides.Count - 1; i >= 0; i--)
+                    activator.RemoveByFile(file);
+                    // already disposed. Active prefab already resolves to something else.
                     {
-                        var prefab = activator.overrides[i];
-                        if (prefab.ContentFile == file)
+                        for (int i = overrides.Count - 1; i >= 0; i--)
                         {
-                            activator.RemoveInternal(prefab);
+                            var prefab = overrides[i];
+                            if (prefab.ContentFile == file)
+                            {
+                                overrides.Remove(prefab);
+                            }
                         }
-                    }
 
-                    if (activator.basePrefabInternal is { ContentFile: var baseFile } p && baseFile == file)
-                    {
-                        activator.RemoveInternal(activator.basePrefabInternal);
+                        if (basePrefabInternal is { ContentFile: var baseFile } p && baseFile == file)
+                        {
+                            basePrefabInternal = null;
+                        }
                     }
                 }
             }
@@ -206,6 +210,21 @@ namespace Barotrauma
             }
         }
 
+        public T? activePrefabInternal_NoCreate
+        {
+            get
+            {
+                if (activator is null)
+                {
+                    return overrides.Count > 0 ? overrides.First() : basePrefabInternal;
+                }
+                else
+                {
+                    return activator.activePrefabInternal_NoCreate?.Current;
+                }
+            }
+        }
+
         private void AddInternal(T prefab, bool isOverride)
         {
             if (overrides.Exists(p => ReferenceEquals(p.ContentPackage, prefab)))
@@ -240,13 +259,13 @@ namespace Barotrauma
         {
             if (activator != null)
             {
-                if (ActivePrefab != prefab)
+                if (activePrefabInternal_NoCreate != prefab)
                 {
                     throw new InvalidOperationException($"Can't remove concrete prefab that is defered and not current.");
                 }
                 else
                 {
-                    activator.ActivePrefab?.InvalidateCache();
+                    activator.activePrefabInternal_NoCreate?.InvalidateCache();
                     overrides.Remove(prefab);
                 }
             }
@@ -263,17 +282,33 @@ namespace Barotrauma
         private void SortInternal(bool force_resolve = false)
         {
             overrides.Sort((p1, p2) => (p1.ContentPackage?.Index ?? int.MaxValue) - (p2.ContentPackage?.Index ?? int.MaxValue));
-            if (force_resolve && activator!=null) {
+            activator?.SortInternal(force_resolve);
+            if (force_resolve && activator != null)
+            {
                 T? current = activator.ActivePrefab?.Activate();
                 overrides.Clear();
-                if (current != null) {
+                if (current != null)
+                {
                     overrides.Add(current);
                 }
             }
         }
 
         // will recursive lock when onAdd is not null and have callback in activate...
-        public bool isEmptyInternal => basePrefabInternal is null && overrides.Count == 0;
+        public bool isEmptyInternal
+        {
+            get
+            {
+                if (activator == null)
+                {
+                    return basePrefabInternal is null && overrides.Count == 0;
+                }
+                else
+                {
+                    return activator.isEmptyInternal;
+                }
+            }
+        }
 
         private bool ContainsInternal(T prefab) => basePrefabInternal == prefab || overrides.Contains(prefab);
 
