@@ -369,6 +369,20 @@ namespace Barotrauma
             return null;
         }
 
+        private T? FindInternal(Predicate<T> predicate)
+        {
+            Prefab.DisallowCallFromConstructor();
+            foreach (var kpv in prefabs)
+            {
+                if (kpv.Value.activePrefabInternal is T p && predicate(p))
+                {
+                    return p;
+                }
+            }
+            return null;
+        }
+
+
         /// <summary>
         /// Returns true if a prefab with the given identifier exists, false otherwise.
         /// </summary>
@@ -474,11 +488,11 @@ namespace Barotrauma
 				(prefab) => {
 					if (prefab is PrefabWithUintIdentifier prefabWithUintIdentifier)
 					{
-						if (!selector.isEmptyInternal)
-						{
-							prefabWithUintIdentifier.UintIdentifier = (selector.activePrefabInternal as PrefabWithUintIdentifier)!.UintIdentifier;
-						}
-						else
+                        if (!selector.isEmptyInternal && selector.activePrefabInternal_NoCreate != null && (selector.activePrefabInternal_NoCreate as PrefabWithUintIdentifier)!.UintIdentifier != 0)
+                        {
+                            prefabWithUintIdentifier.UintIdentifier = (selector.activePrefabInternal_NoCreate as PrefabWithUintIdentifier)!.UintIdentifier;
+                        }
+                        else
 						{
 							using (MD5 md5 = MD5.Create())
 							{
@@ -486,7 +500,7 @@ namespace Barotrauma
 
 								//it's theoretically possible for two different values to generate the same hash, but the probability is astronomically small
 								T? findCollision()
-									=> Find(p =>
+									=> FindInternal(p =>
 										p.Identifier != prefab.Identifier
 										&& p is PrefabWithUintIdentifier otherPrefab
 										&& otherPrefab.UintIdentifier == prefabWithUintIdentifier.UintIdentifier);
