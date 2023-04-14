@@ -369,12 +369,25 @@ namespace Barotrauma
             return null;
         }
 
-        /// <summary>
-        /// Returns true if a prefab with the given identifier exists, false otherwise.
-        /// </summary>
-        /// <param name="identifier">Prefab identifier</param>
-        /// <returns>Whether a prefab with the given identifier exists or not</returns>
-        public bool ContainsKey(Identifier identifier)
+		private T? FindInternal(Predicate<T> predicate)
+		{
+			Prefab.DisallowCallFromConstructor();
+			foreach (var kpv in prefabs)
+			{
+				if (kpv.Value.activePrefabInternal is T p && predicate(p))
+				{
+					return p;
+				}
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Returns true if a prefab with the given identifier exists, false otherwise.
+		/// </summary>
+		/// <param name="identifier">Prefab identifier</param>
+		/// <returns>Whether a prefab with the given identifier exists or not</returns>
+		public bool ContainsKey(Identifier identifier)
         {
             Prefab.DisallowCallFromConstructor();
             return prefabs.ContainsKey(identifier);
@@ -474,9 +487,9 @@ namespace Barotrauma
 				(prefab) => {
 					if (prefab is PrefabWithUintIdentifier prefabWithUintIdentifier)
 					{
-						if (!selector.isEmptyInternal)
+						if (!selector.isEmptyInternal && selector.activePrefabInternal_NoCreate != null && (selector.activePrefabInternal_NoCreate as PrefabWithUintIdentifier)!.UintIdentifier != 0)
 						{
-							prefabWithUintIdentifier.UintIdentifier = (selector.activePrefabInternal as PrefabWithUintIdentifier)!.UintIdentifier;
+							prefabWithUintIdentifier.UintIdentifier = (selector.activePrefabInternal_NoCreate as PrefabWithUintIdentifier)!.UintIdentifier;
 						}
 						else
 						{
