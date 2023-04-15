@@ -5,6 +5,8 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Xml.Linq;
 
+using System.Linq;
+
 namespace Barotrauma
 {
     public abstract class Prefab
@@ -16,8 +18,14 @@ namespace Barotrauma
         }
 
         protected static bool potentialCallFromConstructor = false;
-        public static void DisallowCallFromConstructor()
+
+        public static bool IsActivator<T>() { 
+            return typeof(T).GetInterfaces().Any(i => i.Name.Contains(nameof(IImplementsActivator)));
+        }
+
+        public static void DisallowCallFromConstructor<T>()
         {
+            if (IsActivator<T>()) { return; }
             if (!potentialCallFromConstructor) { return; }
             StackTrace st = new StackTrace(skipFrames: 2, fNeedFileInfo: false);
             for (int i = st.FrameCount - 1; i >= 0; i--)
