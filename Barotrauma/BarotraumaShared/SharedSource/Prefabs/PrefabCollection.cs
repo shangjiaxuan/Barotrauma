@@ -499,7 +499,7 @@ namespace Barotrauma
 
                                 //it's theoretically possible for two different values to generate the same hash, but the probability is astronomically small
                                 T? findCollision()
-                                    => Find(p =>
+                                    => FindInternal(p =>
                                         p.Identifier != prefab.Identifier
                                         && p is PrefabWithUintIdentifier otherPrefab
                                         && otherPrefab.UintIdentifier == prefabWithUintIdentifier.UintIdentifier);
