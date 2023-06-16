@@ -40,6 +40,7 @@ defaultLib["Keys"] = CreateStatic("Microsoft.Xna.Framework.Input.Keys", true)
 defaultLib["GUI"] = {
     GUI = CreateStatic("Barotrauma.GUI", true),
     GUIStyle = CreateStatic("Barotrauma.GUIStyle", true),
+    Component = CreateStatic("Barotrauma.GUIComponent"),
     RectTransform = CreateStatic("Barotrauma.RectTransform", true),
     LayoutGroup = CreateStatic("Barotrauma.GUILayoutGroup", true),
     Button = CreateStatic("Barotrauma.GUIButton", true),

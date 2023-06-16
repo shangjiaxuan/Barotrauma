@@ -1,8 +1,15 @@
 Util = {}
 
 local itemDictionary = {}
+local itemGroups = {}
 
 local function AddItem(item)
+    for _, itemGroup in pairs(itemGroups) do
+        if itemGroup.func(item) then
+            table.insert(itemGroup.items, item)
+        end
+    end
+
     local id = item.Prefab.Identifier.Value
     if itemDictionary[id] == nil then
         itemDictionary[id] = {}
@@ -17,10 +24,47 @@ end)
 
 Hook.Add("roundEnd", "luaSetup.util.itemDictionary", function (item)
     itemDictionary = {}
+    for _, itemGroup in pairs(itemGroups) do
+        itemGroup.items = {}
+    end
 end)
 
 for _, item in pairs(Item.ItemList) do
     AddItem(item)
+end
+
+Util.RegisterItemGroup = function(groupName, func)
+    if type(groupName) ~= "string" then
+        error(string.format("bad argument #1 to 'RegisterItemGroup' (string expected, got %s)", type(groupName)), 2)
+    end
+
+    if type(func) ~= "function" then
+        error(string.format("bad argument #2 to 'RegisterItemGroup' (function expected, got %s)", type(func)), 2)
+    end
+
+    local items = {}
+    for _, item in pairs(Item.ItemList) do
+        if func(item) then
+            table.insert(items, item)
+        end
+    end
+
+    itemGroups[groupName] = {
+        func = func,
+        items = items
+    }
+end
+
+Util.GetItemGroup = function(groupName)
+    if type(groupName) ~= "string" then
+        error(string.format("bad argument #1 to 'GetItemGroup' (string expected, got %s)", type(groupName)), 2)
+    end
+
+    if not itemGroups[groupName] then
+        error("bad argument #1 to 'GetItemGroup' couldn't find the specified groupName", 2)
+    end
+
+    return itemGroups[groupName].items or {}
 end
 
 Util.GetItemsById = function(id)

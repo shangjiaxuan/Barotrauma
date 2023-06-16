@@ -681,6 +681,7 @@ namespace Barotrauma
         private readonly List<Identifier> talentTriggers = new List<Identifier>();
         private readonly List<int> giveExperiences = new List<int>();
         private readonly List<GiveSkill> giveSkills = new List<GiveSkill>();
+        private readonly List<string> luaHook = new List<string>();
 
         public float Duration => duration;
 

@@ -263,7 +263,6 @@ RegisterBarotrauma("AITarget")
 RegisterBarotrauma("AITargetMemory")
 RegisterBarotrauma("AIChatMessage")
 RegisterBarotrauma("AIObjectiveManager")
-RegisterBarotrauma("AITrigger")
 RegisterBarotrauma("WreckAI")
 RegisterBarotrauma("WreckAIConfig")
 
@@ -437,6 +436,8 @@ RegisterBarotrauma("DecalPrefab")
 RegisterBarotrauma("DecalManager")
 
 RegisterBarotrauma("PriceInfo")
+
+RegisterBarotrauma("Voting")
 
 Register("Microsoft.Xna.Framework.Vector2")
 Register("Microsoft.Xna.Framework.Vector3")

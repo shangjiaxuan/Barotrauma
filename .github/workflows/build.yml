@@ -1,22 +1,25 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: Run tests
+name: Build
 
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       target:
         required: true
         type: string
 
+env:
+  CI_DIR: 717a3c49-f5dc-42eb-b332-fcf2988d00e3
+
 jobs:
-  run-tests:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
         with:
-          repository: ${{ inputs.repository }}
           ref: ${{ inputs.target }}
           submodules: recursive
 
@@ -26,22 +29,23 @@ jobs:
           dotnet-version: |
             6.0.x
 
-      - name: Initialize environment
+      - name: Run deploy script
         run: |
-          mkdir -p ~/".local/share/Daedalic Entertainment GmbH/Barotrauma"
+          set -e
+          shopt -s globstar nullglob
+          shopt -u dotglob
+          cd Deploy
+          git apply < ./patches/disable-interactivity.diff
+          git apply < ./patches/prevent-crash-on-missing-dir.diff
+          ./DeployAll.sh
 
-      - name: Run tests
-        continue-on-error: true
+      - name: Create tarball
         run: |
-          set +e
-          dotnet test LinuxSolution.sln -clp:"ErrorsOnly;Summary" --logger "trx;LogFileName=$PWD/test-results.trx"
-          echo "EXITCODE=$?" >> "$GITHUB_ENV"
+          mkdir -p "$CI_DIR"
+          tar -czf "$CI_DIR/build.tar.gz" -C Deploy/bin/content .
 
-      - name: Upload test results
+      - name: Upload tarball
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
         with:
-          name: test-results
-          path: test-results.trx
-
-      - name: Set exit code
-        run: exit "$EXITCODE"
+          name: build
+          path: ${{ env.CI_DIR }}/build.tar.gz

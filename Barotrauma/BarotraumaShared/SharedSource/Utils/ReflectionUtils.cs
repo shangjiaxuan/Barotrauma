@@ -21,18 +21,14 @@ namespace Barotrauma
             Assembly assembly = typeof(T).Assembly;
             lock (cachedNonAbstractTypes) 
             {
-                cachedNonAbstractTypes[assembly] = assembly.GetTypes()
-                    .Where(t => !t.IsAbstract).ToImmutableArray();
+                if (!cachedNonAbstractTypes.ContainsKey(assembly))
+                {
+                    AddNonAbstractAssemblyTypes(assembly);
+                }
+            }
 
-                cachedDerivedNonAbstract[assembly] = new Dictionary<Type, ImmutableArray<Type>>();
-            }
-            if (cachedDerivedNonAbstract[assembly].TryGetValue(t, out var cachedArray))
-            {
-                return cachedArray;
-            }
-            var newArray = cachedNonAbstractTypes[assembly].Where(t2 => t2.IsSubclassOf(t)).ToImmutableArray();
-            cachedDerivedNonAbstract[assembly].Add(t, newArray);
-            return newArray;
+            #warning TODO: Add safety checks in case an assembly is unloaded without being removed from the cache.
+            return cachedNonAbstractTypes.Values.SelectMany(s => s.Where(t => t.IsSubclassOf(typeof(T))));
         }
 
         /// <summary>

@@ -86,7 +86,7 @@
   <ItemGroup>
     <PackageReference Include="RestSharp" Version="106.13.0" />
   </ItemGroup>
-
+  
   <!-- Sourced from https://stackoverflow.com/a/45248069 -->
   <Target Name="GetGitRevision" BeforeTargets="WriteGitRevision" Condition="'$(BuildHash)' == ''">
     <PropertyGroup>
@@ -150,5 +150,10 @@
     <!-- writes the attribute to the customAssemblyInfo file -->
     <WriteCodeFragment Language="C#" OutputFile="$(CustomAssemblyInfoFile)" AssemblyAttributes="@(AssemblyAttributes)" />
   </Target>
+
+  <Import Project="../BarotraumaShared/Luatrauma.props" />
+  <ItemGroup>
+    <None Include="../BarotraumaShared/Luatrauma.props" />
+  </ItemGroup>
 
 </Project>

@@ -155,8 +155,8 @@ namespace Barotrauma
 
         public int GapUpdateInterval
         {
-            get { return MapEntity.GapUpdateInterval; }
-            set { MapEntity.GapUpdateInterval = value; }
+            get { return 1; }
+            set { }
         }
 
         public int PoweredUpdateInterval
@@ -415,6 +415,7 @@ namespace Barotrauma
             { 
                 DebugConsole.FindCommand("cl_reloadluacs"),
                 DebugConsole.FindCommand("cl_lua"),
+                DebugConsole.FindCommand("cl_toggleluadebug"),
             };
 
             foreach (var consoleCommand in LuaAddedCommand.Concat(permitted.AsEnumerable())) 
@@ -532,7 +533,6 @@ namespace Barotrauma
         public void Stop()
         {
             MapEntityUpdateInterval = 1;
-            GapUpdateInterval = 4;
             CharacterUpdateInterval = 1;
 
             foreach (var cmd in luaAddedCommand)

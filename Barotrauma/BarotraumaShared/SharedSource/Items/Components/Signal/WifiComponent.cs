@@ -1,4 +1,4 @@
-using Barotrauma.Networking;
+﻿using Barotrauma.Networking;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -69,21 +69,8 @@ namespace Barotrauma.Items.Components
             "as chat messages in the chatbox of the player holding the item.", alwaysUseInstanceValues: true)]
         public bool LinkToChat
         {
-#if SERVER
-            get
-			{
-                if(GameMain.LuaCs.Game.allowWifiChat) return true;
-                return linkToChat;
-            }
-
-			set
-			{
-                linkToChat = value;
-            }
-#else
             get;
             set;
-#endif
         }
 
         [Editable, Serialize(1.0f, IsPropertySaveable.Yes, description: "How many seconds have to pass between signals for a message to be displayed in the chatbox. " +

@@ -2,12 +2,12 @@ namespace Barotrauma.Items.Components
 {
     partial struct Signal
     {
-        internal string value;
-        internal int stepsTaken;
-        internal Character sender;
-        internal Item source;
-        internal float power;
-        internal float strength;
+        public string value;
+        public int stepsTaken;
+        public Character sender;
+        public Item source;
+        public float power;
+        public float strength;
         public readonly double CreationTime;
 
         public double TimeSinceCreated => Timing.TotalTimeUnpaused - CreationTime;

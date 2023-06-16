@@ -19,6 +19,10 @@ namespace Barotrauma
         protected List<ushort> linkedToID;
         public List<ushort> unresolvedLinkedToID;
 
+        public static int MapEntityUpdateInterval = 1;
+        public static int PoweredUpdateInterval = 1;
+        private static int mapEntityUpdateTick;
+
         /// <summary>
         /// List of upgrades this item has
         /// </summary>
@@ -636,6 +640,11 @@ namespace Barotrauma
             foreach (Gap gap in Gap.GapList.OrderBy(g => Rand.Int(int.MaxValue)))
             {
                 gap.Update(deltaTime, cam);
+            }
+
+            if (mapEntityUpdateTick % PoweredUpdateInterval == 0)
+            {
+                Powered.UpdatePower(deltaTime * PoweredUpdateInterval);
             }
 
 #if CLIENT

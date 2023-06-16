@@ -3429,6 +3429,12 @@ namespace Barotrauma
                     return;
                 }
 
+                if (GameMain.LuaCs.Lua == null)
+                {
+                    ThrowError("LuaCs not initialized, use the console command cl_reloadluacs to force initialization.");
+                    return;
+                }
+
                 try
                 {
                     GameMain.LuaCs.Lua.DoString(string.Join(" ", args));

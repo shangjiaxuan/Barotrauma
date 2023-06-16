@@ -4,20 +4,16 @@ name: On push to master branch
 
 on:
   push:
-    branches: [lua-xpath-1.0.13]
+    branches: [lua-xpath-1.0.20]
 
 jobs:  
-  harden-ci-security:
-    uses: ./.github/workflows/harden-ci-security.yml
-    with:
-      ref: ${{ github.event.ref }}
-
   run-tests:
     uses: ./.github/workflows/run-tests.yml
     with:
-      ref: ${{ github.event.ref }}
+      target: ${{ github.event.ref }}
 
   publish-release:
     uses: ./.github/workflows/publish-release.yml
     with:
-      tag: "xpath-main"
+      target: ${{ github.event.ref }}
+      tag: xpath-main

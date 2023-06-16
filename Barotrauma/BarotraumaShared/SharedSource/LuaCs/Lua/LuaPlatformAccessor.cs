@@ -24,6 +24,22 @@ namespace Barotrauma
                 return FileMode.Append;
         }
 
+        public static FileAccess ParseFileAccess(string mode)
+        {
+            mode = mode.Replace("b", "");
+
+            if (mode == "r")
+                return FileAccess.Read;
+            else if (mode == "r+")
+                return FileAccess.ReadWrite;
+            else if (mode == "w")
+                return FileAccess.ReadWrite;
+            else if (mode == "w+")
+                return FileAccess.ReadWrite;
+            else
+                return FileAccess.Write;
+        }
+
         public override string GetEnvironmentVariable(string envvarname)
         {
             return null;
@@ -38,7 +54,8 @@ namespace Barotrauma
         {
             if (!LuaCsFile.IsPathAllowedLuaException(filename)) { return Stream.Null; }
 
-            return new FileStream(filename, ParseFileMode(mode), FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete);
+            FileStream stream = new FileStream(filename, ParseFileMode(mode), ParseFileAccess(mode), FileShare.ReadWrite | FileShare.Delete);
+            return stream;
         }
 
         public override Stream IO_GetStandardStream(StandardFileType type)

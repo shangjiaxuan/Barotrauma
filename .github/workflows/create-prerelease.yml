@@ -1,0 +1,89 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: Create pre-release
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  check-if-release-needed:
+    runs-on: ubuntu-latest
+    outputs:
+      latest-commit-sha: ${{ steps.get-latest-commit.outputs.result }}
+      has-new-commits: ${{ steps.check-for-new-commits.outputs.has-new-commits }}
+    steps:
+      - name: Extract branch name
+        id: extract-branch-name
+        run: |
+          echo "result=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> "$GITHUB_OUTPUT"
+      - name: Sanity checks
+        if: ${{ github.event_name == 'workflow_dispatch' && steps.extract-branch-name.outputs.result != 'develop' }}
+        run: |
+          echo "::error::this workflow can only be run on the \"develop\" branch"
+          exit 1
+
+      - name: Get latest nightly-tagged commit
+        id: get-latest-tag
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+        with:
+          result-encoding: string
+          script: |
+            try {
+              const ref = await github.rest.git.getRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: "tags/nightly",
+              });
+              return ref.data.object.sha;
+            } catch (err) {
+              if (err.name === "HttpError" && err.status === 404) {
+                return "tag-doesnt-exist";
+              }
+              throw err;
+            }
+
+      - name: Get latest commit on dev branch
+        id: get-latest-commit
+        uses: actions/github-script@d7906e4ad0b1822421a7e6a35d5ca353c962f410 # v6.4.1
+        with:
+          result-encoding: string
+          script: |
+            const ref = await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: "heads/develop",
+            });
+            return ref.data.object.sha;
+
+      - name: Check for new commits
+        id: check-for-new-commits
+        if: ${{ steps.get-latest-tag.outputs.result != 'tag-doesnt-exist' }}
+        env:
+          LATEST_TAGGED_SHA: "${{ steps.get-latest-tag.outputs.result }}"
+          LATEST_SHA: "${{ steps.get-latest-commit.outputs.result }}"
+        run: |
+          if [[ -z "$LATEST_TAGGED_SHA" ]]; then
+            echo "::error::LATEST_TAGGED_SHA env var is invalid"
+            exit 1
+          fi
+          if [[ -z "$LATEST_SHA" ]]; then
+            echo "::error::LATEST_TAGGED_SHA env var is invalid"
+            exit 1
+          fi
+
+          if [[ "$LATEST_TAGGED_SHA" == "$LATEST_SHA" ]]; then
+            echo "has-new-commits=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-new-commits=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish-release:
+    needs: [check-if-release-needed]
+    if: ${{ needs.check-if-release-needed.outputs.has-new-commits == 'true' }}
+    uses: ./.github/workflows/publish-release.yml
+    with:
+      target: ${{ needs.check-if-release-needed.outputs.latest-commit-sha }}
+      tag: nightly
+      prerelease: true

@@ -17,9 +17,9 @@ function Timer.GetTime() end
 -- @realm shared 
 function Timer.Wait(func, milliseconds) end
 
---- Calls a function after a certain amount of time.
+--- Calls a function in the next frame
 -- @realm shared
-function Timer.GetUsageMemory() end
+function Timer.NextFrame(func) end
 
 --- Same as GetTime()
 -- @realm shared 

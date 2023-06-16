@@ -9,9 +9,9 @@ jobs:
   harden-ci-security:
     uses: ./.github/workflows/harden-ci-security.yml
     with:
-      ref: ${{ github.event.pull_request.head.sha }}
+      target: ${{ github.event.pull_request.head.sha }}
 
   run-tests-for-pr:
     uses: ./.github/workflows/run-tests.yml
     with:
-      ref: ${{ github.event.pull_request.head.sha }}
+      target: ${{ github.event.pull_request.head.sha }}
