@@ -12,7 +12,6 @@ jobs:
     with:
       target: ${{ github.event.ref }}
 
-
   publish-release:
     uses: ./.github/workflows/publish-release.yml
     with:
