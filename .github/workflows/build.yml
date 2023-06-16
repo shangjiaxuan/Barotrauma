@@ -12,19 +12,6 @@ on:
 
 env:
   CI_DIR: 717a3c49-f5dc-42eb-b332-fcf2988d00e3
-  TOOLS_DIR: c1c0ee3b-b22f-451f-b330-8f6337a38fd7
-  PUBLICIZED_CLIENT: |
-    Barotrauma.dll
-    DedicatedServer.dll
-  PUBLICIZED_SERVER: |
-    DedicatedServer.dll
-  RELEASES: |
-    windows:client:Deploy/bin/content/Windows/Client
-    windows:server:Deploy/bin/content/Windows/Server
-    linux:client:Deploy/bin/content/Linux/Client
-    linux:server:Deploy/bin/content/Linux/Server
-    mac:client:Deploy/bin/content/Mac/Client/Barotrauma.app/Contents/MacOS
-    mac:server:Deploy/bin/content/Mac/Server
 
 jobs:
   build:
@@ -51,52 +38,6 @@ jobs:
           git apply < ./patches/disable-interactivity.diff
           git apply < ./patches/prevent-crash-on-missing-dir.diff
           ./DeployAll.sh
-      
-      - name: Publicize assemblies
-        run: |
-          set -e
-          shopt -s globstar nullglob
-          shopt -u dotglob
-
-          # This converts a newline-separated (LF) list into a Bash array
-          # NOTE: this doesn't discard the trailing LF that GitHub actions
-          # append (which results in an extra entry in the array).
-          lines_to_array() {
-            IFS=$'\n' readarray -td $'\n' "$1" <<< "${!1}"
-          }
-  
-          lines_to_array RELEASES
-          
-          tools_dir="$(realpath -m "$TOOLS_DIR")"
-          mkdir -p "$tools_dir"
-
-          dotnet tool install --tool-path "$tools_dir/asmpub" BepInEx.AssemblyPublicizer.Cli --version 0.4.1
-  
-          for i in "${!RELEASES[@]}"; do
-            [[ -z "${RELEASES[i]}" ]] && continue
-            (
-              IFS=':' read platform side publish_dir _rest <<< "${RELEASES[i]}"
-              cd "$publish_dir"
-              echo "Publicizing assemblies for $platform build"
-              mkdir Publicized
-              # XXX: assembly-publicizer supports processing assemblies in
-              # parallel, but it aborts the entire process if it encounters
-              # an invalid .NET assembly.
-              if [[ "$side" == "client" ]]; then
-              parallel "$tools_dir/asmpub/assembly-publicizer" \
-                {} -f --strip -o Publicized \
-                ::: ${PUBLICIZED_CLIENT[@]}
-              elif [[ "$side" == "server" ]]; then
-              parallel "$tools_dir/asmpub/assembly-publicizer" \
-                {} -f --strip -o Publicized \
-                ::: ${PUBLICIZED_SERVER[@]}
-              else
-                echo "Invalid side: $side"
-                exit 1
-              fi
-
-            )
-          done
 
       - name: Create tarball
         run: |
