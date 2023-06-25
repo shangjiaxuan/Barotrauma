@@ -380,10 +380,9 @@ namespace Barotrauma
                 tempBuffer.WriteBoolean(aiming);
                 tempBuffer.WriteBoolean(shoot);
                 tempBuffer.WriteBoolean(use);
-                if (AnimController is HumanoidAnimController)
-                {
-                    tempBuffer.WriteBoolean(((HumanoidAnimController)AnimController).Crouching);
-                }
+
+                tempBuffer.WriteBoolean(AnimController is HumanoidAnimController { Crouching: true });
+                
                 tempBuffer.WriteBoolean(attack);
 
                 Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
@@ -434,7 +433,17 @@ namespace Barotrauma
             if (writeStatus)
             {
                 WriteStatus(tempBuffer);
-                AIController?.ServerWrite(tempBuffer);
+                tempBuffer.WriteBoolean(AIController is EnemyAIController);
+                if (AIController is EnemyAIController enemyAi)
+                {
+                    tempBuffer.WriteByte((byte)enemyAi.State);
+                    tempBuffer.WriteBoolean(enemyAi.PetBehavior is PetBehavior);
+                    if (enemyAi.PetBehavior is PetBehavior petBehavior)
+                    {
+                        tempBuffer.WriteByte((byte)((petBehavior.Happiness / petBehavior.MaxHappiness) * byte.MaxValue));
+                        tempBuffer.WriteByte((byte)((petBehavior.Hunger / petBehavior.MaxHunger) * byte.MaxValue));
+                    }
+                }
                 HealthUpdatePending = false;
             }
         }
