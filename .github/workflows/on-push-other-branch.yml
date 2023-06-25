@@ -4,7 +4,7 @@ name: On push to a secondary branch
 
 on:
   push:
-    branches-ignore: ["master","lua-xpath-1.0.20","lua-xpath-1.0.20-preview"]
+    branches-ignore: ["master","lua-xpath-1.0.21","lua-xpath-1.0.21-preview"]
     paths-ignore:
       - ".github/**"
       - "*.md"

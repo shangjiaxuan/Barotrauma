@@ -4,7 +4,7 @@ name: On push to master branch
 
 on:
   push:
-    branches: [lua-xpath-1.0.20]
+    branches: [lua-xpath-1.0.21]
 
 jobs:  
   run-tests:
