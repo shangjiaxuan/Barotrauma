@@ -1757,7 +1757,7 @@ namespace Barotrauma.CharacterEditor
             }
             XDocument doc = new XDocument(config);
             
-            ContentPath configFileContentPath = ContentPath.FromRawNoConcrete(contentPackage, configFilePath);
+            ContentPath configFileContentPath = ContentPath.FromRaw(contentPackage, configFilePath);
             Directory.CreateDirectory(Path.GetDirectoryName(configFileContentPath.Value));
 #if DEBUG
             doc.Save(configFileContentPath.Value);

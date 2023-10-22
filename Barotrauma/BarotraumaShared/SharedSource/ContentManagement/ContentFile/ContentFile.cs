@@ -97,7 +97,7 @@ namespace Barotrauma
             if(relativepath.Equals(".")){
                 relativepath = "";
             }
-            var filePath = element.GetAttributeContentPath("file", ContentPath.FromRawNoConcrete(contentPackage, relativepath));
+            var filePath = element.GetAttributeContentPath("file", ContentPath.FromRaw(contentPackage, relativepath));
             if (type is null)
             {
                 return fail($"Invalid content type \"{elemName}\"");

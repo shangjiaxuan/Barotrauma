@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -160,7 +160,7 @@ namespace Barotrauma
         {
             DebugConsole.AddWarning("Using FromPackage on xpath. Will not evaluate path changes in inheritance!");
             
-            return new ContentXElement(ContentPath.FromRawNoConcrete(contentPackage, ""), element);
+            return new ContentXElement(ContentPath.FromRaw(contentPackage, ""), element);
         }
 
         public static IEnumerable<ContentXElement> Elements(this IEnumerable<ContentXElement> elements)

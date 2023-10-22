@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.IO;
 using Barotrauma.Items.Components;
 using Barotrauma.Steam;
@@ -3680,7 +3680,7 @@ namespace Barotrauma
                     {
                         File.Delete(sub.FilePath);
                         ModProject modProject = new ModProject(subPackage);
-                        modProject.RemoveFile(modProject.Files.First(f => ContentPath.FromRawNoConcrete(subPackage, f.Path) == sub.FilePath));
+                        modProject.RemoveFile(modProject.Files.First(f => ContentPath.FromRaw(subPackage, f.Path) == sub.FilePath));
                         modProject.Save(subPackage.Path);
                         ReloadModifiedPackage(subPackage);
                         if (MainSub?.Info != null && MainSub.Info.FilePath == sub.FilePath)

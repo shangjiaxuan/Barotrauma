@@ -29,7 +29,7 @@ namespace Barotrauma
         public BackgroundCreatureManager(string path)
         {
             DebugConsole.AddWarning($"Couldn't find any BackgroundCreaturePrefabs files, falling back to {path}");
-            LoadConfig(ContentPath.FromRaw(null, path));
+            LoadConfig(ContentPath.FromRaw((ContentPath)null, path));
         }
 
         private void LoadConfig(ContentPath configPath)

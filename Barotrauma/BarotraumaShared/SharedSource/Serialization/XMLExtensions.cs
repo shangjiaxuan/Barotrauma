@@ -182,7 +182,7 @@ namespace Barotrauma
         public static ContentPath GetAttributeContentPath(this XElement element, string name, ContentPackage contentPackage)
         {
             DebugConsole.AddWarning("Using GetAttributeContentPath with ContentPackage on xpath. Will not evaluate path changes in inheritance!");
-            return GetAttributeContentPath(element, name, ContentPath.FromRawNoConcrete(contentPackage, ""));
+            return GetAttributeContentPath(element, name, ContentPath.FromRaw(contentPackage, ""));
         }
 
         public static ContentPath GetAttributeContentPath(this XElement element, string name, ContentPath contentPath)
