@@ -67,31 +67,15 @@ namespace Barotrauma
             string clientVersion = File.ReadAllText(LuaCsSetup.VersionFile);
             string workshopVersion = luaPackage.ModVersion;
 
-            if (clientVersion == workshopVersion) { return; }
+            if (clientVersion == workshopVersion || File.Exists("debugsomething")) { return; }
 
             var msg = new GUIMessageBox($"LuaCs Update", $"Your LuaCs client version is different from the version found in the LuaCsForBarotrauma workshop files. Do you want to update?\n\n Client Version: {clientVersion}\n Workshop Version: {workshopVersion}", 
                 new LocalizedString[2] { TextManager.Get("Yes"), TextManager.Get("Cancel") });
 
             msg.Buttons[0].OnClicked = (GUIButton button, object obj) =>
             {
-                string[] filesToUpdate = new string[]
-                {
-                    "Barotrauma.dll", "Barotrauma.deps.json", "Barotrauma.pdb",
-                    "0Harmony.dll", "Mono.Cecil.dll",
-                    "Sigil.dll",
-                    "Mono.Cecil.Mdb.dll", "Mono.Cecil.Pdb.dll",
-                    "Mono.Cecil.Rocks.dll", "MonoMod.Common.dll",
-                    "MoonSharp.Interpreter.dll", "MoonSharp.VsCodeDebugger.dll",
-
-                    "Microsoft.CodeAnalysis.dll", "Microsoft.CodeAnalysis.CSharp.dll",
-                    "Microsoft.CodeAnalysis.CSharp.Scripting.dll", "Microsoft.CodeAnalysis.Scripting.dll",
-
-                    "System.Reflection.Metadata.dll", "System.Collections.Immutable.dll",
-                    "System.Runtime.CompilerServices.Unsafe.dll"
-                };
-
-                filesToUpdate = filesToUpdate.Concat(Directory.EnumerateFiles(luaCsPath, "*.dll", SearchOption.TopDirectoryOnly)
-                        .Concat(Directory.EnumerateFiles(luaCsPath, "*.json", SearchOption.TopDirectoryOnly)).Select(s => Path.GetFileName(s))).ToArray();
+                string[] filesToUpdate = trackingFiles.Concat(Directory.EnumerateFiles(luaCsPath, "*.dll", SearchOption.AllDirectories)
+                        .Where(s => s.Contains("mscordaccore_amd64_amd64")).Select(s => Path.GetFileName(s))).ToArray();
 
                 try
                 {

@@ -21,23 +21,9 @@ namespace Barotrauma
             {
                 string path = Path.GetDirectoryName(luaPackage.Path);
 
-                string[] filesToCopy = new string[]
-                {
-                    "Barotrauma.dll", "Barotrauma.deps.json", "Barotrauma.pdb",
-                    "0Harmony.dll", "Mono.Cecil.dll",
-                    "Sigil.dll",
-                    "Mono.Cecil.Mdb.dll", "Mono.Cecil.Pdb.dll",
-                    "Mono.Cecil.Rocks.dll", "MonoMod.Common.dll",
-                    "MoonSharp.Interpreter.dll", "MoonSharp.VsCodeDebugger.dll",
+                string[] filesToCopy = trackingFiles.Concat(Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories)
+                    .Where(s => s.Contains("mscordaccore_amd64_amd64")).Select(s => Path.GetFileName(s))).ToArray();
 
-                    "Microsoft.CodeAnalysis.dll", "Microsoft.CodeAnalysis.CSharp.dll",
-                    "Microsoft.CodeAnalysis.CSharp.Scripting.dll", "Microsoft.CodeAnalysis.Scripting.dll",
-
-                    "System.Reflection.Metadata.dll", "System.Collections.Immutable.dll",
-                    "System.Runtime.CompilerServices.Unsafe.dll"
-                };
-                filesToCopy = filesToCopy.Concat(Directory.EnumerateFiles(path, "*.dll", SearchOption.TopDirectoryOnly)
-                        .Concat(Directory.EnumerateFiles(path, "*.json", SearchOption.TopDirectoryOnly)).Select(s => Path.GetFileName(s))).ToArray();
                 CreateMissingDirectory();
 
                 File.Move("Barotrauma.dll", "Temp/Original/Barotrauma.dll", true);
@@ -58,11 +44,13 @@ namespace Barotrauma
                 }
 
                 File.WriteAllText(LuaCsSetup.VersionFile, luaPackage.ModVersion);
+#if WINDOWS
                 File.WriteAllText("LuaDedicatedServer.bat", $"\"%LocalAppData%/Daedalic Entertainment GmbH/Barotrauma/WorkshopMods/Installed/{LuaCsSetup.LuaForBarotraumaId}/Binary/DedicatedServer.exe\"");
+#endif
             }
             catch (UnauthorizedAccessException e)
             {
-                LuaCsLogger.LogError("You seem to already have Client Side LuaCs installed, if you are trying to reinstall, make sure uninstall it first (mainmenu button located top left).", LuaCsMessageOrigin.LuaCs);
+                LuaCsLogger.LogError($"Unauthorized file access exception. This usually means you already have LuaCs installed. ${e}", LuaCsMessageOrigin.LuaCs);
 
                 return;
             }

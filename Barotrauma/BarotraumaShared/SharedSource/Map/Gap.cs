@@ -578,8 +578,8 @@ namespace Barotrauma
                 }
                 else
                 {
-                    hull1.LethalPressure = 0.0f;
-                    hull2.LethalPressure = 0.0f;
+                    hull1.LethalPressure -= Hull.PressureDropSpeed * deltaTime;
+                    hull2.LethalPressure -= Hull.PressureDropSpeed * deltaTime;
                 }
             }
         }
@@ -643,7 +643,7 @@ namespace Barotrauma
                 }
                 else
                 {
-                    hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : 10.0f) * deltaTime;
+                    hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : Hull.PressureBuildUpSpeed) * deltaTime;
                 }
             }
             else
@@ -658,7 +658,7 @@ namespace Barotrauma
                 }
                 if (hull1.WaterVolume >= hull1.Volume / Hull.MaxCompress)
                 {
-                    hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : 10.0f) * deltaTime;
+                    hull1.LethalPressure += ((Submarine != null && Submarine.AtDamageDepth) ? 100.0f : Hull.PressureBuildUpSpeed) * deltaTime;
                 }
             }
         }
