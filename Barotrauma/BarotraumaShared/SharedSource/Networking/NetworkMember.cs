@@ -35,6 +35,7 @@ namespace Barotrauma.Networking
         MEDICAL,         //medical clinic
         TRANSFER_MONEY,      // wallet transfers
         REWARD_DISTRIBUTION, // wallet reward distribution
+        CIRCUITBOX,
         READY_CHECK,
         READY_TO_SPAWN,
         
@@ -82,11 +83,12 @@ namespace Barotrauma.Networking
         STARTGAMEFINALIZE,  //finalize round initialization
         ENDGAME,
 
-        TRAITOR_MESSAGE,
         MISSION,
         EVENTACTION,
+        TRAITOR_MESSAGE,
         CREW,               //anything related to managing bots in multiplayer
         MEDICAL,            //medical clinic
+        CIRCUITBOX,
         MONEY,
         READY_CHECK,        //start, end and update a ready check
         
@@ -116,14 +118,6 @@ namespace Barotrauma.Networking
                 EntityId: entity.ID);
     }
 
-    enum TraitorMessageType
-    {
-        Server,
-        ServerMessageBox,
-        Objective,
-        Console
-    }
-
     enum VoteType
     {
         Unknown,
@@ -135,7 +129,8 @@ namespace Barotrauma.Networking
         PurchaseAndSwitchSub,
         PurchaseSub,
         SwitchSub,
-        TransferMoney
+        TransferMoney,
+        Traitor,
     }
 
     public enum ReadyCheckState

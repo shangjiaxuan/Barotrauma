@@ -28,6 +28,45 @@ namespace Barotrauma
             
         }
 
+        private static void CopyFolder(string sourceDirName, string destDirName, bool copySubDirs, bool overwriteExisting = false)
+        {
+            // Get the subdirectories for the specified directory.
+            DirectoryInfo dir = new DirectoryInfo(sourceDirName);
+
+            if (!dir.Exists)
+            {
+                throw new System.IO.DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + sourceDirName);
+            }
+
+            IEnumerable<DirectoryInfo> dirs = dir.GetDirectories();
+            // If the destination directory doesn't exist, create it.
+            if (!Directory.Exists(destDirName))
+            {
+                Directory.CreateDirectory(destDirName);
+            }
+
+            // Get the files in the directory and copy them to the new location.
+            IEnumerable<FileInfo> files = dir.GetFiles();
+            foreach (FileInfo file in files)
+            {
+                string tempPath = Path.Combine(destDirName, file.Name);
+                if (!overwriteExisting && File.Exists(tempPath)) { continue; }
+                file.CopyTo(tempPath, true);
+            }
+
+            // If copying subdirectories, copy them and their contents to new location.
+            if (copySubDirs)
+            {
+                foreach (DirectoryInfo subdir in dirs)
+                {
+                    string tempPath = Path.Combine(destDirName, subdir.Name);
+                    CopyFolder(subdir.FullName, tempPath, copySubDirs, overwriteExisting);
+                }
+            }
+        }
+
         private async void DownloadWorkshopItemAsync(WorkshopItemDownload download, bool startDownload = false)
         {
             if (startDownload)
@@ -45,7 +84,7 @@ namespace Barotrauma
                 }
                 
                 itemsBeingDownloaded.Remove(download);
-                SaveUtil.CopyFolder(download.Item.Directory, download.Destination, true, true);
+                CopyFolder(download.Item.Directory, download.Destination, true, true);
                 return;
             }
         }

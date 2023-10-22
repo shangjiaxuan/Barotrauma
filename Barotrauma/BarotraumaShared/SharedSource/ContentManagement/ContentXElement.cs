@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -52,7 +52,7 @@ namespace Barotrauma
             => Element.Descendants().Select(e => new ContentXElement(ContentPath, e));
 
         public IEnumerable<ContentXElement> GetChildElements(string name)
-            => Elements().Where(e => string.Equals(name, e.Name.LocalName, StringComparison.InvariantCultureIgnoreCase));
+            => Elements().Where(e => string.Equals(name, e.Name.LocalName, StringComparison.OrdinalIgnoreCase));
 
         public XAttribute? GetAttribute(string name) => Element.GetAttribute(name);
         
@@ -76,6 +76,7 @@ namespace Barotrauma
         public string[]? GetAttributeStringArray(string key, string[]? def, bool convertToLowerInvariant = false) => Element.GetAttributeStringArray(key, def, convertToLowerInvariant);
         public ContentPath? GetAttributeContentPath(string key) => Element.GetAttributeContentPath(key, ContentPath);
         public int GetAttributeInt(string key, int def) => Element.GetAttributeInt(key, def);
+        public ushort GetAttributeUInt16(string key, ushort def) => Element.GetAttributeUInt16(key, def);
         public int[]? GetAttributeIntArray(string key, int[]? def) => Element.GetAttributeIntArray(key, def);
         public ushort[]? GetAttributeUshortArray(string key, ushort[]? def) => Element.GetAttributeUshortArray(key, def);
         public float GetAttributeFloat(string key, float def) => Element.GetAttributeFloat(key, def);
@@ -159,7 +160,7 @@ namespace Barotrauma
         {
             DebugConsole.AddWarning("Using FromPackage on xpath. Will not evaluate path changes in inheritance!");
             
-            return new ContentXElement(ContentPath.FromRawNoConcrete(contentPackage, ""), element);
+            return new ContentXElement(ContentPath.FromRaw(contentPackage, ""), element);
         }
 
         public static IEnumerable<ContentXElement> Elements(this IEnumerable<ContentXElement> elements)

@@ -745,6 +745,13 @@ namespace Barotrauma
         {
             if (character.DisableImpactDamageTimer > 0.0f) { return; }
 
+            if (f2.Body?.UserData is Item) 
+            { 
+                //no impact damage from items
+                //items that can impact characters (melee weapons, projectiles) should handle the damage themselves
+                return; 
+            }
+
             Vector2 normal = localNormal;
             float impact = Vector2.Dot(velocity, -normal);
             if (f1.Body == Collider.FarseerBody || !Collider.Enabled)
@@ -754,12 +761,14 @@ namespace Barotrauma
 
                 if (isNotRemote)
                 {
-                    if (impact > ImpactTolerance)
+                    float impactTolerance = ImpactTolerance;
+                    if (character.Stun > 0.0f) { impactTolerance *= 0.5f; }
+                    if (impact > impactTolerance)
                     {
                         impactPos = ConvertUnits.ToDisplayUnits(impactPos);
-                        if (character.Submarine != null) impactPos += character.Submarine.Position;
+                        if (character.Submarine != null) { impactPos += character.Submarine.Position; }
 
-                        float impactDamage = Math.Min((impact - ImpactTolerance) * ImpactDamageMultiplayer, character.MaxVitality * MaxImpactDamage);
+                        float impactDamage = GetImpactDamage(impact, impactTolerance);
 
                         var should = GameMain.LuaCs.Hook.Call<float?>("changeFallDamage", impactDamage, character, impactPos, velocity);
 
@@ -770,7 +779,7 @@ namespace Barotrauma
 
                         character.LastDamageSource = null;
                         character.AddDamage(impactPos, AfflictionPrefab.ImpactDamage.Instantiate(impactDamage).ToEnumerable(), 0.0f, true);
-                        strongestImpact = Math.Max(strongestImpact, impact - ImpactTolerance);
+                        strongestImpact = Math.Max(strongestImpact, impact - impactTolerance);
                         character.ApplyStatusEffects(ActionType.OnImpact, 1.0f);
                         //briefly disable impact damage
                         //otherwise the character will take damage multiple times when for example falling, 
@@ -782,6 +791,12 @@ namespace Barotrauma
             }
 
             ImpactProjSpecific(impact, f1.Body);
+        }
+
+        public float GetImpactDamage(float impact, float? impactTolerance = null)
+        {
+            float tolerance = impactTolerance ?? ImpactTolerance;
+            return Math.Min((impact - tolerance) * ImpactDamageMultiplayer, character.MaxVitality * MaxImpactDamage);
         }
 
         private readonly List<Limb> connectedLimbs = new List<Limb>();
@@ -1031,7 +1046,12 @@ namespace Barotrauma
             
             CurrentHull = newHull;
             character.Submarine = currentHull?.Submarine;
-            character.AttachedProjectiles.ForEach(p => p?.Item?.UpdateTransform());
+            foreach (var attachedProjectile in character.AttachedProjectiles)
+            {
+                attachedProjectile.Item.CurrentHull = currentHull;
+                attachedProjectile.Item.Submarine = character.Submarine;
+                attachedProjectile.Item.UpdateTransform();
+            }
         }
 
         private void PreventOutsideCollision()
@@ -1331,6 +1351,11 @@ namespace Barotrauma
                     if (Collider.LinearVelocity == Vector2.Zero)
                     {
                         character.IsRagdolled = true;
+                        if (character.IsBot)
+                        {
+                            // Seems to work without this on player controlled characters -> not sure if we should call it always or just for the bots.
+                            character.SetInput(InputType.Ragdoll, hit: false, held: true);
+                        }
                     }
                 }
             }
@@ -1789,12 +1814,6 @@ namespace Barotrauma
             Character.Latchers.ForEachMod(l => l?.DeattachFromBody(reset: true));
             Character.Latchers.Clear();
 
-            if (detachProjectiles)
-            {
-                character.AttachedProjectiles.ForEachMod(p => p?.Unstick());
-                character.AttachedProjectiles.Clear();
-            }
-
             Vector2 limbMoveAmount = forceMainLimbToCollider ? simPosition - MainLimb.SimPosition : simPosition - Collider.SimPosition;
             if (lerp)
             {
@@ -1831,7 +1850,7 @@ namespace Barotrauma
         protected void TrySetLimbPosition(Limb limb, Vector2 original, Vector2 simPosition, float rotation, bool lerp = false, bool ignorePlatforms = true)
         {
             Vector2 movePos = simPosition;
-
+            Vector2 prevPosition = limb.body.SimPosition;
             if (Vector2.DistanceSquared(original, simPosition) > 0.0001f)
             {
                 Category collisionCategory = Physics.CollisionWall | Physics.CollisionLevel;
@@ -1858,6 +1877,16 @@ namespace Barotrauma
                 limb.body.SetTransform(movePos, rotation);
                 limb.PullJointWorldAnchorB = limb.PullJointWorldAnchorA;
                 limb.PullJointEnabled = false;
+            }
+            foreach (var attachedProjectile in character.AttachedProjectiles)
+            {
+                if (attachedProjectile.IsAttachedTo(limb.body))
+                {
+                    attachedProjectile.Item.SetTransform(
+                        attachedProjectile.Item.SimPosition + (movePos - prevPosition), 
+                        attachedProjectile.Item.body.Rotation, 
+                        findNewHull: false);
+                }
             }
         }
 

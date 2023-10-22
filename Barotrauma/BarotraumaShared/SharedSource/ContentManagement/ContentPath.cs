@@ -1,12 +1,9 @@
 ﻿#nullable enable
 
+using Barotrauma.IO;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Barotrauma.IO;
-using System.Xml.Linq;
-using System.Diagnostics;
 
 namespace Barotrauma
 {
@@ -77,7 +74,6 @@ namespace Barotrauma
                         ?? allPackages.FirstOrDefault(p => p.Name == otherModName)
                         ?? allPackages.FirstOrDefault(p => p.NameMatches(otherModName))
                         ?? throw new MissingContentPackageException(ContentPackage, otherModName.Value);
-                    Debug.Assert(!IsVanilla(otherMod));
 					cachedValue = cachedValue.Replace(string.Format(OtherModDirFmt, otherModName.Value), Path.GetDirectoryName(otherMod.Path));
 				}
                 cachedValue = cachedValue.CleanUpPath();
@@ -271,9 +267,24 @@ namespace Barotrauma
         public bool isVanilla { get; private set; }
 
         public static ContentPath FromRaw(string? rawValue)
-            => new ContentPath((ContentPackage?)null, rawValue);
+            => FromRaw((ContentPackage?)null, rawValue);
 
-        public static ContentPath FromRawNoConcrete(ContentPackage? contentPackage, string? rawValue)
+        /*
+         *  wierd logic
+        private static ContentPath prevCreatedRaw;
+        public static ContentPath FromRaw(ContentPackage? contentPackage, string? rawValue)
+        {
+            var newRaw = new ContentPath(contentPackage, rawValue);
+            if (prevCreatedRaw is not null && prevCreatedRaw.ContentPackage == contentPackage &&
+                prevCreatedRaw.RawValue == rawValue)
+            {
+                newRaw.cachedValue = prevCreatedRaw.Value;
+            }
+            prevCreatedRaw = newRaw;
+            return newRaw;
+        }*/
+
+        public static ContentPath FromRaw(ContentPackage? contentPackage, string? rawValue)
             => new ContentPath(contentPackage, rawValue);
 
         public static ContentPath FromRaw(ContentPath? parent, string? rawValue)
@@ -345,8 +356,8 @@ namespace Barotrauma
             return HashCode.Combine(RawValue, ContentPackage, cachedValue, cachedFullPath);
         }
 
-        public bool IsNullOrEmpty() => string.IsNullOrEmpty(Value);
-        public bool IsNullOrWhiteSpace() => string.IsNullOrWhiteSpace(Value);
+        public bool IsPathNullOrEmpty() => string.IsNullOrEmpty(Value);
+        public bool IsPathNullOrWhiteSpace() => string.IsNullOrWhiteSpace(Value);
 
         public bool EndsWith(string suffix) => Value.EndsWith(suffix, StringComparison.OrdinalIgnoreCase);
         

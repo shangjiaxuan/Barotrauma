@@ -6,8 +6,8 @@ Register("System.Exception")
 Register("System.Console")
 Register("System.Exception")
 
-RegisterBarotrauma("Success`2[[Barotrauma.ContentPackage],[System.Exception]]")
-RegisterBarotrauma("Failure`2[[Barotrauma.ContentPackage],[System.Exception]]")
+RegisterBarotrauma("Success`2")
+RegisterBarotrauma("Failure`2")
 
 RegisterBarotrauma("LuaSByte")
 RegisterBarotrauma("LuaByte")
@@ -24,8 +24,7 @@ RegisterBarotrauma("GameMain")
 RegisterBarotrauma("Networking.BanList")
 RegisterBarotrauma("Networking.BannedPlayer")
 
-RegisterBarotrauma("Range`1[System.Single]")
-RegisterBarotrauma("Range`1[System.Int32]")
+RegisterBarotrauma("Range`1")
 
 RegisterBarotrauma("RichString")
 RegisterBarotrauma("Identifier")
@@ -217,7 +216,6 @@ RegisterBarotrauma("SubmarineFile")
 RegisterBarotrauma("TalentsFile")
 RegisterBarotrauma("TalentTreesFile")
 RegisterBarotrauma("TextFile")
-RegisterBarotrauma("TraitorMissionsFile")
 RegisterBarotrauma("TutorialsFile")
 RegisterBarotrauma("UIStyleFile")
 RegisterBarotrauma("UpgradeModulesFile")
@@ -241,8 +239,15 @@ RegisterBarotrauma("ItemInventory")
 RegisterBarotrauma("Inventory+ItemSlot")
 RegisterBarotrauma("FireSource")
 RegisterBarotrauma("AutoItemPlacer")
+RegisterBarotrauma("CircuitBoxConnection")
+RegisterBarotrauma("CircuitBoxComponent")
+RegisterBarotrauma("CircuitBoxNode")
+RegisterBarotrauma("CircuitBoxWire")
+RegisterBarotrauma("CircuitBoxInputOutputNode")
+RegisterBarotrauma("CircuitBoxSelectable")
+RegisterBarotrauma("CircuitBoxSizes")
 
-local componentsToRegister = { "DockingPort", "Door", "GeneticMaterial", "Growable", "Holdable", "LevelResource", "ItemComponent", "ItemLabel", "LightComponent", "Controller", "Deconstructor", "Engine", "Fabricator", "OutpostTerminal", "Pump", "Reactor", "Steering", "PowerContainer", "Projectile", "Repairable", "Rope", "Scanner", "ButtonTerminal", "ConnectionPanel", "CustomInterface", "MemoryComponent", "Terminal", "WifiComponent", "Wire", "TriggerComponent", "ElectricalDischarger", "EntitySpawnerComponent", "ProducedItem", "VineTile", "GrowthSideExtension", "IdCard", "MeleeWeapon", "Pickable", "AbilityItemPickingTime", "Propulsion", "RangedWeapon", "AbilityRangedWeapon", "RepairTool", "Sprayer", "Throwable", "ItemContainer", "AbilityItemContainer", "Ladder", "LimbPos", "AbilityDeconstructedItem", "AbilityItemCreationMultiplier", "AbilityItemDeconstructedInventory", "MiniMap", "OxygenGenerator", "Sonar", "SonarTransducer", "Vent", "NameTag", "Planter", "Powered", "PowerTransfer", "Quality", "RemoteController", "AdderComponent", "AndComponent", "ArithmeticComponent", "ColorComponent", "ConcatComponent", "Connection", "DelayComponent", "DivideComponent", "EqualsComponent", "ExponentiationComponent", "FunctionComponent", "GreaterComponent", "ModuloComponent", "MotionSensor", "MultiplyComponent", "NotComponent", "OrComponent", "OscillatorComponent", "OxygenDetector", "RegExFindComponent", "RelayComponent", "SignalCheckComponent", "SmokeDetector", "StringComponent", "SubtractComponent", "TrigonometricFunctionComponent", "WaterDetector", "XorComponent", "StatusHUD", "Turret", "Wearable",
+local componentsToRegister = { "DockingPort", "Door", "GeneticMaterial", "Growable", "Holdable", "LevelResource", "ItemComponent", "ItemLabel", "LightComponent", "Controller", "Deconstructor", "Engine", "Fabricator", "OutpostTerminal", "Pump", "Reactor", "Steering", "PowerContainer", "Projectile", "Repairable", "Rope", "Scanner", "ButtonTerminal", "ConnectionPanel", "CustomInterface", "MemoryComponent", "Terminal", "WifiComponent", "Wire", "TriggerComponent", "ElectricalDischarger", "EntitySpawnerComponent", "ProducedItem", "VineTile", "GrowthSideExtension", "IdCard", "MeleeWeapon", "Pickable", "AbilityItemPickingTime", "Propulsion", "RangedWeapon", "AbilityRangedWeapon", "RepairTool", "Sprayer", "Throwable", "ItemContainer", "AbilityItemContainer", "Ladder", "LimbPos", "AbilityDeconstructedItem", "AbilityItemCreationMultiplier", "AbilityItemDeconstructedInventory", "MiniMap", "OxygenGenerator", "Sonar", "SonarTransducer", "Vent", "NameTag", "Planter", "Powered", "PowerTransfer", "Quality", "RemoteController", "AdderComponent", "AndComponent", "ArithmeticComponent", "ColorComponent", "ConcatComponent", "Connection", "CircuitBox", "DelayComponent", "DivideComponent", "EqualsComponent", "ExponentiationComponent", "FunctionComponent", "GreaterComponent", "ModuloComponent", "MotionSensor", "MultiplyComponent", "NotComponent", "OrComponent", "OscillatorComponent", "OxygenDetector", "RegExFindComponent", "RelayComponent", "SignalCheckComponent", "SmokeDetector", "StringComponent", "SubtractComponent", "TrigonometricFunctionComponent", "WaterDetector", "XorComponent", "StatusHUD", "Turret", "Wearable",
 "GridInfo", "PowerSourceGroup"
 }
 
@@ -382,8 +387,10 @@ RegisterBarotrauma("Skill")
 RegisterBarotrauma("SkillPrefab")
 RegisterBarotrauma("SkillSettings")
 
-RegisterBarotrauma("TraitorMissionPrefab")
-RegisterBarotrauma("TraitorMissionResult")
+RegisterBarotrauma("TraitorManager")
+RegisterBarotrauma("TraitorEvent")
+RegisterBarotrauma("TraitorEventPrefab")
+RegisterBarotrauma("TraitorManager+TraitorResults")
 
 Register("FarseerPhysics.Dynamics.Body")
 Register("FarseerPhysics.Dynamics.World")
@@ -399,27 +406,11 @@ end
 RegisterBarotrauma("Camera")
 RegisterBarotrauma("Key")
 
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.ItemPrefab]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.JobPrefab]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.CharacterPrefab]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.AfflictionPrefab]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.TalentPrefab]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.TalentTree]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.OrderPrefab]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.LevelGenerationParams]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.OutpostGenerationParams]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.RuinGeneration.RuinGenerationParams]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.LevelGenerationParams]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.LocationType]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.EventPrefab]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.EventSet]]")
-RegisterBarotrauma("PrefabCollection`1[[Barotrauma.EventManagerSettings]]")
+RegisterBarotrauma("PrefabCollection`1")
 
-RegisterBarotrauma("PrefabSelector`1[[Barotrauma.SkillSettings]]")
+RegisterBarotrauma("PrefabSelector`1")
 
-RegisterBarotrauma("Pair`2[[Barotrauma.JobPrefab],[System.Int32]]")
-
-RegisterBarotrauma("Range`1[System.Single]")
+RegisterBarotrauma("Pair`2")
 
 RegisterBarotrauma("Items.Components.Signal")
 RegisterBarotrauma("SubmarineInfo")

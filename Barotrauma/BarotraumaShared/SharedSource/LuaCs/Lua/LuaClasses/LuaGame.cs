@@ -489,9 +489,9 @@ namespace Barotrauma
             GameMain.Server.SendChatMessage(msg, messageType, sender, character);
         }
 
-        public static void SendTraitorMessage(Client client, string msg, Identifier missionid, TraitorMessageType type)
+        public static void SendTraitorMessage(WriteOnlyMessage message, Client client)
         {
-            GameMain.Server.SendTraitorMessage(client, msg, missionid, type);
+            GameMain.Server.SendTraitorMessage(message, client);
         }
 
         public static void SendDirectChatMessage(string sendername, string text, Character sender, ChatMessageType messageType = ChatMessageType.Private, Client client = null, string iconStyle = "")

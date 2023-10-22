@@ -112,6 +112,33 @@ jobs:
           archives_dir="$(realpath -m "$CI_DIR/archives")"
           mkdir -p "$archives_dir"
 
+          refs_dir="$(realpath -m "$CI_DIR/refs")"
+          mkdir -p "${refs_dir}"
+          mkdir -p "${refs_dir}/Windows"
+          mkdir -p "${refs_dir}/Linux"
+          mkdir -p "${refs_dir}/OSX"
+          
+          # Archive Refs, used by mod developers
+          cp "${artifacts_dir}/Windows/Client/Publicized/Barotrauma.dll" "${refs_dir}/Windows/Barotrauma.dll"
+          cp "${artifacts_dir}/Windows/Client/Publicized/DedicatedServer.dll" "${refs_dir}/Windows/DedicatedServer.dll"
+          cp "${artifacts_dir}/Linux/Client/Publicized/Barotrauma.dll" "${refs_dir}/Linux/Barotrauma.dll"
+          cp "${artifacts_dir}/Linux/Client/Publicized/DedicatedServer.dll" "${refs_dir}/Linux/DedicatedServer.dll"
+          cp "${artifacts_dir}/Mac/Client/Barotrauma.app/Contents/MacOS/Publicized/Barotrauma.dll" "${refs_dir}/OSX/Barotrauma.dll"
+          cp "${artifacts_dir}/Mac/Client/Barotrauma.app/Contents/MacOS/Publicized/DedicatedServer.dll" "${refs_dir}/OSX/DedicatedServer.dll"
+          cp "${artifacts_dir}/Windows/Client/Publicized/MonoGame.Framework.Windows.NetStandard.dll" "${refs_dir}/MonoGame.Framework.Windows.NetStandard.dll"
+          cp "${artifacts_dir}/Linux/Client/Publicized/MonoGame.Framework.Linux.NetStandard.dll" "${refs_dir}/MonoGame.Framework.Linux.NetStandard.dll"
+          cp "${artifacts_dir}/Mac/Client/Barotrauma.app/Contents/MacOS/Publicized/MonoGame.Framework.MacOS.NetStandard.dll" "${refs_dir}/MonoGame.Framework.MacOS.NetStandard.dll"
+          # Those are the same across all the platforms, so i guess it doesn't matter?
+          cp "${artifacts_dir}/Windows/Client/Publicized/0Harmony.dll" "${refs_dir}/0Harmony.dll"
+          cp "${artifacts_dir}/Windows/Client/Publicized/Farseer.NetStandard.dll" "${refs_dir}/Farseer.NetStandard.dll"
+          cp "${artifacts_dir}/Windows/Client/Publicized/Lidgren.NetStandard.dll" "${refs_dir}/Lidgren.NetStandard.dll"
+          cp "${artifacts_dir}/Windows/Client/Publicized/Mono.Cecil.dll" "${refs_dir}/Mono.Cecil.dll"
+          cp "${artifacts_dir}/Windows/Client/Publicized/MonoMod.Common.dll" "${refs_dir}/MonoMod.Common.dll"
+          cp "${artifacts_dir}/Windows/Client/Publicized/MoonSharp.Interpreter.dll" "${refs_dir}/MoonSharp.Interpreter.dll"
+          cp "${artifacts_dir}/Windows/Client/Publicized/XNATypes.dll" "${refs_dir}/XNATypes.dll"
+          cd "${refs_dir}"
+          zip -r "${archives_dir}/${ARCHIVE_BASE_NAME}_refs.zip" .
+
           for i in "${!RELEASES[@]}"; do
             [[ -z "${RELEASES[i]}" ]] && continue
             (
@@ -157,7 +184,7 @@ jobs:
           done
 
       - name: Publish release
-        uses: notpeelz/action-gh-create-release@a12edfc71daf5daa7922b931c28e2bf88d3b2ced # v5.0.0
+        uses: notpeelz/action-gh-create-release@c1bebd17c8a128e8db4165a68be4dc4e3f106ff1 # v5.0.1
         with:
           target: ${{ inputs.target }}
           tag: ${{ inputs.tag }}
@@ -168,3 +195,4 @@ jobs:
           files: |
             ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_{build,patch}_{windows,linux,mac}_{client,server}.zip
             ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_{build,patch}_linux_{client,server}.tar.gz
+            ${{ env.CI_DIR }}/archives/${{ env.ARCHIVE_BASE_NAME }}_refs.zip
