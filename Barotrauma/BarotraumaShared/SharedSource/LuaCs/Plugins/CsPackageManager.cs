@@ -5,12 +5,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using Barotrauma.Steam;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using MonoMod.Utils;
+
+// ReSharper disable InconsistentNaming
 
 namespace Barotrauma;
 
@@ -69,10 +72,20 @@ public sealed class CsPackageManager : IDisposable
             .ToString(),
         ScriptParseOptions);
 
+    private readonly string[] _publicizedAssembliesToLoad =
+    {
+#if CLIENT
+        "Barotrauma.dll"
+#elif SERVER
+        "DedicatedServer.dll"
+#endif
+    };
+    
+
     private const string SCRIPT_FILE_REGEX = "*.cs";
     private const string ASSEMBLY_FILE_REGEX = "*.dll";
 
-    private readonly float _assemblyUnloadTimeoutSeconds = 4f;
+    private readonly float _assemblyUnloadTimeoutSeconds = 6f;
     private Guid _publicizedAssemblyLoader;
     private readonly List<ContentPackage> _currentPackagesByLoadOrder = new();
     private readonly Dictionary<ContentPackage, ImmutableList<ContentPackage>> _packagesDependencies = new();
@@ -147,12 +160,12 @@ public sealed class CsPackageManager : IDisposable
     /// <summary>
     /// Whether or not plugins' types have been instantiated.
     /// </summary>
-    public bool PluginsInitialized { get; private set; } = false;
+    public bool PluginsInitialized { get; private set; }
 
     /// <summary>
     /// Whether or not plugins are fully loaded.
     /// </summary>
-    public bool PluginsLoaded { get; private set; } = false;
+    public bool PluginsLoaded { get; private set; }
 
     public IEnumerable<ContentPackage> GetCurrentPackagesByLoadOrder() => _currentPackagesByLoadOrder;
 
@@ -202,10 +215,19 @@ public sealed class CsPackageManager : IDisposable
     /// </summary>
     public event Action OnDispose; 
 
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void Dispose()
     {
         // send events for cleanup
-        OnDispose?.Invoke();
+        try
+        {
+            OnDispose?.Invoke();
+        }
+        catch (Exception e)
+        {
+            ModUtils.Logging.PrintError($"Error while executing Dispose event: {e.Message}");
+        }
+        
         // cleanup events
         if (OnDispose is not null)
         {
@@ -218,10 +240,15 @@ public sealed class CsPackageManager : IDisposable
         // cleanup plugins and assemblies
         ReflectionUtils.ResetCache();
         UnloadPlugins();
-
         // try cleaning up the assemblies
         _pluginTypes.Clear();   // remove assembly references
         _loadedPlugins.Clear();
+        _publicizedAssemblyLoader = Guid.Empty;
+        _packagesDependencies.Clear();
+        _loadedCompiledPackageAssemblies.Clear();
+        _reverseLookupGuidList.Clear();
+        _packageRunConfigs.Clear();
+        _currentPackagesByLoadOrder.Clear();
 
         // lua cleanup
         foreach (var kvp in _luaRegisteredTypes)
@@ -239,6 +266,7 @@ public sealed class CsPackageManager : IDisposable
         // we can't wait forever or app dies but we can try to be graceful
         while (!_assemblyManager.TryBeginDispose())
         {
+            Thread.Sleep(20);   // give the assembly context unloader time to run (async)
             if (_assemblyUnloadStartTime.AddSeconds(_assemblyUnloadTimeoutSeconds) > DateTime.Now)
             {
                 break;
@@ -246,8 +274,10 @@ public sealed class CsPackageManager : IDisposable
         }
         
         _assemblyUnloadStartTime = DateTime.Now;
+        Thread.Sleep(100);  // give the garbage collector time to finalize the disposed assemblies.
         while (!_assemblyManager.FinalizeDispose())
         {
+            Thread.Sleep(100);  // give the garbage collector time to finalize the disposed assemblies.
             if (_assemblyUnloadStartTime.AddSeconds(_assemblyUnloadTimeoutSeconds) > DateTime.Now)
             {
                 break;
@@ -257,17 +287,8 @@ public sealed class CsPackageManager : IDisposable
         _assemblyManager.OnAssemblyLoaded -= AssemblyManagerOnAssemblyLoaded;
         _assemblyManager.OnAssemblyUnloading -= AssemblyManagerOnAssemblyUnloading;
 
-        _publicizedAssemblyLoader = Guid.Empty;
-            
-        // clear lists after cleaning up
-        _packagesDependencies.Clear();
-        _loadedCompiledPackageAssemblies.Clear();
-        _reverseLookupGuidList.Clear();
-        _packageRunConfigs.Clear();
-        _currentPackagesByLoadOrder.Clear();
-
         AssembliesLoaded = false;
-        GC.SuppressFinalize(this);  
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>
@@ -285,64 +306,39 @@ public sealed class CsPackageManager : IDisposable
         _assemblyManager.OnAssemblyUnloading += AssemblyManagerOnAssemblyUnloading;
 
         // log error if some ACLs are still unloading (some assembly is still in use)
+        _assemblyManager.FinalizeDispose(); //Update lists
         if (_assemblyManager.IsCurrentlyUnloading)
         {
-            ModUtils.Logging.PrintError($"WARNING: Some mods from a previous session (lobby) are still loaded! This may result in undefined behaviour! Please restart your game. \nIf you wish to avoid this issue in the future, please disable the below mods and report the error to the mod author.");
+            ModUtils.Logging.PrintWarning($"WARNING: Some mods from a previous session (lobby) are still loaded! This may result in undefined behaviour!\nIf you notice any odd behaviour that only occurs after multiple lobbies, please restart your game.");
+            ModUtils.Logging.PrintWarning($"The below ACLs are still unloading:");
             foreach (var wkref in _assemblyManager.StillUnloadingACLs)
             {
-                ModUtils.Logging.PrintError($"The below ACL is still unloading:");
                 if (wkref.TryGetTarget(out var tgt))
                 {
-                    ModUtils.Logging.PrintError($"ACL Name: {tgt.Name}");
+                    ModUtils.Logging.PrintWarning($"ACL Name: {tgt.FriendlyName}");
                     foreach (Assembly assembly in tgt.Assemblies)
                     {
-                        ModUtils.Logging.PrintError($"-- Assembly: {assembly.GetName()}");
+                        ModUtils.Logging.PrintWarning($"-- Assembly: {assembly.GetName()}");
                     }
                 }
             }
         }
-        
-        // load publicized assemblies
-        var publicizedDir = Path.Combine(Environment.CurrentDirectory, "Publicized");
-        
-        // if using workshop lua setup is checked, try to use the publicized assemblies in the content package there instead.
-        if (_luaCsSetup.Config.PreferToUseWorkshopLuaSetup)
-        {
-            var pck = LuaCsSetup.GetPackage(LuaCsSetup.LuaForBarotraumaId);
-            if (pck is not null)
-            {
-                publicizedDir = Path.Combine(pck.Dir, "Binary", "Publicized");
-            }
-        }
-        
-        ImmutableList<Assembly> publicizedAssemblies = ImmutableList<Assembly>.Empty;
-        ImmutableList<string> list;
-        
-        try
-        {
-            // search for assemblies
-            list = Directory.GetFiles(publicizedDir, "*.dll")
-#if CLIENT
-                .Where(s => !s.ToLowerInvariant().EndsWith("dedicatedserver.dll"))
-#elif SERVER
-                .Where(s => !s.ToLowerInvariant().EndsWith("barotrauma.dll"))
-#endif
-                .ToImmutableList();
 
-            if (list.Count < 1)
-                throw new DirectoryNotFoundException("No publicized assemblies found.");
-        }
-        // no directory found, use the other one
-        catch (DirectoryNotFoundException dne)
+        ImmutableList<Assembly> publicizedAssemblies = ImmutableList<Assembly>.Empty;
+        List<string> publicizedAssembliesLocList = new();
+
+        foreach (string dllName in _publicizedAssembliesToLoad)
         {
+            GetFiles(publicizedAssembliesLocList, dllName);
+        }
+        
+        void GetFiles(List<string> list, string searchQuery)
+        {
+            var publicizedDir = Path.Combine(Environment.CurrentDirectory, "Publicized");
+            
+            // if using workshop lua setup is checked, try to use the publicized assemblies in the content package there instead.
             if (_luaCsSetup.Config.PreferToUseWorkshopLuaSetup)
             {
-                ModUtils.Logging.PrintError($"Unable to find <LuaCsPackage>/Binary/Publicized/ . Using Game folder instead.");
-                publicizedDir = Path.Combine(Environment.CurrentDirectory, "Publicized");
-            }
-            else
-            {
-                ModUtils.Logging.PrintError($"Unable to find <GameFolder>/Publicized/ . Using LuaCsPackage folder instead.");
                 var pck = LuaCsSetup.GetPackage(LuaCsSetup.LuaForBarotraumaId);
                 if (pck is not null)
                 {
@@ -350,18 +346,35 @@ public sealed class CsPackageManager : IDisposable
                 }
             }
             
-            // search for assemblies
-            list = Directory.GetFiles(publicizedDir, "*.dll")
-#if CLIENT
-                .Where(s => !s.ToLowerInvariant().EndsWith("dedicatedserver.dll"))
-#elif SERVER
-                .Where(s => !s.ToLowerInvariant().EndsWith("barotrauma.dll"))
-#endif
-                .ToImmutableList();
+            try
+            {
+                list.AddRange(Directory.GetFiles(publicizedDir, searchQuery));
+            }
+            // no directory found, use the other one
+            catch (DirectoryNotFoundException)
+            {
+                if (_luaCsSetup.Config.PreferToUseWorkshopLuaSetup)
+                {
+                    ModUtils.Logging.PrintError($"Unable to find <LuaCsPackage>/Binary/Publicized/ . Using Game folder instead.");
+                    publicizedDir = Path.Combine(Environment.CurrentDirectory, "Publicized");
+                }
+                else
+                {
+                    ModUtils.Logging.PrintError($"Unable to find <GameFolder>/Publicized/ . Using LuaCsPackage folder instead.");
+                    var pck = LuaCsSetup.GetPackage(LuaCsSetup.LuaForBarotraumaId);
+                    if (pck is not null)
+                    {
+                        publicizedDir = Path.Combine(pck.Dir, "Binary", "Publicized");
+                    }
+                }
+            
+                // search for assemblies
+                list.AddRange(Directory.GetFiles(publicizedDir, searchQuery));
+            }
         }
 
         // try load them into an acl
-        var loadState = _assemblyManager.LoadAssembliesFromLocations(list, "luacs_publicized_assemblies", ref _publicizedAssemblyLoader);
+        var loadState = _assemblyManager.LoadAssembliesFromLocations(publicizedAssembliesLocList, "luacs_publicized_assemblies", ref _publicizedAssemblyLoader);
 
         // loaded
         if (loadState is AssemblyLoadingSuccessState.Success)
@@ -454,8 +467,7 @@ public sealed class CsPackageManager : IDisposable
         if (reliableMap && OrderAndFilterPackagesByDependencies(
                 _packagesDependencies,
                 out var readyToLoad,
-                out var cannotLoadPackages,
-                null))
+                out var cannotLoadPackages))
         {
             packagesToLoadInOrder.AddRange(readyToLoad);
             if (cannotLoadPackages is not null)
@@ -480,7 +492,8 @@ public sealed class CsPackageManager : IDisposable
                 cp,
                 new LoadableData(
                     TryScanPackagesForAssemblies(cp, out var list1) ? list1 : null,
-                    TryScanPackageForScripts(cp, out var list2) ? list2 : null)))
+                    TryScanPackageForScripts(cp, out var list2) ? list2 : null,
+                    GetRunConfigForPackage(cp))))
             .ToImmutableDictionary();
         
         HashSet<ContentPackage> badPackages = new();
@@ -564,11 +577,13 @@ public sealed class CsPackageManager : IDisposable
             
                 // try compile
                 successState = _assemblyManager.LoadAssemblyFromMemory(
-                    pair.Key.Name.Replace(" ",""), 
+                    pair.Value.config.UseInternalAssemblyName ? "CompiledAssembly" : pair.Key.Name.Replace(" ",""), 
                     syntaxTrees, 
                     null, 
                     CompilationOptions, 
-                     pair.Key.Name, ref id, publicizedAssemblies);
+                     pair.Key.Name, 
+                    ref id, 
+                    pair.Value.config.UseNonPublicizedAssemblies ? null : publicizedAssemblies);
 
                 if (successState is not AssemblyLoadingSuccessState.Success)
                 {
@@ -611,21 +626,19 @@ public sealed class CsPackageManager : IDisposable
 
         bool ShouldRunPackage(ContentPackage package, RunConfig config)
         {
-            if (config.AutoGenerated)
-                return false;
             return (!_luaCsSetup.Config.TreatForcedModsAsNormal && config.IsForced())
                    || (ContentPackageManager.EnabledPackages.All.Contains(package) && config.IsForcedOrStandard());
         }
 
-        void UpdatePackagesToDisable(ref HashSet<ContentPackage> list, 
+        void UpdatePackagesToDisable(ref HashSet<ContentPackage> set, 
             ContentPackage newDisabledPackage, 
             IEnumerable<KeyValuePair<ContentPackage, ImmutableList<ContentPackage>>> dependenciesMap)
         {
-            list.Add(newDisabledPackage);
+            set.Add(newDisabledPackage);
             foreach (var package in dependenciesMap)
             {
                 if (package.Value.Contains(newDisabledPackage))
-                    list.Add(newDisabledPackage);
+                    set.Add(newDisabledPackage);
             }
         }
     }
@@ -655,7 +668,7 @@ public sealed class CsPackageManager : IDisposable
             // init
             foreach (var plugin in contentPlugins.Value)
             {
-                TryRun(() => plugin.Initialize(), $"{nameof(IAssemblyPlugin.Initialize)}", plugin.GetType().Name);
+                TryRun(() => plugin.Initialize(), $"{nameof(IAssemblyPlugin.Initialize)}", $"CP: {_reverseLookupGuidList[contentPlugins.Key].Name} Plugin: {plugin.GetType().Name}");
             }
         }
         
@@ -664,7 +677,7 @@ public sealed class CsPackageManager : IDisposable
             // load complete
             foreach (var plugin in contentPlugins.Value)
             {
-                TryRun(() => plugin.OnLoadCompleted(), $"{nameof(IAssemblyPlugin.OnLoadCompleted)}", plugin.GetType().Name);
+                TryRun(() => plugin.OnLoadCompleted(), $"{nameof(IAssemblyPlugin.OnLoadCompleted)}", $"CP: {_reverseLookupGuidList[contentPlugins.Key].Name} Plugin: {plugin.GetType().Name}");
             }
         }
 
@@ -698,7 +711,7 @@ public sealed class CsPackageManager : IDisposable
             // init
             foreach (var plugin in contentPlugins.Value)
             {
-                TryRun(() => plugin.PreInitPatching(), $"{nameof(IAssemblyPlugin.PreInitPatching)}", plugin.GetType().Name);
+                TryRun(() => plugin.PreInitPatching(), $"{nameof(IAssemblyPlugin.PreInitPatching)}", $"CP: {_reverseLookupGuidList[contentPlugins.Key].Name} Plugin: {plugin.GetType().Name}");
             }
         }
 
@@ -741,21 +754,20 @@ public sealed class CsPackageManager : IDisposable
                 try
                 {
                    plugin = (IAssemblyPlugin)Activator.CreateInstance(type);
+                   _loadedPlugins[pair.Key].Add(plugin);
                 }
                 catch (Exception e)
                 {
                     ModUtils.Logging.PrintError($"{nameof(CsPackageManager)}: Error while instantiating plugin of type {type}. Now disposing...");
-#if DEBUG
                     ModUtils.Logging.PrintError($"{nameof(CsPackageManager)}: Details: {e.Message} | {e.InnerException}");
-#endif
-                    TryRun(() => plugin?.Dispose(), "Dispose", type.FullName ?? type.Name);
 
-                    plugin = null;
+                    if (plugin is not null)
+                    {
+                        // ReSharper disable once AccessToModifiedClosure
+                        TryRun(() => plugin?.Dispose(), nameof(IAssemblyPlugin.Dispose), type.FullName ?? type.Name);
+                        plugin = null;
+                    }
                 }
-                if (plugin is not null)
-                    _loadedPlugins[pair.Key].Add(plugin);
-                else
-                    ModUtils.Logging.PrintError($"{nameof(CsPackageManager)}: Error while instantiating plugin of type {type}");
             }
         }
 
@@ -772,7 +784,7 @@ public sealed class CsPackageManager : IDisposable
         {
             foreach (var plugin in contentPlugins.Value)
             {
-                TryRun(() => plugin.Dispose(), $"{nameof(IAssemblyPlugin.Dispose)}", plugin.GetType().Name);
+                TryRun(() => plugin.Dispose(), $"{nameof(IAssemblyPlugin.Dispose)}", $"CP: {_reverseLookupGuidList[contentPlugins.Key].Name} Plugin: {plugin.GetType().Name}");
             }
             contentPlugins.Value.Clear();
         }
@@ -816,9 +828,7 @@ public sealed class CsPackageManager : IDisposable
         catch (Exception e)
         {
             ModUtils.Logging.PrintError($"{nameof(CsPackageManager)}: Error while running {messageMethodName}() on plugin of type {messageTypeName}");
-#if DEBUG
             ModUtils.Logging.PrintError($"{nameof(CsPackageManager)}: Details: {e.Message} | {e.InnerException}");
-#endif
         }
     }
     
@@ -934,14 +944,10 @@ public sealed class CsPackageManager : IDisposable
                     }
                     else
                     {
-                        ModUtils.Logging.PrintError($"Warning! The ContentPackage {package.Name} lists a dependency of (STEAMID: {dependency.SteamWorkshopId}, PackageName: {dependency.PackageName}) but it could not be found in the to-be-loaded CSharp packages list!");
+                        ModUtils.Logging.PrintWarning($"Warning: The ContentPackage {package.Name} lists a dependency of (STEAMID: {dependency.SteamWorkshopId}, PackageName: {dependency.PackageName}) but it could not be found in the to-be-loaded CSharp packages list!");
                         reliableMap = false;
                     }
                 }    
-            }
-            else
-            {
-                ModUtils.Logging.PrintMessage($"Warning! Could not retrieve RunConfig for ContentPackage {package.Name}!");
             }
         }
         
@@ -1032,7 +1038,7 @@ public sealed class CsPackageManager : IDisposable
                         if (!ContentPackageManager.EnabledPackages.All.Contains(dependency))
                         {
                             // present warning but allow loading anyways, better to let the user just disable the package if it's really an issue.
-                            ModUtils.Logging.PrintError(
+                            ModUtils.Logging.PrintWarning(
                                 $"Warning: the ContentPackage of {packageToProcess.Name} requires the Dependency {dependency.Name} but this package wasn't found in the enabled mods list!");
                         }
 
@@ -1082,7 +1088,7 @@ public sealed class CsPackageManager : IDisposable
         BadPackage
     }
 
-    private record LoadableData(ImmutableList<string> AssembliesFilePaths, ImmutableList<string> ScriptsFilePaths);
+    private record LoadableData(ImmutableList<string> AssembliesFilePaths, ImmutableList<string> ScriptsFilePaths, RunConfig config);
 
     #endregion
 }

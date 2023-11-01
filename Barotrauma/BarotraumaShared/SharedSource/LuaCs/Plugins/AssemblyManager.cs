@@ -25,7 +25,7 @@ namespace Barotrauma;
 /// Provides functionality for the loading, unloading and management of plugins implementing IAssemblyPlugin.
 /// All plugins are loaded into their own AssemblyLoadContext along with their dependencies.
 /// </summary>
-public partial class AssemblyManager
+public class AssemblyManager
 {
     #region ExternalAPI
     
@@ -143,15 +143,22 @@ public partial class AssemblyManager
             {
                 if (!_subTypesLookupCache.TryAdd(typeName, list1))
                 {
-                    ModUtils.Logging.PrintError($"{nameof(AssemblyManager)}: Unable to add subtypes to cache of type {typeName}!");
+                    ModUtils.Logging.PrintError(
+                        $"{nameof(AssemblyManager)}: Unable to add subtypes to cache of type {typeName}!");
                 }
             }
             else
             {
-                ModUtils.Logging.PrintMessage($"{nameof(AssemblyManager)}: Warning: No types found during search for subtypes of {typeName}");
+                ModUtils.Logging.PrintMessage(
+                    $"{nameof(AssemblyManager)}: Warning: No types found during search for subtypes of {typeName}");
             }
 
             return list1;
+        }
+        catch (Exception e)
+        {
+            this.OnException?.Invoke($"{nameof(AssemblyManager)}::{nameof(GetSubTypesInLoadedAssemblies)}() | Error: {e.Message}", e);
+            return ImmutableList<Type>.Empty;
         }
         finally
         {
@@ -187,7 +194,6 @@ public partial class AssemblyManager
     /// </summary>
     /// <param name="id"></param>
     /// <param name="types"></param>
-    /// <typeparam name="T"></typeparam>
     /// <returns></returns>
     public bool TryGetSubTypesFromACL(Guid id, out IEnumerable<Type> types)
     {
@@ -206,7 +212,7 @@ public partial class AssemblyManager
     /// Allows iteration over all types, including interfaces, in all loaded assemblies in the AsmMgr who's names match the string.
     /// Note: Will return the by-reference equivalent type if the type name is prefixed with "out " or "ref ".
     /// </summary>
-    /// <param name="name">The string name of the type to search for.</param>
+    /// <param name="typeName">The string name of the type to search for.</param>
     /// <returns>An Enumerator for matching types. List will be empty if bad params are supplied.</returns>
     public IEnumerable<Type> GetTypesByName(string typeName)
     {
@@ -243,12 +249,20 @@ public partial class AssemblyManager
                 types.Add(byRef ? t.MakeByRefType() : t);
                 return types;
             }
-            
+
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                t = assembly.GetType(typeName, false, false);
-                if (t is not null)
-                    types.Add(byRef ? t.MakeByRefType() : t);
+                try
+                {
+                    t = assembly.GetType(typeName, false, false);
+                    if (t is not null)
+                        types.Add(byRef ? t.MakeByRefType() : t);
+                }
+                catch (Exception e)
+                {
+                    this.OnException?.Invoke(
+                        $"{nameof(AssemblyManager)}::{nameof(GetTypesByName)}() | Error: {e.Message}", e);
+                }
             }
         }
         finally
@@ -296,11 +310,15 @@ public partial class AssemblyManager
         OpsLockLoaded.EnterReadLock();
         try
         {
-            return AssemblyLoadContext.Default.Assemblies
-                .SelectMany(a => a.GetSafeTypes())
+            return _defaultContextTypes
+                .Select(kvp => kvp.Value)
                 .Concat(LoadedACLs
-                    .SelectMany(kvp => kvp.Value.AssembliesTypes.Select(kv => kv.Value)))
+                    .SelectMany(kvp => kvp.Value?.AssembliesTypes.Select(kv => kv.Value)))
                 .ToImmutableList();
+        }
+        catch
+        {
+            return ImmutableList<Type>.Empty;
         }
         finally
         {
@@ -316,21 +334,42 @@ public partial class AssemblyManager
     /// <returns></returns>
     public IEnumerable<LoadedACL> GetAllLoadedACLs()
     {
+        OpsLockLoaded.EnterReadLock();
         try
         {
-            OpsLockLoaded.EnterReadLock();
+            if (!LoadedACLs.Any())
+            {
+                return ImmutableList<LoadedACL>.Empty;
+            }
+
             return LoadedACLs.Select(kvp => kvp.Value).ToImmutableList();
+        }
+        catch
+        {
+            return ImmutableList<LoadedACL>.Empty;
         }
         finally
         {
             OpsLockLoaded.ExitReadLock();
         }
-        
     }
 
     #endregion
 
     #region InternalAPI
+
+    /// <summary>
+    /// [Unsafe] Warning: only for use in nested threading functions. Requires care to manage access.
+    /// Does not make any guarantees about the state of the ACL after the list has been returned.
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.Synchronized | MethodImplOptions.NoInlining)]
+    internal ImmutableList<LoadedACL> UnsafeGetAllLoadedACLs()
+    {
+        if (LoadedACLs.IsEmpty)
+            return ImmutableList<LoadedACL>.Empty;
+        return LoadedACLs.Select(kvp => kvp.Value).ToImmutableList();
+    }
 
     /// <summary>
     /// Used by content package and plugin management to stop unloading of a given ACL until all plugins have gracefully closed.
@@ -360,6 +399,9 @@ public partial class AssemblyManager
         // validation
         if (compiledAssemblyName.IsNullOrWhiteSpace())
             return AssemblyLoadingSuccessState.BadName;
+
+        if (syntaxTree is null)
+            return AssemblyLoadingSuccessState.InvalidAssembly;
         
         if (!GetOrCreateACL(id, friendlyName, out var acl))
             return AssemblyLoadingSuccessState.ACLLoadFailure;
@@ -371,8 +413,18 @@ public partial class AssemblyManager
             return AssemblyLoadingSuccessState.AlreadyLoaded;
 
         // compile
-        var state = acl.Acl.CompileAndLoadScriptAssembly(compiledAssemblyName, syntaxTree, externalMetadataReferences,
-            compilationOptions, out var messages, externFileAssemblyRefs);
+        AssemblyLoadingSuccessState state;
+        string messages;
+        try
+        {
+            state = acl.Acl.CompileAndLoadScriptAssembly(compiledAssemblyName, syntaxTree, externalMetadataReferences,
+                compilationOptions, out messages, externFileAssemblyRefs);
+        }
+        catch (Exception e)
+        {
+            ModUtils.Logging.PrintError($"{nameof(AssemblyManager)}::{nameof(LoadAssemblyFromMemory)}() | Failed to compile and load assemblies for [ {compiledAssemblyName} / {friendlyName} ]! Details: {e.Message} | {e.StackTrace}");
+            return AssemblyLoadingSuccessState.InvalidAssembly;
+        }
 
         // get types
         if (state is AssemblyLoadingSuccessState.Success)
@@ -419,8 +471,10 @@ public partial class AssemblyManager
 
         if (filePaths is null)
         {
-            throw new ArgumentNullException(
+            var exception = new ArgumentNullException(
                 $"{nameof(AssemblyManager)}::{nameof(LoadAssembliesFromLocations)}() | file paths supplied is null!");
+            this.OnException?.Invoke($"Error: {exception.Message}", exception);
+            throw exception;
         }
         
         ImmutableList<string> assemblyFilePaths = filePaths.ToImmutableList();  // copy the list before loading
@@ -437,7 +491,7 @@ public partial class AssemblyManager
             if (state != AssemblyLoadingSuccessState.Success)
             {
                 DisposeACL(loadedAcl.Id);
-                ModUtils.Logging.PrintError($"ACL failed, unloading...");
+                ModUtils.Logging.PrintError($"ACL {friendlyName} failed, unloading...");
                 return state;
             }
             // build types list
@@ -463,17 +517,21 @@ public partial class AssemblyManager
         try
         {
             _subTypesLookupCache.Clear();
+            _defaultContextTypes = _defaultContextTypes.Clear();
 
             foreach (KeyValuePair<Guid, LoadedACL> loadedAcl in LoadedACLs)
             {
                 if (loadedAcl.Value.Acl is not null)
                 {
-                    foreach (Delegate del in IsReadyToUnloadACL.GetInvocationList())
+                    if (IsReadyToUnloadACL is not null)
                     {
-                        if (del is System.Func<LoadedACL, bool> { } func)
+                        foreach (Delegate del in IsReadyToUnloadACL.GetInvocationList())
                         {
-                            if (!func.Invoke(loadedAcl.Value))
-                                return false; // Not ready, exit
+                            if (del is System.Func<LoadedACL, bool> { } func)
+                            {
+                                if (!func.Invoke(loadedAcl.Value))
+                                    return false; // Not ready, exit
+                            }
                         }
                     }
 
@@ -485,6 +543,7 @@ public partial class AssemblyManager
                     UnloadingACLs.Add(new WeakReference<MemoryFileAssemblyContextLoader>(loadedAcl.Value.Acl, true));
                     loadedAcl.Value.ClearTypesList();
                     loadedAcl.Value.Acl.Unload();
+                    loadedAcl.Value.ClearACLRef();
                     OnACLUnload?.Invoke(loadedAcl.Value.Id);
                 }
             }
@@ -492,9 +551,10 @@ public partial class AssemblyManager
             LoadedACLs.Clear();
             return true;
         }
-        catch
+        catch(Exception e)
         {
             // should never happen
+            this.OnException?.Invoke($"{nameof(TryBeginDispose)}() | Error: {e.Message}", e);
             return false;
         }
         finally
@@ -512,6 +572,7 @@ public partial class AssemblyManager
         OpsLockUnloaded.EnterUpgradeableReadLock();
         try
         {
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced); // force the gc to collect unloaded acls.
             List<WeakReference<MemoryFileAssemblyContextLoader>> toRemove = new();
             foreach (WeakReference<MemoryFileAssemblyContextLoader> weakReference in UnloadingACLs)
             {
@@ -609,9 +670,9 @@ public partial class AssemblyManager
             }
 
         }
-        catch
+        catch(Exception e)
         {
-            // should never happen but in-case
+            this.OnException?.Invoke($"{nameof(GetOrCreateACL)}Error: {e.Message}", e);
             acl = null;
             return false;
         }
@@ -629,7 +690,15 @@ public partial class AssemblyManager
         OpsLockUnloaded.EnterWriteLock();
         try
         {
-            if (id.Equals(Guid.Empty) || !LoadedACLs.ContainsKey(id) || LoadedACLs[id] is null)
+            if (LoadedACLs.ContainsKey(id) && LoadedACLs[id] == null)
+            {
+                if (!LoadedACLs.TryRemove(id, out _))
+                {
+                    ModUtils.Logging.PrintWarning($"An ACL with the GUID {id.ToString()} was found as null. Unable to remove null ACL entry.");
+                }
+            }
+            
+            if (id.Equals(Guid.Empty) || !LoadedACLs.ContainsKey(id))
             {
                 return false; // nothing to dispose of
             }
@@ -644,13 +713,14 @@ public partial class AssemblyManager
             _subTypesLookupCache.Clear();
             UnloadingACLs.Add(new WeakReference<MemoryFileAssemblyContextLoader>(acl.Acl, true));
             acl.Acl.Unload();
+            acl.ClearACLRef();
             OnACLUnload?.Invoke(acl.Id);
 
             return true;
         }
-        catch
+        catch (Exception e)
         {
-            // should never happen
+            this.OnException?.Invoke($"{nameof(DisposeACL)}() | Error: {e.Message}", e);
             return false;
         }
         finally
@@ -677,8 +747,9 @@ public partial class AssemblyManager
                 .ToImmutableDictionary(t => t.FullName ?? t.Name, t => t);
             _subTypesLookupCache.Clear();
         }
-        catch(ArgumentException _)
+        catch(ArgumentException ae)
         {
+            this.OnException?.Invoke($"{nameof(RebuildTypesList)}() | Error: {ae.Message}", ae);
             try
             {
                 // some types must've had duplicate type names, build the list while filtering
@@ -699,6 +770,7 @@ public partial class AssemblyManager
             }
             catch (Exception e)
             {
+                this.OnException?.Invoke($"{nameof(RebuildTypesList)}() | Error: {e.Message}", e);
                 ModUtils.Logging.PrintError($"{nameof(AssemblyManager)}: Unable to create list of default assembly types! Default AssemblyLoadContext types searching not available.");
 #if DEBUG
                 ModUtils.Logging.PrintError($"{nameof(AssemblyManager)}: Exception Details :{e.Message} | {e.InnerException}");
@@ -716,8 +788,8 @@ public partial class AssemblyManager
     private ImmutableDictionary<string, Type> _defaultContextTypes;
     private readonly ConcurrentDictionary<Guid, LoadedACL> LoadedACLs = new();
     private readonly List<WeakReference<MemoryFileAssemblyContextLoader>> UnloadingACLs= new();
-    private readonly ReaderWriterLockSlim OpsLockLoaded = new ReaderWriterLockSlim();
-    private readonly ReaderWriterLockSlim OpsLockUnloaded = new ReaderWriterLockSlim();
+    private readonly ReaderWriterLockSlim OpsLockLoaded = new ();
+    private readonly ReaderWriterLockSlim OpsLockUnloaded = new ();
 
     #endregion
 
@@ -728,23 +800,37 @@ public partial class AssemblyManager
     {
         public readonly Guid Id;
         private ImmutableDictionary<string, Type> _assembliesTypes = ImmutableDictionary<string, Type>.Empty;
-        public readonly MemoryFileAssemblyContextLoader Acl;
-        private readonly AssemblyManager _manager;
+        public MemoryFileAssemblyContextLoader Acl { get; private set; }
 
         internal LoadedACL(Guid id, AssemblyManager manager, string friendlyName)
         {
             this.Id = id;
-            this.Acl = new(manager);
-            this._manager = manager;
-            this.Acl.FriendlyName = friendlyName;
+            this.Acl = new(manager)
+            {
+                FriendlyName = friendlyName
+            };
         }
-        public ImmutableDictionary<string, Type> AssembliesTypes => _assembliesTypes;
+        public ref readonly ImmutableDictionary<string, Type> AssembliesTypes => ref _assembliesTypes;
+
+        /// <summary>
+        /// Warning: For use by the Assembly Manager only! Do not call this method otherwise.
+        /// </summary>
+        internal void ClearACLRef()
+        {
+            Acl = null;
+        }
         
         /// <summary>
         /// Rebuild the list of types from assemblies loaded in the AsmCtxLoader.
         /// </summary>
         internal void RebuildTypesList()
         {
+            if (this.Acl is null)
+            {
+                ModUtils.Logging.PrintWarning($"{nameof(RebuildTypesList)}() | ACL with GUID {Id.ToString()} is null, cannot rebuild.");
+                return;
+            }
+            
             ClearTypesList();
             try
             {
@@ -752,7 +838,7 @@ public partial class AssemblyManager
                     .SelectMany(a => a.GetSafeTypes())
                     .ToImmutableDictionary(t => t.FullName ?? t.Name, t => t);
             }
-            catch(ArgumentException _)
+            catch(ArgumentException)
             {
                 // some types must've had duplicate type names, build the list while filtering
                 Dictionary<string, Type> types = new();
@@ -774,7 +860,7 @@ public partial class AssemblyManager
 
         internal void ClearTypesList()
         {
-            _assembliesTypes.Clear();
+            _assembliesTypes = ImmutableDictionary<string, Type>.Empty;
         }
     }
 
@@ -802,12 +888,12 @@ public static class AssemblyExtensions
             {
                 return re.Types.Where(x => x != null)!;
             }
-            catch (InvalidOperationException ioe)   
+            catch (InvalidOperationException)   
             {
                 return new List<Type>();
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return new List<Type>();
         }

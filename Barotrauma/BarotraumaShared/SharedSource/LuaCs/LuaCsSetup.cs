@@ -275,15 +275,14 @@ namespace Barotrauma
 
         public void Stop()
         {
-
+            PluginPackageManager.UnloadPlugins();            
+            
             // unregister types
             foreach (Type type in AssemblyManager.GetAllLoadedACLs().SelectMany(
                          acl => acl.AssembliesTypes.Select(kvp => kvp.Value)))
             {
                 UserData.UnregisterType(type, true);
             }
-            
-            PluginPackageManager.UnloadPlugins();   // stop plugin code execution
 
             if (Lua?.Globals is not null)
             {
@@ -310,6 +309,9 @@ namespace Barotrauma
             
             // we can only unload assemblies after clearing ModStore/references.
             PluginPackageManager.Dispose();
+#pragma warning disable CS0618
+            ACsMod.LoadedMods.Clear();
+#pragma warning restore CS0618
             
             Game = new LuaGame();
             Networking = new LuaCsNetworking();

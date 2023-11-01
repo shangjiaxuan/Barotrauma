@@ -153,11 +153,6 @@ namespace Barotrauma
                     return minVitality;
                 }
                 return vitality;
-
-            }
-            private set
-            {
-                vitality = value;
             }
         }
 
@@ -259,7 +254,7 @@ namespace Barotrauma
         public CharacterHealth(Character character)
         {
             this.Character = character;
-            Vitality = 100.0f;
+            vitality = 100.0f;
 
             DoesBleed = true;
             UseHealthWindow = false;
@@ -276,7 +271,7 @@ namespace Barotrauma
             this.Character = character;
             InitIrremovableAfflictions();
 
-            Vitality    = UnmodifiedMaxVitality;
+            vitality    = UnmodifiedMaxVitality;
 
             minVitality = character.IsHuman ? -100.0f : 0.0f;
 
@@ -987,7 +982,7 @@ namespace Barotrauma
 
         public void CalculateVitality()
         {
-            Vitality = MaxVitality;
+            vitality = MaxVitality;
             IsParalyzed = false;
             if (Unkillable || Character.GodMode) { return; }
 
@@ -1000,7 +995,7 @@ namespace Barotrauma
                 {
                     vitalityDecrease *= GetVitalityMultiplier(affliction, limbHealth);
                 }
-                Vitality -= vitalityDecrease;
+                vitality -= vitalityDecrease;
                 affliction.CalculateDamagePerSecond(vitalityDecrease);
 
                 if (affliction.Strength >= affliction.Prefab.MaxStrength &&
