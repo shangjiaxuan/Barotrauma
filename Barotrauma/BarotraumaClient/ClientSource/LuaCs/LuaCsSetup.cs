@@ -19,7 +19,7 @@ namespace Barotrauma
             List<ContentPackage> csharpMods = new List<ContentPackage>();
             foreach (ContentPackage cp in ContentPackageManager.EnabledPackages.All)
             {
-                if (Directory.Exists(cp.Dir + "/CSharp"))
+                if (Directory.Exists(cp.Dir + "/CSharp") || Directory.Exists(cp.Dir + "/bin"))
                 {
                     csharpMods.Add(cp);
                 }

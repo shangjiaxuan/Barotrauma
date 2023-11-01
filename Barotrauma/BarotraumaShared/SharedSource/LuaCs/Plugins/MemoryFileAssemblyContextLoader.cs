@@ -7,11 +7,11 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
-using System.Threading;
-using Barotrauma;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Emit;
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
+
+[assembly: InternalsVisibleTo("CompiledAssembly")]
 
 namespace Barotrauma;
 
@@ -23,20 +23,23 @@ namespace Barotrauma;
 public class MemoryFileAssemblyContextLoader : AssemblyLoadContext
 {
     // public
-    public string FriendlyName { get; set; } = null;
+    public string FriendlyName { get; set; }
     // ReSharper disable MemberCanBePrivate.Global
-    public Assembly CompiledAssembly { get; private set; } = null;
-    public byte[] CompiledAssemblyImage { get; private set; } = null;
+    public Assembly CompiledAssembly { get; private set; }
+    public byte[] CompiledAssemblyImage { get; private set; }
     // ReSharper restore MemberCanBePrivate.Global 
     // internal
     private readonly Dictionary<string, AssemblyDependencyResolver> _dependencyResolvers = new();       // path-folder, resolver
     protected bool IsResolving;   //this is to avoid circular dependency lookup.
     private AssemblyManager _assemblyManager;
-    public bool IsTemplateMode { get; set; } = false;
+    public bool IsTemplateMode { get; set; }
+    public bool IsDisposed { get; private set; }
     
     public MemoryFileAssemblyContextLoader(AssemblyManager assemblyManager) : base(isCollectible: true)
     {
         this._assemblyManager = assemblyManager;
+        this.IsDisposed = false;
+        base.Unloading += OnUnload;
     }
     
 
@@ -75,22 +78,27 @@ public class MemoryFileAssemblyContextLoader : AssemblyLoadContext
             // on fail of any we're done because we assume that loaded files are related. This ACL needs to be unloaded and collected.
             catch (ArgumentNullException ane)
             {
+                ModUtils.Logging.PrintError($"MemFileACL::{nameof(LoadFromFiles)}() | Error loading file path {sanitizedFilePath}. Details: {ane.Message} | {ane.StackTrace}");
                 return AssemblyLoadingSuccessState.BadFilePath;
             }
             catch (ArgumentException ae)
             {
+                ModUtils.Logging.PrintError($"MemFileACL::{nameof(LoadFromFiles)}() | Error loading file path {sanitizedFilePath}. Details: {ae.Message} | {ae.StackTrace}");
                 return AssemblyLoadingSuccessState.BadFilePath;
             }
             catch (FileLoadException fle)
             {
+                ModUtils.Logging.PrintError($"MemFileACL::{nameof(LoadFromFiles)}() | Error loading file path {sanitizedFilePath}. Details: {fle.Message} | {fle.StackTrace}");
                 return AssemblyLoadingSuccessState.CannotLoadFile;
             }
-            catch (FileNotFoundException fne)
+            catch (FileNotFoundException fnfe)
             {
+                ModUtils.Logging.PrintError($"MemFileACL::{nameof(LoadFromFiles)}() | Error loading file path {sanitizedFilePath}. Details: {fnfe.Message} | {fnfe.StackTrace}");
                 return AssemblyLoadingSuccessState.NoAssemblyFound;
             }
-            catch (BadImageFormatException bfe)
+            catch (BadImageFormatException bife)
             {
+                ModUtils.Logging.PrintError($"MemFileACL::{nameof(LoadFromFiles)}() | Error loading file path {sanitizedFilePath}. Details: {bife.Message} | {bife.StackTrace}");
                 return AssemblyLoadingSuccessState.InvalidAssembly;
             }
             catch (Exception e)
@@ -159,11 +167,11 @@ public class MemoryFileAssemblyContextLoader : AssemblyLoadContext
         if (externMetadataReferences is not null)
             metadataReferences.AddRange(externMetadataReferences);
 
-        // build metadata refs from global where not an in-memory compiled assembly and not the same assembly as supplied.
-        metadataReferences.AddRange(AppDomain.CurrentDomain.GetAssemblies()
+        // build metadata refs from default where not an in-memory compiled assembly and not the same assembly as supplied.
+        metadataReferences.AddRange(AssemblyLoadContext.Default.Assemblies
             .Where(a =>
             {
-                if (a.IsDynamic || string.IsNullOrEmpty(a.Location) || a.Location.Contains("xunit"))
+                if (a.IsDynamic || string.IsNullOrWhiteSpace(a.Location) || a.Location.Contains("xunit"))
                     return false;
                 if (a.FullName is null)
                     return true;
@@ -174,15 +182,40 @@ public class MemoryFileAssemblyContextLoader : AssemblyLoadContext
                 .Where(a => !(a.IsDynamic || string.IsNullOrEmpty(a.Location) || a.Location.Contains("xunit")))
                 .Select(a => MetadataReference.CreateFromFile(a.Location) as MetadataReference)
             ).ToList());
-            
-        // build metadata refs from in-memory images
-        foreach (var loadedAcl in _assemblyManager.GetAllLoadedACLs())
+
+        ImmutableList<AssemblyManager.LoadedACL> loadedAcls = _assemblyManager.GetAllLoadedACLs().ToImmutableList();
+        if (loadedAcls.Any())
         {
-            if (loadedAcl.Acl.CompiledAssemblyImage is null || loadedAcl.Acl.CompiledAssemblyImage.Length == 0)
-                continue;
-            metadataReferences.Add(MetadataReference.CreateFromImage(loadedAcl.Acl.CompiledAssemblyImage));
-        }
+            // build metadata refs from ACL assemblies from files/disk.
+            foreach (AssemblyManager.LoadedACL loadedAcl in loadedAcls)
+            {
+                if(loadedAcl?.Acl is null || loadedAcl.Acl.IsTemplateMode || loadedAcl.Acl.IsDisposed)
+                    continue;
+                metadataReferences.AddRange(loadedAcl.Acl.Assemblies
+                    .Where(a =>
+                    {
+                        if (a.IsDynamic || string.IsNullOrWhiteSpace(a.Location) || a.Location.Contains("xunit"))
+                            return false;
+                        if (a.FullName is null)
+                            return true;
+                        return !externAssemblyNames.Contains(a.FullName);    // exclude duplicates
+                    })
+                    .Select(a => MetadataReference.CreateFromFile(a.Location) as MetadataReference)
+                    .Union(externAssemblyRefs   // add custom supplied assemblies
+                        .Where(a => !(a.IsDynamic || string.IsNullOrEmpty(a.Location) || a.Location.Contains("xunit")))
+                        .Select(a => MetadataReference.CreateFromFile(a.Location) as MetadataReference)
+                    ).ToList());
+            }
         
+            // build metadata refs from in-memory images
+            foreach (var loadedAcl in loadedAcls)
+            {
+                if (loadedAcl?.Acl?.CompiledAssemblyImage is null || loadedAcl.Acl.CompiledAssemblyImage.Length == 0)
+                    continue;
+                metadataReferences.Add(MetadataReference.CreateFromImage(loadedAcl.Acl.CompiledAssemblyImage));
+            }
+        }
+
         // Change inaccessible options to allow public access to restricted members
         var topLevelBinderFlagsProperty = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
         topLevelBinderFlagsProperty?.SetValue(compilationOptions, (uint)1 << 22);
@@ -252,19 +285,33 @@ public class MemoryFileAssemblyContextLoader : AssemblyLoadContext
             }
 
             //try resolve against other loaded alcs
-            foreach (var loadedAcL in _assemblyManager.GetAllLoadedACLs())
+            ImmutableList<AssemblyManager.LoadedACL> list;
+            try
             {
-                if (loadedAcL.Acl is null || loadedAcL.Acl.IsTemplateMode) continue;
+                list = _assemblyManager.UnsafeGetAllLoadedACLs();
+            }
+            catch
+            {
+                list = ImmutableList<AssemblyManager.LoadedACL>.Empty;
+            }
+
+            if (!list.IsEmpty)
+            {
+                foreach (var loadedAcL in list)
+                {
+                    if (loadedAcL.Acl is null || loadedAcL.Acl.IsTemplateMode || loadedAcL.Acl.IsDisposed) 
+                        continue;
                 
-                try
-                {
-                    ass = loadedAcL.Acl.LoadFromAssemblyName(assemblyName);
-                    if (ass is not null)
-                        return ass;
-                }
-                catch
-                {
-                    // LoadFromAssemblyName throws, no need to propagate
+                    try
+                    {
+                        ass = loadedAcL.Acl.LoadFromAssemblyName(assemblyName);
+                        if (ass is not null)
+                            return ass;
+                    }
+                    catch
+                    {
+                        // LoadFromAssemblyName throws, no need to propagate
+                    }
                 }
             }
             
@@ -281,10 +328,13 @@ public class MemoryFileAssemblyContextLoader : AssemblyLoadContext
     }
     
 
-    private new void Unload()
+    private void OnUnload(AssemblyLoadContext alc)
     {
         CompiledAssembly = null;
         CompiledAssemblyImage = null;
-        base.Unload();
+        _dependencyResolvers.Clear();
+        _assemblyManager = null;
+        base.Unloading -= OnUnload;
+        this.IsDisposed = true;
     }
 }
