@@ -12,6 +12,8 @@ namespace Barotrauma
     public sealed class ContentXElement
     {
         public ContentPath ContentPath { get;  private set; }
+        public ContentPackage? ContentPackage => ContentPath?.ContentPackage;
+
         public readonly XElement Element;
         
         public ContentXElement(ContentPath? contentPath, XElement element)

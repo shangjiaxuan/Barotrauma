@@ -84,7 +84,7 @@ namespace Barotrauma
                 {
                     case "character":
                     case "characterinfo":
-                        CharacterInfo = new CharacterInfo(new ContentXElement(contentPackage: null, subElement));
+                        CharacterInfo = new CharacterInfo(new ContentXElement(contentPath: null, subElement));
                         break;
                     case "inventory":
                         itemData = subElement;

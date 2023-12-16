@@ -293,7 +293,7 @@ namespace Barotrauma
 
             XElement parentElement = new XElement("CharacterInfo");
             XElement infoElement = character.Info?.Save(parentElement);
-            CharacterInfo huskCharacterInfo = infoElement == null ? null : new CharacterInfo(new ContentXElement(Prefab.ContentPackage, infoElement));
+            CharacterInfo huskCharacterInfo = infoElement == null ? null : new CharacterInfo(new ContentXElement(Prefab.ContentFile.Path, infoElement));
 
             if (huskCharacterInfo != null)
             {

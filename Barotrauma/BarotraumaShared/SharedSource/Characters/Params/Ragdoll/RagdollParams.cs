@@ -1236,7 +1236,7 @@ namespace Barotrauma
             public SubParam(ContentXElement element, RagdollParams ragdoll)
             {
                 Element = element;
-                OriginalElement = new ContentXElement(element.ContentPackage, element);
+                OriginalElement = new ContentXElement(element.ContentPath, element);
                 Ragdoll = ragdoll;
                 SerializableProperties = SerializableProperty.DeserializeProperties(this, element);
             }
