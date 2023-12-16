@@ -15,6 +15,8 @@ namespace Barotrauma
 
     partial class LuaCsLogger
     {
+        public static bool HideUserNames = true;
+
 #if SERVER
         private const string LogPrefix = "SV";
         private const int NetMaxLength = 1024;
@@ -32,40 +34,47 @@ namespace Barotrauma
 
         public static void HandleException(Exception ex, LuaCsMessageOrigin origin)
         {
+            string errorString = "";
             switch (ex)
             {
                 case NetRuntimeException netRuntimeException:
                     if (netRuntimeException.DecoratedMessage == null)
                     {
-                        LogError(netRuntimeException.ToString(), origin);
+                        errorString = netRuntimeException.ToString();
                     }
                     else
                     {
                         // FIXME: netRuntimeException.ToString() doesn't print the InnerException's stack trace...
-                        LogError($"{netRuntimeException.DecoratedMessage}: {netRuntimeException}", origin);
+                        errorString = $"{netRuntimeException.DecoratedMessage}: {netRuntimeException}";
                     }
                     break;
                 case InterpreterException interpreterException:
                     if (interpreterException.DecoratedMessage == null)
                     {
-                        LogError(interpreterException.ToString(), origin);
+                        errorString = interpreterException.ToString();
                     }
                     else
                     {
-                        LogError(interpreterException.DecoratedMessage, origin);
+                        errorString = interpreterException.DecoratedMessage;
                     }
                     break;
                 default:
-                    var msg = ex.StackTrace != null
+                    errorString = ex.StackTrace != null
                         ? ex.ToString()
                         : $"{ex}\n{Environment.StackTrace}";
-                    LogError(msg, origin);
                     break;
             }
+             
+            LogError(Environment.UserName + " " + errorString, origin);
         }
 
         public static void LogError(string message, LuaCsMessageOrigin origin)
         {
+            if (HideUserNames && !Environment.UserName.IsNullOrEmpty())
+            {
+                message = message.Replace(Environment.UserName, "USERNAME");
+            }
+
             switch (origin)
             {
                 case LuaCsMessageOrigin.LuaCs:

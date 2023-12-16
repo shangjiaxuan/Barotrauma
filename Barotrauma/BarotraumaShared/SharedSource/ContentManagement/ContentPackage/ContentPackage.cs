@@ -313,7 +313,7 @@ namespace Barotrauma
                     catch (Exception e)
                     {
                         var innermost = e.GetInnermost();
-                        DebugConsole.LogError($"Failed to load \"{filesToLoad[i].Path}\": {innermost.Message}\n{innermost.StackTrace}");
+                        DebugConsole.LogError($"Failed to load \"{filesToLoad[i].Path}\": {innermost.Message}\n{innermost.StackTrace}", contentPackage: this);
                         exception = e;
                     }
                     if (exception != null)
@@ -421,7 +421,8 @@ namespace Barotrauma
 
             DebugConsole.AddWarning(
                 $"The following errors occurred while loading the content package \"{Name}\". The package might not work correctly.\n" +
-                string.Join('\n', FatalLoadErrors.Select(errorToStr)));
+                string.Join('\n', FatalLoadErrors.Select(errorToStr)),
+                this);
 
             static string errorToStr(LoadError error)
                 => error.ToString();

@@ -69,6 +69,19 @@ namespace Barotrauma
                 }
             };
 
+            new GUITickBox(new RectTransform(new Vector2(0.8f, 0.1f), list.Content.RectTransform), "Hide usernames In Error Logs")
+            {
+                Selected = GameMain.LuaCs.Config.HideUserNames,
+                ToolTip = "Hides the operating system username when displaying error logs (eg your username on windows).",
+                OnSelected = (GUITickBox tick) =>
+                {
+                    GameMain.LuaCs.Config.HideUserNames = tick.Selected;
+                    GameMain.LuaCs.UpdateConfig();
+
+                    return true;
+                }
+            };
+
             new GUIButton(new RectTransform(new Vector2(1f, 0.1f), list.Content.RectTransform), $"Remove Client-Side LuaCs", style: "GUIButtonSmall")
             {
                 ToolTip = "Remove Client-Side LuaCs.",

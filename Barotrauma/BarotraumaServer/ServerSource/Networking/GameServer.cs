@@ -259,6 +259,7 @@ namespace Barotrauma.Networking
 
         private void OnInitializationComplete(NetworkConnection connection, string clientName)
         {
+            clientName = Client.SanitizeName(clientName);
             Client newClient = new Client(clientName, GetNewClientSessionId());
             newClient.InitClientSync();
             newClient.Connection = connection;
@@ -817,7 +818,7 @@ namespace Barotrauma.Networking
                         {
                             using (dosProtection.Pause(connectedClient))
                             {
-                                MultiPlayerCampaign.LoadCampaign(saveName);
+                                MultiPlayerCampaign.LoadCampaign(saveName, connectedClient);
                             }
                         }
                     }
@@ -1243,11 +1244,6 @@ namespace Barotrauma.Networking
                             }
 
                             c.LastRecvEntityEventID = lastRecvEntityEventID;
-                            #warning TODO: remove this later
-                            /*if (!CoroutineManager.IsCoroutineRunning("RoundRestartLoop"))
-                            {
-                                CoroutineManager.StartCoroutine(RoundRestartLoop(), "RoundRestartLoop");
-                            }*/
                         }
                         else if (lastRecvEntityEventID != c.LastRecvEntityEventID && GameSettings.CurrentConfig.VerboseLogging)
                         {
@@ -1497,7 +1493,7 @@ namespace Barotrauma.Networking
                             {
                                 using (dosProtection.Pause(sender))
                                 {
-                                    MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath);
+                                    MultiPlayerCampaign.LoadCampaign(GameMain.GameSession.SavePath, sender);
                                 }
                             }
                         }
@@ -2560,7 +2556,7 @@ namespace Barotrauma.Networking
                     {
                         spawnList.Add(new PurchasedItem(kvp.Key, kvp.Value, buyer: null));
                     }
-                    CargoManager.CreateItems(spawnList, sub, cargoManager: null);
+                    CargoManager.DeliverItemsToSub(spawnList, sub, cargoManager: null);
                 }
             }
 
@@ -2616,6 +2612,7 @@ namespace Barotrauma.Networking
             msg.WriteBoolean(ServerSettings.AllowRespawn && missionAllowRespawn);
             msg.WriteBoolean(ServerSettings.AllowDisguises);
             msg.WriteBoolean(ServerSettings.AllowRewiring);
+            msg.WriteBoolean(ServerSettings.AllowImmediateItemDelivery);
             msg.WriteBoolean(ServerSettings.AllowFriendlyFire);
             msg.WriteBoolean(ServerSettings.LockAllDefaultWires);
             msg.WriteBoolean(ServerSettings.AllowLinkingWifiToChat);
@@ -3770,8 +3767,12 @@ namespace Barotrauma.Networking
             }
         }
 
+        public readonly List<string> JobAssignmentDebugLog = new List<string>();
+
         public void AssignJobs(List<Client> unassigned)
         {
+            JobAssignmentDebugLog.Clear();
+
             var jobList = JobPrefab.Prefabs.ToList();
             unassigned = new List<Client>(unassigned);
             unassigned = unassigned.OrderBy(sp => Rand.Int(int.MaxValue)).ToList();
@@ -3793,10 +3794,11 @@ namespace Barotrauma.Networking
                 //remove already assigned clients from unassigned
                 unassigned.RemoveAll(u => campaignAssigned.ContainsKey(u));
                 //add up to assigned client count
-                foreach (KeyValuePair<Client, Job> clientJob in campaignAssigned)
+                foreach ((Client client, Job job) in campaignAssigned)
                 {
-                    assignedClientCount[clientJob.Value.Prefab]++;
-                    clientJob.Key.AssignedJob = new JobVariant(clientJob.Value.Prefab, clientJob.Value.Variant);
+                    assignedClientCount[job.Prefab]++;
+                    client.AssignedJob = new JobVariant(job.Prefab, job.Variant);
+                    JobAssignmentDebugLog.Add($"Client {client.Name} has an existing campaign character, keeping the job {job.Name}.");
                 }
             }
 
@@ -3815,6 +3817,7 @@ namespace Barotrauma.Networking
             {
                 if (unassigned[i].JobPreferences.Count == 0) { continue; }
                 if (!unassigned[i].JobPreferences.Any() || !unassigned[i].JobPreferences[0].Prefab.AllowAlways) { continue; }
+                JobAssignmentDebugLog.Add($"Client {unassigned[i].Name} has {unassigned[i].JobPreferences[0].Prefab.Name} as their first preference, assigning it because the job is always allowed.");
                 unassigned[i].AssignedJob = unassigned[i].JobPreferences[0];
                 unassigned.RemoveAt(i);
             }
@@ -3833,6 +3836,7 @@ namespace Barotrauma.Networking
                     Client client = FindClientWithJobPreference(unassigned, jobPrefab, forceAssign: false);
                     if (client != null)
                     {
+                        JobAssignmentDebugLog.Add($"At least {jobPrefab.MinNumber} {jobPrefab.Name} required. Assigning {client.Name} as a {jobPrefab.Name} (has the job in their preferences).");
                         AssignJob(client, jobPrefab);
                     }
                 }
@@ -3844,7 +3848,11 @@ namespace Barotrauma.Networking
                     {
                         if (unassigned.Count == 0) { break; }
                         if (jobPrefab.MinNumber < 1 || assignedClientCount[jobPrefab] >= jobPrefab.MinNumber) { continue; }
-                        AssignJob(FindClientWithJobPreference(unassigned, jobPrefab, forceAssign: true), jobPrefab);
+                        var client = FindClientWithJobPreference(unassigned, jobPrefab, forceAssign: true);
+                        JobAssignmentDebugLog.Add(
+                            $"At least {jobPrefab.MinNumber} {jobPrefab.Name} required. "+
+                            $"A random client needs to be assigned because no one has the job in their preferences. Assigning {client.Name} as a {jobPrefab.Name}.");
+                        AssignJob(client, jobPrefab);
                     }
                 }
 
@@ -3862,32 +3870,6 @@ namespace Barotrauma.Networking
                 }
             }
 
-            List<WayPoint> availableSpawnPoints = WayPoint.WayPointList.FindAll(wp =>
-                wp.SpawnType == SpawnType.Human &&
-                wp.Submarine != null && wp.Submarine.TeamID == teamID);
-
-            /*bool canAssign = false;
-            do
-            {
-                canAssign = false;
-                foreach (WayPoint spawnPoint in unassignedSpawnPoints)
-                {
-                    if (unassigned.Count == 0) { break; }
-
-                    JobPrefab job = spawnPoint.AssignedJob ?? JobPrefab.List.Values.GetRandom();
-                    if (assignedClientCount[job] >= job.MaxNumber) { continue; }
-
-                    Client assignedClient = FindClientWithJobPreference(unassigned, job, true);
-                    if (assignedClient != null)
-                    {
-                        assignedClient.AssignedJob = job;
-                        assignedClientCount[job]++;
-                        unassigned.Remove(assignedClient);
-                        canAssign = true;
-                    }
-                }
-            } while (unassigned.Count > 0 && canAssign);*/
-
             // Attempt to give the clients a job they have in their job preferences.
             // First evaluate all the primary preferences, then all the secondary etc.
             for (int preferenceIndex = 0; preferenceIndex < 3; preferenceIndex++)
@@ -3898,12 +3880,17 @@ namespace Barotrauma.Networking
                     if (preferenceIndex >= client.JobPreferences.Count) { continue; }
                     var preferredJob = client.JobPreferences[preferenceIndex];
                     JobPrefab jobPrefab = preferredJob.Prefab;
-                    if (assignedClientCount[jobPrefab] >= jobPrefab.MaxNumber || client.Karma < jobPrefab.MinKarma)
+                    if (assignedClientCount[jobPrefab] >= jobPrefab.MaxNumber)
                     {
-                        //can't assign this job if maximum number has reached or the clien't karma is too low
+                        JobAssignmentDebugLog.Add($"{client.Name} has {jobPrefab.Name} as their {preferenceIndex + 1}. preference. Cannot assign, maximum number of the job has been reached.");
                         continue;
                     }
-
+                    if (client.Karma < jobPrefab.MinKarma)
+                    {
+                        JobAssignmentDebugLog.Add($"{client.Name} has {jobPrefab.Name} as their {preferenceIndex + 1}. preference. Cannot assign, karma too low ({client.Karma} < {jobPrefab.MinKarma}).");
+                        continue;
+                    }
+                    JobAssignmentDebugLog.Add($"{client.Name} has {jobPrefab.Name} as their {preferenceIndex + 1}. preference. Assigning {client.Name} as a {jobPrefab.Name}.");
                     client.AssignedJob = preferredJob;
                     assignedClientCount[jobPrefab]++;
                     unassigned.RemoveAt(i);
@@ -3919,7 +3906,9 @@ namespace Barotrauma.Networking
                 //all jobs taken, give a random job
                 if (remainingJobs.Count == 0)
                 {
-                    DebugConsole.ThrowError("Failed to assign a suitable job for \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
+                    string errorMsg = $"Failed to assign a suitable job for \"{c.Name}\" (all jobs already have the maximum numbers of players). Assigning a random job...";
+                    DebugConsole.ThrowError(errorMsg);
+                    JobAssignmentDebugLog.Add(errorMsg);
                     int jobIndex = Rand.Range(0, jobList.Count);
                     int skips = 0;
                     while (c.Karma < jobList[jobIndex].MinKarma)
@@ -3935,19 +3924,20 @@ namespace Barotrauma.Networking
                     assignedClientCount[c.AssignedJob.Prefab]++;
                 }
                 //if one of the client's preferences is still available, give them that job
-                else if (c.JobPreferences.Any(jp => remainingJobs.Contains(jp.Prefab)))
+                else if (c.JobPreferences.FirstOrDefault(jp => remainingJobs.Contains(jp.Prefab)) is { } remainingJob)
                 {
-                    foreach (JobVariant preferredJob in c.JobPreferences)
-                    {
-                        c.AssignedJob = preferredJob;
-                        assignedClientCount[preferredJob.Prefab]++;
-                        break;
-                    }
+                    JobAssignmentDebugLog.Add(
+                        $"{c.Name} has {remainingJob.Prefab.Name} as their {c.JobPreferences.IndexOf(remainingJob) + 1}. preference, and it is still available."+
+                        $" Assigning {c.Name} as a {remainingJob.Prefab.Name}.");                    
+                    c.AssignedJob = remainingJob;
+                    assignedClientCount[remainingJob.Prefab]++;
                 }
                 else //none of the client's preferred jobs available, choose a random job
                 {
                     c.AssignedJob = new JobVariant(remainingJobs[Rand.Range(0, remainingJobs.Count)], 0);
                     assignedClientCount[c.AssignedJob.Prefab]++;
+                    JobAssignmentDebugLog.Add(
+                        $"No suitable jobs available for {c.Name} (karma {c.Karma}). Assigning a random job: {c.AssignedJob.Prefab.Name}.");
                 }
             }
 
@@ -4013,7 +4003,6 @@ namespace Barotrauma.Networking
                 if (remainingJobs.None())
                 {
                     DebugConsole.ThrowError("Failed to assign a suitable job for bot \"" + c.Name + "\" (all jobs already have the maximum numbers of players). Assigning a random job...");
-                    #warning TODO: is this randsync correct?
                     c.Job = Job.Random(Rand.RandSync.ServerAndClient);
                     assignedPlayerCount[c.Job.Prefab]++;
                 }

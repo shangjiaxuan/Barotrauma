@@ -580,15 +580,10 @@ namespace Barotrauma
             base.Remove();
 
             MapEntityList.Remove(this);
-
 #if CLIENT
             Submarine.ForceRemoveFromVisibleEntities(this);
-            if (SelectedList.Contains(this))
-            {
-                SelectedList = SelectedList.Where(e => e != this).ToHashSet();
-            }
+            SelectedList.Remove(this);
 #endif
-
             if (aiTarget != null)
             {
                 aiTarget.Remove();
@@ -715,6 +710,9 @@ namespace Barotrauma
             relative.X = 0.0f;
             Move(-relative * 2.0f);
         }
+
+        public virtual Quad2D GetTransformedQuad()
+            => Quad2D.FromSubmarineRectangle(rect);
 
         public static List<MapEntity> LoadAll(Submarine submarine, XElement parentElement, string filePath, int idOffset)
         {
