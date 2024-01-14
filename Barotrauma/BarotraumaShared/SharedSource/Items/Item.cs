@@ -3141,6 +3141,7 @@ namespace Barotrauma
             if (character.IsDead) { return; }
             if (!UseInHealthInterface) { return; }
 
+            GameAnalyticsManager.AddDesignEvent("ApplyTreatment:" + Prefab.Identifier);
 #if CLIENT
             if (user == Character.Controlled)
             {
