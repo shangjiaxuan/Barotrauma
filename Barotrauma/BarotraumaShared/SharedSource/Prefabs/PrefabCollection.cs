@@ -482,9 +482,8 @@ namespace Barotrauma
 
             //Add to list
             selector ??= new PrefabSelector<T>();
-
             selector.AddDefered(identifier, file, element, constructorLambda, locator, inherit_callback,
-				(((prefab) => {
+				((Action<T>)((prefab) => {
 					if (prefab is PrefabWithUintIdentifier prefabWithUintIdentifier)
 					{
 						if (!selector.isEmptyInternal && selector.activePrefabInternal_NoCreate != null && (selector.activePrefabInternal_NoCreate as PrefabWithUintIdentifier)!.UintIdentifier != 0)
@@ -495,7 +494,7 @@ namespace Barotrauma
 						{
 							using (MD5 md5 = MD5.Create())
 							{
-								prefabWithUintIdentifier.UintIdentifier = ToolBox.IdentifierToUint32Hash(prefab.Identifier, md5);
+								prefabWithUintIdentifier.UintIdentifier = ToolBoxCore.IdentifierToUint32Hash(prefab.Identifier, md5);
 
 								//it's theoretically possible for two different values to generate the same hash, but the probability is astronomically small
 								T? findCollision()
