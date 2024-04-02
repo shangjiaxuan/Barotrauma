@@ -23,7 +23,7 @@ namespace Barotrauma
 
                 string[] filesToRemove = new string[]
                 {
-                    "Barotrauma.dll", "Barotrauma.deps.json", "Barotrauma.pdb",
+                    "Barotrauma.dll", "Barotrauma.deps.json", "Barotrauma.pdb", "BarotraumaCore.dll", "BarotraumaCore.pdb",
                     "System.Reflection.Metadata.dll", "System.Collections.Immutable.dll",
                     "System.Runtime.CompilerServices.Unsafe.dll"
                 };

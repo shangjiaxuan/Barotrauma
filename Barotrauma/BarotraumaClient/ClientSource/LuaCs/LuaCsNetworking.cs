@@ -14,7 +14,7 @@ namespace Barotrauma
             WriteOnlyMessage message = new WriteOnlyMessage();
             message.WriteByte((byte)ClientPacketHeader.LUA_NET_MESSAGE);
             message.WriteByte((byte)LuaCsClientToServer.RequestAllIds);
-            GameMain.Client.ClientPeer.Send(message, DeliveryMethod.ReliableOrdered);
+            GameMain.Client.ClientPeer.Send(message, DeliveryMethod.Reliable);
         }
 
         public void NetMessageReceived(IReadMessage netMessage, ServerPacketHeader header, Client client = null)
@@ -82,7 +82,7 @@ namespace Barotrauma
 
             message.WriteString(netMessageName);
 
-            Send(message, DeliveryMethod.ReliableOrdered);
+            Send(message, DeliveryMethod.Reliable);
         }
 
         public void Send(IWriteMessage netMessage, DeliveryMethod deliveryMethod = DeliveryMethod.Reliable)

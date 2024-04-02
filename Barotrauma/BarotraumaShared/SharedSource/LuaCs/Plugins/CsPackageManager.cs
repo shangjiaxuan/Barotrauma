@@ -64,6 +64,7 @@ public sealed class CsPackageManager : IDisposable
             .AppendLine("using System.Reflection;")
             .AppendLine("using Barotrauma;")
             .AppendLine("using System.Runtime.CompilerServices;")
+            .AppendLine("[assembly: IgnoresAccessChecksTo(\"BarotraumaCore\")]")
 #if CLIENT
             .AppendLine("[assembly: IgnoresAccessChecksTo(\"Barotrauma\")]")
 #elif SERVER
@@ -74,6 +75,7 @@ public sealed class CsPackageManager : IDisposable
 
     private readonly string[] _publicizedAssembliesToLoad =
     {
+        "BarotraumaCore.dll",
 #if CLIENT
         "Barotrauma.dll"
 #elif SERVER

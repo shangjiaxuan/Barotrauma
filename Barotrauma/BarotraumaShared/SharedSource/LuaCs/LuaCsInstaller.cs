@@ -9,7 +9,7 @@ namespace Barotrauma
     {
         private static string[] trackingFiles = new string[]
         {
-            "Barotrauma.dll", "Barotrauma.deps.json", "Barotrauma.pdb",
+            "Barotrauma.dll", "Barotrauma.deps.json", "Barotrauma.pdb", "BarotraumaCore.dll", "BarotraumaCore.pdb",
             "0Harmony.dll", "Mono.Cecil.dll",
             "Sigil.dll",
             "Mono.Cecil.Mdb.dll", "Mono.Cecil.Pdb.dll",

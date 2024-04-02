@@ -179,7 +179,7 @@ namespace Barotrauma.Tutorials
 
         public void Start()
         {
-            GameMain.LuaCs.Initialize();
+            GameMain.LuaCs.CheckInitialize();
 
             GameMain.Instance.ShowLoading(Loading());
             ObjectiveManager.ResetObjectives();

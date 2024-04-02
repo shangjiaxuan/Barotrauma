@@ -94,19 +94,21 @@ namespace Barotrauma
         {
             if (!LuaCsFile.IsPathAllowedException(destination)) { return; }
 
-            Steamworks.Ugc.Item? item = await SteamManager.Workshop.GetItem(id);
+            Option<Steamworks.Ugc.Item> itemOption = await SteamManager.Workshop.GetItem(id);
 
-            if (item == null)
+            if (itemOption.TryUnwrap(out Steamworks.Ugc.Item item))
+            {
+                DownloadWorkshopItemAsync(new WorkshopItemDownload()
+                {
+                    Item = item,
+                    Destination = destination,
+                    Callback = callback
+                }, true);
+            }
+            else
             {
                 throw new Exception($"Tried to download invalid workshop item {id}.");
             }
-
-            DownloadWorkshopItemAsync(new WorkshopItemDownload()
-            {
-                Item = item.Value,
-                Destination = destination,
-                Callback = callback
-            }, true);
         }
 
         public void DownloadWorkshopItem(Steamworks.Ugc.Item item, string destination, LuaCsAction callback)
@@ -121,8 +123,16 @@ namespace Barotrauma
 
         public async void GetWorkshopItem(UInt64 id, LuaCsAction callback)
         {
-            Steamworks.Ugc.Item? item = await SteamManager.Workshop.GetItem(id);
-            callback(item);
+            Option<Steamworks.Ugc.Item> itemOption = await SteamManager.Workshop.GetItem(id);
+
+            if (itemOption.TryUnwrap(out Steamworks.Ugc.Item item)) 
+            {
+                callback(item);
+            }
+            else
+            {
+                callback(null);
+            }
         }
 
         public void Update()

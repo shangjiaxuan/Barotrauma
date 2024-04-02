@@ -144,7 +144,7 @@ namespace Barotrauma
             message.WriteUInt16(id);
             message.WriteString(name);
 
-            Send(message, null, DeliveryMethod.ReliableOrdered);
+            Send(message, null, DeliveryMethod.Reliable);
         }
 
         private void WriteAllIds(Client client)
@@ -160,7 +160,7 @@ namespace Barotrauma
                 message.WriteString(name);
             }
 
-            Send(message, client.Connection, DeliveryMethod.ReliableOrdered);
+            Send(message, client.Connection, DeliveryMethod.Reliable);
         }
 
         public void ClientWriteLobby(Client client) => GameMain.Server.ClientWriteLobby(client);
@@ -183,11 +183,6 @@ namespace Barotrauma
         public void UpdateClientPermissions(Client client)
         {
             GameMain.Server.UpdateClientPermissions(client);
-        }
-
-        public void RemovePendingClient(ServerPeer.PendingClient pendingClient, PeerDisconnectPacket peerDisconnectPacket)
-        {
-            GameMain.Server.ServerPeer.RemovePendingClient(pendingClient, peerDisconnectPacket);
         }
 
         public int FileSenderMaxPacketsPerUpdate

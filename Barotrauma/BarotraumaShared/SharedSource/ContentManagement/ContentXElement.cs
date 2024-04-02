@@ -22,6 +22,7 @@ namespace Barotrauma
             Element = element;
         }
 
+        [return: NotNullIfNotNull("cxe")]
         public static implicit operator XElement?(ContentXElement? cxe) => cxe?.Element;
         //public static implicit operator ContentXElement?(XElement? xe) => xe is null ? null : new ContentXElement(null, xe);
 

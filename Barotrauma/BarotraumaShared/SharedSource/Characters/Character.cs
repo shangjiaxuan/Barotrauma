@@ -1276,14 +1276,11 @@ namespace Barotrauma
             return newCharacter;
         }
 
-        private Character(Submarine submarine, ushort id): base(submarine, id)
+        protected Character(CharacterPrefab prefab, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, RagdollParams ragdollParams = null, bool spawnInitialItems = true)
+            : base(null, id)
         {
             wallet = new Wallet(Option<Character>.Some(this));
-        }
 
-        protected Character(CharacterPrefab prefab, Vector2 position, string seed, CharacterInfo characterInfo = null, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, RagdollParams ragdollParams = null, bool spawnInitialItems = true)
-            : this(null, id)
-        {
             this.Seed = seed;
             this.Prefab = prefab;
             MTRandom random = new MTRandom(ToolBox.StringToInt(seed));
@@ -2486,7 +2483,7 @@ namespace Barotrauma
             return false;
         }
 
-        public Item GetEquippedItem(Identifier? tagOrIdentifier = null, InvSlotType? slotType = null)
+        public Item GetEquippedItem(Identifier tagOrIdentifier = default, InvSlotType? slotType = null)
         {
             if (Inventory == null) { return null; }
             for (int i = 0; i < Inventory.Capacity; i++)
@@ -2501,7 +2498,7 @@ namespace Barotrauma
                 }
                 var item = Inventory.GetItemAt(i);
                 if (item == null) { continue; }
-                if (tagOrIdentifier == null || tagOrIdentifier.Value.IsEmpty || item.Prefab.Identifier == tagOrIdentifier || item.HasTag(tagOrIdentifier.Value)) 
+                if (tagOrIdentifier.IsEmpty || item.Prefab.Identifier == tagOrIdentifier || item.HasTag(tagOrIdentifier)) 
                 {
                     return item;
                 }
@@ -4678,7 +4675,7 @@ namespace Barotrauma
 
             if (GameMain.GameSession != null && Screen.Selected == GameMain.GameScreen)
             {
-                SteamAchievementManager.OnCharacterKilled(this, CauseOfDeath);
+                AchievementManager.OnCharacterKilled(this, CauseOfDeath);
             }
 
             GameMain.LuaCs.Hook.Call("character.death", this, causeOfDeathAffliction);

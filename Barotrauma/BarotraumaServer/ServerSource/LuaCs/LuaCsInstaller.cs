@@ -29,6 +29,8 @@ namespace Barotrauma
                 File.Move("Barotrauma.dll", "Temp/Original/Barotrauma.dll", true);
                 File.Move("Barotrauma.deps.json", "Temp/Original/Barotrauma.deps.json", true);
                 File.Move("Barotrauma.pdb", "Temp/Original/Barotrauma.pdb", true);
+                File.Move("BarotraumaCore.dll", "Temp/Original/BarotraumaCore.dll", true);
+                File.Move("BarotraumaCore.pdb", "Temp/Original/BarotraumaCore.pdb", true);
 
                 File.Move("System.Reflection.Metadata.dll", "Temp/Original/System.Reflection.Metadata.dll", true);
                 File.Move("System.Collections.Immutable.dll", "Temp/Original/System.Collections.Immutable.dll", true);

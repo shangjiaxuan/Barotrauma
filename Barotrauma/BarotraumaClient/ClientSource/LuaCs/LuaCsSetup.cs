@@ -25,15 +25,8 @@ namespace Barotrauma
                 }
             }
 
-            if (csharpMods.Count == 0 || ShouldRunCs || GameMain.Client == null)
+            if (csharpMods.Count == 0 || ShouldRunCs)
             {
-                Initialize();
-                return;
-            }
-
-            if (GameMain.Client.IsServerOwner)
-            {
-                new GUIMessageBox("", "You have CSharp mods enabled but don't have the Cs For Barotrauma package enabled, those mods might not work.");
                 Initialize();
                 return;
             }
@@ -50,6 +43,13 @@ namespace Barotrauma
                 {
                     sb.AppendLine($"- {cp.Name} (Not On Workshop)");
                 }
+            }
+
+            if (GameMain.Client == null || GameMain.Client.IsServerOwner)
+            {
+                new GUIMessageBox("", $"You have CSharp mods enabled but don't have the CSharp Scripting enabled, those mods might not work, go to the Main Menu, click on LuaCs Settings and check Enable CSharp Scripting.\n\n{sb}");
+                Initialize();
+                return;
             }
 
             GUIMessageBox msg = new GUIMessageBox(

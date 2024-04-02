@@ -46,6 +46,9 @@ env:
     Publicized/Barotrauma.dll
     Publicized/DedicatedServer.dll
   ARCHIVE_FILES_SHARED: |
+    BarotraumaCore.dll
+    BarotraumaCore.pdb
+    Publicized/BarotraumaCore.dll
     0Harmony.dll
     Sigil.dll
     MoonSharp.Interpreter.dll
@@ -76,7 +79,7 @@ jobs:
     needs: [build]
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110 # v4.1.0
+        uses: actions/download-artifact@c850b930e6ba138125429b7e5c93fc707a7f8427 # v4.1.4
         with:
           name: build
           path: ${{ env.CI_DIR }}
@@ -121,10 +124,13 @@ jobs:
           # Archive Refs, used by mod developers
           cp "${artifacts_dir}/Windows/Client/Publicized/Barotrauma.dll" "${refs_dir}/Windows/Barotrauma.dll"
           cp "${artifacts_dir}/Windows/Client/Publicized/DedicatedServer.dll" "${refs_dir}/Windows/DedicatedServer.dll"
+          cp "${artifacts_dir}/Windows/Client/Publicized/BarotraumaCore.dll" "${refs_dir}/Windows/BarotraumaCore.dll"
           cp "${artifacts_dir}/Linux/Client/Publicized/Barotrauma.dll" "${refs_dir}/Linux/Barotrauma.dll"
           cp "${artifacts_dir}/Linux/Client/Publicized/DedicatedServer.dll" "${refs_dir}/Linux/DedicatedServer.dll"
+          cp "${artifacts_dir}/Linux/Client/Publicized/BarotraumaCore.dll" "${refs_dir}/Linux/BarotraumaCore.dll"
           cp "${artifacts_dir}/Mac/Client/Barotrauma.app/Contents/MacOS/Publicized/Barotrauma.dll" "${refs_dir}/OSX/Barotrauma.dll"
           cp "${artifacts_dir}/Mac/Client/Barotrauma.app/Contents/MacOS/Publicized/DedicatedServer.dll" "${refs_dir}/OSX/DedicatedServer.dll"
+          cp "${artifacts_dir}/Mac/Client/Barotrauma.app/Contents/MacOS/Publicized/BarotraumaCore.dll" "${refs_dir}/OSX/BarotraumaCore.dll"
           cp "${artifacts_dir}/Windows/Client/Publicized/MonoGame.Framework.Windows.NetStandard.dll" "${refs_dir}/MonoGame.Framework.Windows.NetStandard.dll"
           cp "${artifacts_dir}/Linux/Client/Publicized/MonoGame.Framework.Linux.NetStandard.dll" "${refs_dir}/MonoGame.Framework.Linux.NetStandard.dll"
           cp "${artifacts_dir}/Mac/Client/Barotrauma.app/Contents/MacOS/Publicized/MonoGame.Framework.MacOS.NetStandard.dll" "${refs_dir}/MonoGame.Framework.MacOS.NetStandard.dll"

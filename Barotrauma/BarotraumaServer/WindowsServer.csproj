@@ -6,24 +6,24 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma Dedicated Server</Product>
-    <Version>1.2.8.0</Version>
+    <Version>1.3.0.1</Version>
     <Copyright>Copyright © FakeFish 2018-2023</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>DedicatedServer</AssemblyName>
     <ApplicationIcon>..\BarotraumaShared\Icon.ico</ApplicationIcon>
     <Configurations>Debug;Release;Unstable</Configurations>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <WarningsAsErrors>;NU1605;CS0114;CS0108;CS8597;CS8600;CS8601;CS8603;CS8604;CS8605;CS8606;CS8607;CS8608;CS8609;CS8610;CS8611;CS8612;CS8613;CS8614;CS8615;CS8616;CS8617;CS8618;CS8619;CS8620;CS8621;CS8622;CS8624;CS8625;CS8626;CS8629;CS8631;CS8632;CS8633;CS8634;CS8638;CS8643;CS8644;CS8645;CS8653;CS8654;CS8655;CS8667;CS8669;CS8670;CS8714;CS8717;CS8765</WarningsAsErrors>
+    <WarningsAsErrors>;NU1605;CS0114;CS0108;CS8597;CS8600;CS8601;CS8602;CS8603;CS8604;CS8605;CS8606;CS8607;CS8608;CS8609;CS8610;CS8611;CS8612;CS8613;CS8614;CS8615;CS8616;CS8617;CS8618;CS8619;CS8620;CS8621;CS8622;CS8624;CS8625;CS8626;CS8629;CS8631;CS8632;CS8633;CS8634;CS8638;CS8643;CS8644;CS8645;CS8653;CS8654;CS8655;CS8667;CS8669;CS8670;CS8714;CS8717;CS8765</WarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE;SERVER;WINDOWS;USE_STEAM</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;SERVER;WINDOWS</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <DefineConstants>TRACE;DEBUG;SERVER;WINDOWS;X64;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;SERVER;WINDOWS;X64</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <DebugType>full</DebugType>
@@ -31,20 +31,20 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;SERVER;WINDOWS;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;SERVER;WINDOWS</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unstable|AnyCPU'">
-    <DefineConstants>TRACE;SERVER;WINDOWS;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;SERVER;WINDOWS</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <Optimize>true</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DefineConstants>TRACE;SERVER;WINDOWS;X64;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;SERVER;WINDOWS;X64</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <DebugType>full</DebugType>
@@ -52,7 +52,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Unstable|x64'">
-    <DefineConstants>TRACE;SERVER;WINDOWS;X64;USE_STEAM</DefineConstants>
+    <DefineConstants>TRACE;SERVER;WINDOWS;X64</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <OutputPath>..\bin\$(Configuration)Windows\</OutputPath>
     <DebugType>full</DebugType>
@@ -87,6 +87,11 @@
     <PackageReference Include="RestSharp" Version="106.13.0" />
   </ItemGroup>
   
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\BarotraumaLibs\BarotraumaCore\BarotraumaCore.csproj" />
+    <ProjectReference Include="..\..\Libraries\BarotraumaLibs\EosInterface\EosInterface.csproj" />
+  </ItemGroup>
+
   <!-- Sourced from https://stackoverflow.com/a/45248069 -->
   <Target Name="GetGitRevision" BeforeTargets="WriteGitRevision" Condition="'$(BuildHash)' == ''">
     <PropertyGroup>
@@ -151,9 +156,14 @@
     <WriteCodeFragment Language="C#" OutputFile="$(CustomAssemblyInfoFile)" AssemblyAttributes="@(AssemblyAttributes)" />
   </Target>
 
+  <PropertyGroup>
+    <ManualDeployRuntime>win-x64</ManualDeployRuntime>
+    <ProjectFileNamePlatformSuffix>Win64</ProjectFileNamePlatformSuffix>
+  </PropertyGroup>
+  <Import Project="../BarotraumaShared/DeployEosPrivate.props" />
+
   <Import Project="../BarotraumaShared/Luatrauma.props" />
   <ItemGroup>
     <None Include="../BarotraumaShared/Luatrauma.props" />
   </ItemGroup>
-
 </Project>
