@@ -689,6 +689,8 @@ namespace Barotrauma
             return moduleBuilder;
         }
 
+        public void Add(string name, LuaCsFunc func, ACsMod owner = null) => Add(name, name, func, owner);
+
         public void Add(string name, string identifier, LuaCsFunc func, ACsMod owner = null)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));

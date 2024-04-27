@@ -24,17 +24,20 @@ Hook.Call("myCustomEvent", {"some", "arguments", 123})
 
 ## XML Status Effect Hooks
 
-With Lua, a new XML tags is added, it can be used to call Lua hooks inside status effects:
+With Lua, a new XML tags is added, it can be used to call hooks inside status effects:
 
 ```
 <StatusEffect type="OnUse">
-    <LuaHook name="doSomething" />
+    <Hook name="doSomething" custom="thing" />
 </StatusEffect>
 ```
 
 ```
-Hook.Add("doSomething", "something", function(effect, deltaTime, item, targets, worldPosition)
+Hook.Add("doSomething", function(effect, deltaTime, item, targets, worldPosition, element)
     print(effect, ' ', item)
+
+    -- You can also access the XML custom parameters
+    print(element.GetAttributeString("custom", "default value"))
 end)
 ```
 

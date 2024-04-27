@@ -28,6 +28,13 @@ namespace Barotrauma
         }
 
         public LuaCsSetupConfig() { }
+        public LuaCsSetupConfig(LuaCsSetupConfig config)
+        {
+            EnableCsScripting = config.EnableCsScripting;
+            TreatForcedModsAsNormal = config.TreatForcedModsAsNormal;
+            PreferToUseWorkshopLuaSetup = config.PreferToUseWorkshopLuaSetup;
+            DisableErrorGUIOverlay = config.DisableErrorGUIOverlay;
+        }
     }
 
     internal delegate void LuaCsMessageLogger(string message);
@@ -438,7 +445,7 @@ namespace Barotrauma
             Lua.Globals["Networking"] = Networking;
             Lua.Globals["Steam"] = Steam;
             Lua.Globals["PerformanceCounter"] = PerformanceCounter;
-            Lua.Globals["LuaCsConfig"] = Config;
+            Lua.Globals["LuaCsConfig"] = new LuaCsSetupConfig(Config);
 
             Lua.Globals["ExecutionNumber"] = executionNumber;
             Lua.Globals["CSActive"] = csActive;

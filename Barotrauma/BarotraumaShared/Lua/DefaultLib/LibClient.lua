@@ -39,7 +39,7 @@ defaultLib["Keys"] = CreateStatic("Microsoft.Xna.Framework.Input.Keys", true)
 
 defaultLib["GUI"] = {
     GUI = CreateStatic("Barotrauma.GUI", true),
-    GUIStyle = CreateStatic("Barotrauma.GUIStyle", true),
+    Style = CreateStatic("Barotrauma.GUIStyle", true),
     Component = CreateStatic("Barotrauma.GUIComponent"),
     RectTransform = CreateStatic("Barotrauma.RectTransform", true),
     LayoutGroup = CreateStatic("Barotrauma.GUILayoutGroup", true),
@@ -73,6 +73,8 @@ defaultLib["GUI"] = {
     Pivot = CreateStatic("Barotrauma.Pivot"),
     SoundType = CreateEnum("Barotrauma.GUISoundType"),
     CursorState = CreateEnum("Barotrauma.CursorState"),
+
+    GUIStyle = CreateStatic("Barotrauma.GUIStyle", true),
 }
 
 setmetatable(defaultLib["GUI"], {

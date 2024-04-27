@@ -103,21 +103,21 @@ This will give us a debug build of LuaCsForBarotrauma. A debug build gives us ac
 - MacSolution.sln
 - LinuxSolution.sln
  ```
--- NOTE: This tutorial assumes that you are using the `WindowsSolution.sln`. For other platforms, the naming of files may be slightly different (MacXXX, LinuxXXX, where 'XXX' is either "Client" or "Server").\
-\
-3. In the Project Settings for `WindowsClient` and `WindowsServer`, you want to change the `Platform Target` from `Any CPU` to `x64`. This is necessary for OpenAL code to build successfully.\
-\
+-- NOTE: This tutorial assumes that you are using the `WindowsSolution.sln`. For other platforms, the naming of files may be slightly different (MacXXX, LinuxXXX, where 'XXX' is either "Client" or "Server").
+
+3. In the Project Settings for `WindowsClient` and `WindowsServer`, you want to change the `Platform Target` from `Any CPU` to `x64`. This is necessary for OpenAL code to build successfully.
+
 4. Build the whole Solution (`Build -> Build Solution`). This will create the necessary dependencies from libraries and make sure that there are no errors at this point.\
-\
+
 5. For both the `WindowsClient` and `WindowsServer` projects, set their output/build type to `DEBUG` (should be in a drop-down menu at the top next to a green play button).\
-\
-6. Select `Build Solution`. This will generate Debug builds for use. This debug build will now exist in `./Barotrauma/bin/DebugXXX/net6.0/` where `XXX` is based on your Solution choice. IE. `./Barotrauma/bin/DebugWindows/net6.0`.\
-\
+
+6. Select `Build Solution`. This will generate Debug builds for use. This debug build will now exist in `./Barotrauma/bin/DebugXXX/net6.0/` where `XXX` is based on your Solution choice. IE. `./Barotrauma/bin/DebugWindows/net6.0`.
+
 7. Make the local folder in Barotrauma/LocalMods/ for your mod: 
 - A. Navigate into the Client Debug Build folder (or game folder if you are coming from Part 3, Step 3) and then into `/LocalMods`.
 - B. CREATE a folder with the name of your mod. Ideally, it should match the name of your `.sln` file with the extension.
-- C. COPY the path to this directory (with your mod) and save it in a sticky note or .txt file. We will be using it shortly.\
-\
+- C. COPY the path to this directory (with your mod) and save it in a sticky note or .txt file. We will be using it shortly.
+
 ---
 #### Part 3: Setting up MSBuild to Copy Files into Local Mods.
 

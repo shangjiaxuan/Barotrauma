@@ -651,10 +651,24 @@ namespace Barotrauma
             Item.UpdatePendingConditionUpdates(deltaTime);
             if (mapEntityUpdateTick % MapEntityUpdateInterval == 0)
             {
-                foreach (Item item in Item.ItemList)
+                Item lastUpdatedItem = null;
+
+                try
                 {
-                    if (GameMain.LuaCs.Game.UpdatePriorityItems.Contains(item)) continue;
-                    item.Update(deltaTime * MapEntityUpdateInterval, cam);
+                    foreach (Item item in Item.ItemList)
+                    {
+                        if (GameMain.LuaCs.Game.UpdatePriorityItems.Contains(item)) { continue; }
+                        lastUpdatedItem = item;
+                        item.Update(deltaTime * MapEntityUpdateInterval, cam);
+                    }
+                }
+                catch (InvalidOperationException e)
+                {
+                    GameAnalyticsManager.AddErrorEventOnce(
+                        "MapEntity.UpdateAll:ItemUpdateInvalidOperation", 
+                        GameAnalyticsManager.ErrorSeverity.Critical, 
+                        $"Error while updating item {lastUpdatedItem?.Name ?? "null"}: {e.Message}");
+                    throw new InvalidOperationException($"Error while updating item {lastUpdatedItem?.Name ?? "null"}", innerException: e);
                 }
             }
 

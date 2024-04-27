@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,7 +6,7 @@
     <RootNamespace>Barotrauma</RootNamespace>
     <Authors>FakeFish, Undertow Games</Authors>
     <Product>Barotrauma Dedicated Server</Product>
-    <Version>1.3.0.1</Version>
+    <Version>1.4.5.0</Version>
     <Copyright>Copyright © FakeFish 2018-2023</Copyright>
     <Platforms>AnyCPU;x64</Platforms>
     <AssemblyName>DedicatedServer</AssemblyName>

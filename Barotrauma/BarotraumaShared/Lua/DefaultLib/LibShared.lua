@@ -43,12 +43,11 @@ defaultLib["ClientPermissions"] = CreateEnum("Barotrauma.Networking.ClientPermis
 defaultLib["OrderCategory"] = CreateEnum("Barotrauma.OrderCategory")
 defaultLib["WearableType"] = CreateEnum("Barotrauma.WearableType")
 defaultLib["NumberType"] = CreateEnum("Barotrauma.NumberType")
-defaultLib["GameDifficulty"] = CreateEnum("Barotrauma.GameDifficulty")
-defaultLib["StartingBalanceAmount"] = CreateEnum("Barotrauma.StartingBalanceAmount")
 defaultLib["ChatMode"] = CreateEnum("Barotrauma.ChatMode")
 defaultLib["CharacterType"] = CreateEnum("Barotrauma.CharacterType")
 defaultLib["MissionType"] = CreateEnum("Barotrauma.MissionType")
 defaultLib["VoteType"] = CreateEnum("Barotrauma.Networking.VoteType")
+defaultLib["CanEnterSubmarine"] = CreateEnum("Barotrauma.CanEnterSubmarine")
 defaultLib["InputType"] = CreateStatic("Barotrauma.InputType")
 
 defaultLib["EventPrefab"] = CreateStatic("Barotrauma.EventPrefab", true)

@@ -153,6 +153,9 @@ namespace Barotrauma
             }
         }
 
+        /// <summary>
+        /// When enabled, clips the left side of the text if it's too long to fit in the box (i.e. allows you to enter longer texts without the text overflowing from the box).
+        /// </summary>
         public bool OverflowClip
         {
             get { return textBlock.OverflowClip; }
@@ -335,7 +338,7 @@ namespace Barotrauma
             textBlock.Text = text;
             ClearSelection();
             if (Text == null) textBlock.Text = "";
-            if (Text != "" && !Wrap)
+            if (Text != "")
             {
                 if (maxTextLength != null)
                 {
@@ -344,7 +347,7 @@ namespace Barotrauma
                         textBlock.Text = Text.Substring(0, (int)maxTextLength);
                     }
                 }
-                else
+                else if (!Wrap)
                 {
                     while (ClampText && textBlock.Text.Length > 0 && Font.MeasureString(textBlock.Text).X * TextBlock.TextScale > (int)(textBlock.Rect.Width - textBlock.Padding.X - textBlock.Padding.Z))
                     {

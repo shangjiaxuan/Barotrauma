@@ -34,10 +34,16 @@ namespace Barotrauma.Items.Components
             get { return outputContainer; }
         }
 
+        /// <summary>
+        /// Should the output items left in the deconstructor be automatically moved to the main sub at the end of the round 
+        /// if the deconstructor is not in the main sub?
+        /// </summary>
+        public bool RelocateOutputToMainSub;
+
         [Serialize(false, IsPropertySaveable.Yes)]
         public bool DeconstructItemsSimultaneously { get; set; }
 
-        [Editable, Serialize(1.0f, IsPropertySaveable.Yes)]
+        [Editable(MinValueFloat = 0.1f, MaxValueFloat = 1000), Serialize(1.0f, IsPropertySaveable.Yes)]
         public float DeconstructionSpeed { get; set; }
 
         public Deconstructor(Item item, ContentXElement element)
@@ -290,6 +296,10 @@ namespace Barotrauma.Items.Components
                         spawnedItem.AllowStealing = targetItem.AllowStealing;
                         spawnedItem.OriginalOutpost = targetItem.OriginalOutpost;
                         spawnedItem.SpawnedInCurrentOutpost = targetItem.SpawnedInCurrentOutpost;
+                        if (RelocateOutputToMainSub && user is { AIController: HumanAIController humanAi })
+                        {
+                            humanAi.HandleRelocation(spawnedItem);
+                        }
                         for (int i = 0; i < outputContainer.Capacity; i++)
                         {
                             var containedItem = outputContainer.Inventory.GetItemAt(i);
@@ -318,7 +328,12 @@ namespace Barotrauma.Items.Components
                 }
             }
 
-            GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + targetItem.Prefab.Identifier);
+            if (targetItem.Prefab.ContentPackage == ContentPackageManager.VanillaCorePackage &&
+                /* we don't need info of every item, we can get a good sample size just by logging 5% */
+                Rand.Range(0.0f, 1.0f) < 0.05f)
+            {
+                GameAnalyticsManager.AddDesignEvent("ItemDeconstructed:" + (GameMain.GameSession?.GameMode?.Preset.Identifier.Value ?? "none") + ":" + targetItem.Prefab.Identifier);
+            }
 
             bool? result = GameMain.LuaCs.Hook.Call<bool?>("item.deconstructed", targetItem, this, user, allowRemove);
             if (result == true) { return; }
@@ -332,6 +347,10 @@ namespace Barotrauma.Items.Components
                     foreach (Item outputItem in ic.Inventory.AllItemsMod)
                     {
                         tryPutInOutputSlots(outputItem);
+                        if (RelocateOutputToMainSub && user != null && user.AIController is HumanAIController humanAi)
+                        {
+                            humanAi.HandleRelocation(outputItem);
+                        }
                     }
                 }
                 inputContainer.Inventory.RemoveItem(targetItem);
@@ -439,11 +458,12 @@ namespace Barotrauma.Items.Components
             }
         }
 
-        private void SetActive(bool active, Character user = null)
+        public void SetActive(bool active, Character user = null, bool createNetworkEvent = false)
         {
             PutItemsToLinkedContainer();
 
             this.user = user;
+            RelocateOutputToMainSub = false;
 
             if (inputContainer.Inventory.IsEmpty()) { active = false; }
 
@@ -456,6 +476,10 @@ namespace Barotrauma.Items.Components
             {
                 GameServer.Log(GameServer.CharacterLogName(user) + (IsActive ? " activated " : " deactivated ") + item.Name, ServerLog.MessageType.ItemInteraction);
             }
+            if (createNetworkEvent)
+            {
+                item.CreateServerEvent(this);
+            }
 #endif
             if (!IsActive)
             {
@@ -465,7 +489,11 @@ namespace Barotrauma.Items.Components
 #if CLIENT
             else
             {
-                HintManager.OnStartDeconstructing(user, this);
+                HintManager.OnStartDeconstructing(user, this); 
+                if (Item.Submarine is { Info.IsOutpost: true } && user is { IsBot: true })
+                {
+                    HintManager.OnItemMarkedForRelocation();
+                }
             }
 #endif
 

@@ -10,6 +10,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinuxServer", "..\..\..\..\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LuaDocsGenerator", "LuaDocsGenerator.csproj", "{6E36A474-29B7-4F0C-96CE-79F11BF6C0A4}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BarotraumaCore", "..\..\..\..\Libraries\BarotraumaLibs\BarotraumaCore\BarotraumaCore.csproj", "{4F493ED0-CC77-4151-AFBC-A12340B352B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,30 +58,6 @@ Global
 		{562EDFE0-7AEB-4F1E-BC26-148DF42F4186}.Unstable|Any CPU.Build.0 = Unstable|Any CPU
 		{562EDFE0-7AEB-4F1E-BC26-148DF42F4186}.Unstable|x64.ActiveCfg = Unstable|x64
 		{562EDFE0-7AEB-4F1E-BC26-148DF42F4186}.Unstable|x64.Build.0 = Unstable|x64
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Debug|x64.Build.0 = Debug|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Release|x64.ActiveCfg = Release|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Release|x64.Build.0 = Release|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Unstable|Any CPU.ActiveCfg = Debug|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Unstable|Any CPU.Build.0 = Debug|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Unstable|x64.ActiveCfg = Debug|Any CPU
-		{FDB16AC2-7947-4DCC-A46F-E9D1B05C0A1E}.Unstable|x64.Build.0 = Debug|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Debug|x64.Build.0 = Debug|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Release|x64.ActiveCfg = Release|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Release|x64.Build.0 = Release|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Unstable|Any CPU.ActiveCfg = Debug|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Unstable|Any CPU.Build.0 = Debug|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Unstable|x64.ActiveCfg = Debug|Any CPU
-		{49C8C464-A381-4FDD-AB52-80BB9FE35DDB}.Unstable|x64.Build.0 = Debug|Any CPU
 		{6E36A474-29B7-4F0C-96CE-79F11BF6C0A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6E36A474-29B7-4F0C-96CE-79F11BF6C0A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E36A474-29B7-4F0C-96CE-79F11BF6C0A4}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -92,6 +70,18 @@ Global
 		{6E36A474-29B7-4F0C-96CE-79F11BF6C0A4}.Unstable|Any CPU.Build.0 = Debug|Any CPU
 		{6E36A474-29B7-4F0C-96CE-79F11BF6C0A4}.Unstable|x64.ActiveCfg = Debug|Any CPU
 		{6E36A474-29B7-4F0C-96CE-79F11BF6C0A4}.Unstable|x64.Build.0 = Debug|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Debug|x64.Build.0 = Debug|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Release|x64.ActiveCfg = Release|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Release|x64.Build.0 = Release|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Unstable|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Unstable|Any CPU.Build.0 = Debug|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Unstable|x64.ActiveCfg = Debug|Any CPU
+		{4F493ED0-CC77-4151-AFBC-A12340B352B7}.Unstable|x64.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
