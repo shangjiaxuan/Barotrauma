@@ -1753,7 +1753,7 @@ namespace Barotrauma
             createPendingChangesText = createPendingText;
             if (characterInfo == null || CampaignCharacterDiscarded)
             {
-                characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, GameMain.Client.Name, null);
+                characterInfo = new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""), GameMain.Client.Name, null);
                 characterInfo.RecreateHead(MultiplayerPreferences.Instance);
                 GameMain.Client.CharacterInfo = characterInfo;
                 characterInfo.OmitJobInMenus = true;

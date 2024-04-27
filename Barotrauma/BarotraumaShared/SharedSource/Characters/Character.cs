@@ -404,8 +404,10 @@ namespace Barotrauma
         public readonly CharacterParams Params;
         
         public Identifier SpeciesName => Params?.SpeciesName ?? "null".ToIdentifier();
-        
-        public Identifier GetBaseCharacterSpeciesName() => Prefab.GetBaseCharacterSpeciesName(SpeciesName);
+
+        public PrefabInstance SpeciesInstance => new PrefabInstance(SpeciesName, Prefab.ContentPackage.Name);
+
+        public PrefabInstance GetBaseCharacterSpeciesName() => Prefab.GetBaseCharacterSpeciesName(SpeciesInstance);
 
         public Identifier Group => HumanPrefab is HumanPrefab humanPrefab && !humanPrefab.Group.IsEmpty ? humanPrefab.Group : Params.Group;
 
@@ -1250,7 +1252,7 @@ namespace Barotrauma
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
         public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null, bool spawnInitialItems = true)
         {
-            return Create(characterInfo.SpeciesName, position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent: true, ragdoll, spawnInitialItems);
+            return Create(characterInfo.SpeciesName.id, position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent: true, ragdoll, spawnInitialItems);
         }
 
         /// <summary>
@@ -1357,7 +1359,7 @@ namespace Barotrauma
                 }
                 if (characterInfo == null)
                 {
-                    Info = new CharacterInfo(CharacterPrefab.HumanSpeciesName);
+                    Info = new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""));
                 }
             }
             if (Info != null)
@@ -1487,16 +1489,16 @@ namespace Barotrauma
                 if (ragdollParams == null && ((prefab as IImplementsVariants<CharacterPrefab>).InheritParent.IsEmpty || (prefab as IImplementsVariants<CharacterPrefab>).InheritParent.id == prefab.Identifier))
                 {
                     Identifier name = Params.UseHuskAppendage ? nonHuskedSpeciesName : speciesName;
-                    ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(name, Params, Prefab.ContentPackage) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(name, Params, Prefab.ContentPackage);
+                    ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(new PrefabInstance(name, Prefab.ContentPackage.Name), Params, Prefab.ContentFile.Path) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(new PrefabInstance(name, Prefab.ContentPackage.Name), Params, Prefab.ContentFile.Path);
                 }
                 if (Params.HasInfo && info == null)
                 {
-                    info = new CharacterInfo(nonHuskedSpeciesName);
+                    info = new CharacterInfo(new PrefabInstance(nonHuskedSpeciesName, ""));
                 }
             }
             else if (Params.HasInfo && info == null)
             {
-                info = new CharacterInfo(speciesName);
+                info = new CharacterInfo(new PrefabInstance(speciesName, ""));
             }
 
             if (IsHumanoid)

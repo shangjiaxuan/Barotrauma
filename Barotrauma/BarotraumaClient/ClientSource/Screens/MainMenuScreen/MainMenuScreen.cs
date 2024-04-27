@@ -942,7 +942,7 @@ namespace Barotrauma
             {
                 var jobPrefab = JobPrefab.Get(job);
                 var variant = Rand.Range(0, jobPrefab.Variants);
-                var characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: jobPrefab, variant: variant);
+                var characterInfo = new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""), jobOrJobPrefab: jobPrefab, variant: variant);
                 if (characterInfo.Job == null)
                 {
                     DebugConsole.ThrowError("Failed to find the job \"" + job + "\"!");

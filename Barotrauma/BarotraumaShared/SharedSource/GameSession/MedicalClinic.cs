@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -357,13 +357,13 @@ namespace Barotrauma
 #if DEBUG && CLIENT
         private static readonly CharacterInfo[] TestInfos =
         {
-            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
-            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
-            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
-            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
-            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
-            new CharacterInfo(CharacterPrefab.HumanSpeciesName),
-            new CharacterInfo(CharacterPrefab.HumanSpeciesName)
+            new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, "")),
+            new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, "")),
+            new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, "")),
+            new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, "")),
+            new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, "")),
+            new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, "")),
+            new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""))
         };
 
         private static readonly NetAffliction[] TestAfflictions =

@@ -16,10 +16,14 @@ namespace Barotrauma
         }
 
         public string Name => Identifier.Value;
-        public Identifier VariantOf { get; }
+        public PrefabInstance VariantOf { get
+            {
+                return ConfigElement.InheritParent();
+            }
+        }
         public CharacterPrefab ParentPrefab { get; set; }
         
-        public Identifier GetBaseCharacterSpeciesName(Identifier speciesName)
+        public PrefabInstance GetBaseCharacterSpeciesName(PrefabInstance speciesName)
         {
             if (!VariantOf.IsEmpty)
             {
@@ -27,7 +31,7 @@ namespace Barotrauma
                 if (ParentPrefab is { VariantOf.IsEmpty: false } parentPrefab)
                 {
                     speciesName = parentPrefab.GetBaseCharacterSpeciesName(speciesName);
-                }   
+                }
             }
             return speciesName;
         }
@@ -70,6 +74,12 @@ namespace Barotrauma
             return Prefabs[speciesName];
         }
 
+        public static CharacterPrefab FindBySpeciesInstance(PrefabInstance speciesName)
+        {
+            if (!Prefabs.TryGet(speciesName, out CharacterPrefab prefab)) { return null; }
+            return prefab;
+        }
+
         public static CharacterPrefab FindByFilePath(string filePath)
         {
             return Prefabs.Find(p => p.ContentFile.Path == filePath);
@@ -80,7 +90,7 @@ namespace Barotrauma
             return Prefabs.Find(predicate);
         }
 
-        public CharacterPrefab(ContentXElement mainElement, CharacterFile file) : base(file, ParseName(mainElement, file))
+        public CharacterPrefab(ContentXElement mainElement, CharacterFile file) : base(file, ParseName(mainElement, file).id)
         {
             originalElement = mainElement;
             ConfigElement = mainElement;
@@ -88,7 +98,7 @@ namespace Barotrauma
             ParseConfigElement();
         }
 
-        public static Identifier ParseName(XElement element, CharacterFile file)
+        public static PrefabInstance ParseName(XElement element, CharacterFile file)
         {
             string name = element.GetAttributeString("name", null);
             if (!string.IsNullOrEmpty(name))
@@ -99,13 +109,13 @@ namespace Barotrauma
             {
                 name = element.GetAttributeString("speciesname", string.Empty);
             }
-            return new Identifier(name);
+            return new PrefabInstance(new Identifier(name), file.ContentPackage.Name);
         }
 
-        public static bool CheckSpeciesName(XElement mainElement, CharacterFile file, out Identifier name)
+        public static bool CheckSpeciesName(XElement mainElement, CharacterFile file, out PrefabInstance name)
         {
             name = ParseName(mainElement, file);
-            if (name == Identifier.Empty)
+            if (name.IsEmpty)
             {
                 DebugConsole.ThrowError($"No species name defined for: {file.Path}",
                     contentPackage: file.ContentPackage);

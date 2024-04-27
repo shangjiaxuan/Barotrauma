@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Linq;
 
 namespace Barotrauma
@@ -89,7 +89,7 @@ namespace Barotrauma
                 jobPrefab = JobPrefab.Prefabs.First();
             }
             int jobVariant = tutorialCharacterElement.GetAttributeInt("variant", 0);
-            var characterInfo = new CharacterInfo(speciesName, jobOrJobPrefab: jobPrefab, variant: jobVariant);
+            var characterInfo = new CharacterInfo(new PrefabInstance(speciesName, ""), jobOrJobPrefab: jobPrefab, variant: jobVariant);
             foreach (var skillElement in tutorialCharacterElement.GetChildElements("skill"))
             {
                 Identifier skillIdentifier = skillElement.GetAttributeIdentifier("identifier", "");

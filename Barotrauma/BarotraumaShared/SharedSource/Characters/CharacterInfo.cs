@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Barotrauma.Items.Components;
 using Microsoft.Xna.Framework;
 using System;
@@ -154,7 +154,7 @@ namespace Barotrauma
                     }
                     return CharacterInfo.Hairs.ElementAtOrDefault(hairWithHatIndex.Value);
                 }
-            }            
+            }
             public ContentXElement BeardElement
             {
                 get
@@ -236,7 +236,13 @@ namespace Barotrauma
         public bool IsMale { get { return head?.Preset?.TagSet?.Contains(maleIdentifier) ?? false; } }
         public bool IsFemale { get { return head?.Preset?.TagSet?.Contains(femaleIdentifier) ?? false; } }
 
-        public CharacterInfoPrefab Prefab => CharacterPrefab.Prefabs[SpeciesName].CharacterInfoPrefab;
+        public CharacterInfoPrefab Prefab {
+            get {
+                if(!CharacterPrefab.Prefabs.TryGet(SpeciesName, out CharacterPrefab prefab)){ return null; }
+                return prefab.CharacterInfoPrefab;
+            }
+        }
+
         public class HeadPreset : ISerializableEntity
         {
             private readonly CharacterInfoPrefab characterInfoPrefab;
@@ -326,7 +332,7 @@ namespace Barotrauma
             }
         }
 
-        public Identifier SpeciesName { get; }
+        public PrefabInstance SpeciesName { get; }
 
         /// <summary>
         /// Note: Can be null.
@@ -551,11 +557,11 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
-                    Identifier speciesName = SpeciesName;
-                    bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName == CharacterPrefab.HumanSpeciesName);
+                    PrefabInstance speciesName = SpeciesName;
+                    bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName.id == CharacterPrefab.HumanSpeciesName);
                     ragdoll = isHumanoid 
-                        ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(SpeciesName, CharacterConfigElement, CharacterConfigElement.ContentPackage)
-                        : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(SpeciesName, CharacterConfigElement, CharacterConfigElement.ContentPackage);
+                        ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(SpeciesName, CharacterConfigElement, CharacterConfigElement.ContentPath)
+                        : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(SpeciesName, CharacterConfigElement, CharacterConfigElement.ContentPath);
                 }
                 return ragdoll;
             }
@@ -645,7 +651,7 @@ namespace Barotrauma
         
         // Used for creating the data
         public CharacterInfo(
-            Identifier speciesName,
+            PrefabInstance speciesName,
             string name = "",
             string originalName = "",
             Either<Job, JobPrefab> jobOrJobPrefab = null,
@@ -664,7 +670,8 @@ namespace Barotrauma
             idCounter++;
             SpeciesName = speciesName;
             SpriteTags = new List<Identifier>();
-            CharacterConfigElement = CharacterPrefab.FindBySpeciesName(SpeciesName)?.ConfigElement;
+            CharacterPrefab.Prefabs.TryGet(SpeciesName, out CharacterPrefab prefab);
+            CharacterConfigElement = prefab?.ConfigElement;
             if (CharacterConfigElement == null) { return; }
             // TODO: support for variants
             HasSpecifierTags = ElementHasSpecifierTags(CharacterConfigElement);
@@ -770,11 +777,11 @@ namespace Barotrauma
             AdditionalTalentPoints = infoElement.GetAttributeInt("additionaltalentpoints", 0);
             HashSet<Identifier> tags = infoElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToHashSet();
             LoadTagsBackwardsCompatibility(infoElement, tags);
-            SpeciesName = infoElement.GetAttributeIdentifier("speciesname", "");
+            SpeciesName = new PrefabInstance(infoElement.GetAttributeIdentifier("speciesname", ""), infoElement.ContentPackage?.Name);
             ContentXElement element;
             if (!SpeciesName.IsEmpty)
             {
-                element = CharacterPrefab.FindBySpeciesName(SpeciesName)?.ConfigElement;
+                element = CharacterPrefab.FindBySpeciesInstance(SpeciesName)?.ConfigElement;
             }
             else
             {

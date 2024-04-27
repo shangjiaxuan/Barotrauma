@@ -485,10 +485,10 @@ namespace Barotrauma
                     //2. check if the base prefab defines the texture
                     if (texturePath.IsNullOrEmpty() && !character.Prefab.VariantOf.IsEmpty)
                     {
-                        Identifier speciesName = character.GetBaseCharacterSpeciesName();
+                        PrefabInstance speciesName = character.GetBaseCharacterSpeciesName();
                         RagdollParams parentRagdollParams = character.IsHumanoid ?
-                                RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(speciesName, character.Params, character.Prefab.ContentPackage) :
-                                RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(speciesName, character.Params, character.Prefab.ContentPackage);
+                                RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(speciesName, character.Params, character.Prefab.ContentFile.Path) :
+                                RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(speciesName, character.Params, character.Prefab.ContentFile.Path);
  
                         texturePath = parentRagdollParams.OriginalElement?.GetAttributeContentPath("texture");
                     }

@@ -19,7 +19,7 @@ namespace Barotrauma
     {
         public Identifier id;
         public string package;
-        public PrefabInstance(Identifier identifier, string Package){ id = identifier; package = Package; }
+        public PrefabInstance(Identifier identifier, string Package){ id = identifier; package = Package is null? "":Package; }
 
         public bool IsEmpty { get { return id.IsEmpty; } }
     }

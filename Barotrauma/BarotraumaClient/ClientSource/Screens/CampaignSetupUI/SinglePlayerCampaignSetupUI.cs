@@ -277,7 +277,7 @@ namespace Barotrauma
                 for (int i = 0; i < jobPrefab.InitialCount; i++)
                 {
                     var variant = Rand.Range(0, jobPrefab.Variants);
-                    characterInfos.Add((new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: jobPrefab, variant: variant), jobPrefab));
+                    characterInfos.Add((new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""), jobOrJobPrefab: jobPrefab, variant: variant), jobPrefab));
                 }
             }
             if (characterInfos.Count == 0)
@@ -287,7 +287,7 @@ namespace Barotrauma
                 foreach (JobPrefab jobPrefab in JobPrefab.Prefabs)
                 {
                     var variant = Rand.Range(0, jobPrefab.Variants);
-                    characterInfos.Add((new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: jobPrefab, variant: variant), jobPrefab));
+                    characterInfos.Add((new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""), jobOrJobPrefab: jobPrefab, variant: variant), jobPrefab));
                     if (characterInfos.Count >= 3) { break; }
                 }
             }

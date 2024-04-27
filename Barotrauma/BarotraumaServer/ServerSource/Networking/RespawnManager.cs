@@ -96,7 +96,7 @@ namespace Barotrauma.Networking
                 CharacterInfo botToRespawn = existingBots.Find(b => b.IsDead)?.Info;
                 if (botToRespawn == null)
                 {
-                    botToRespawn = new CharacterInfo(CharacterPrefab.HumanSpeciesName);
+                    botToRespawn = new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""));
                 }
                 else
                 {
@@ -358,7 +358,7 @@ namespace Barotrauma.Networking
                 //all characters are in Team 1 in game modes/missions with only one team.
                 //if at some point we add a game mode with multiple teams where respawning is possible, this needs to be reworked
                 c.TeamID = CharacterTeamType.Team1;
-                if (c.CharacterInfo == null) { c.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, c.Name); }
+                if (c.CharacterInfo == null) { c.CharacterInfo = new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""), c.Name); }
             }
             List<CharacterInfo> characterInfos = clients.Select(c => c.CharacterInfo).ToList();
 

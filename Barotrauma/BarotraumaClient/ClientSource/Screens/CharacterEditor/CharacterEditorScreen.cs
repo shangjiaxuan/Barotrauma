@@ -8,6 +8,8 @@ using System.Xml.Linq;
 using Barotrauma.Extensions;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
+using System.Linq.Expressions;
+
 #if DEBUG
 using System.IO;
 #else
@@ -1508,7 +1510,7 @@ namespace Barotrauma.CharacterEditor
             }
             if (speciesName == CharacterPrefab.HumanSpeciesName && !selectedJob.IsEmpty)
             {
-                var characterInfo = new CharacterInfo(speciesName, jobOrJobPrefab: JobPrefab.Prefabs[selectedJob.Value]);
+                var characterInfo = new CharacterInfo(new PrefabInstance(speciesName, ""), jobOrJobPrefab: JobPrefab.Prefabs[selectedJob.Value]);
                 character = Character.Create(speciesName, spawnPosition, ToolBox.RandomSeed(8), characterInfo, hasAi: false, ragdoll: ragdoll);
                 character.GiveJobItems();
                 HideWearables();
@@ -1760,8 +1762,8 @@ namespace Barotrauma.CharacterEditor
             RagdollParams.ClearCache();
             string ragdollPath = RagdollParams.GetDefaultFile(name, contentPackage);
             RagdollParams ragdollParams = isHumanoid
-                ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, name, ragdoll)
-                : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, name, ragdoll);
+                ? RagdollParams.CreateDefault<HumanRagdollParams>(ragdollPath, new PrefabInstance(name, ""), ragdoll)
+                : RagdollParams.CreateDefault<FishRagdollParams>(ragdollPath, new PrefabInstance(name, ""), ragdoll);
 
             // Animations
             AnimationParams.ClearCache();
@@ -1806,7 +1808,7 @@ namespace Barotrauma.CharacterEditor
                     }
                     Type type = AnimationParams.GetParamTypeFromAnimType(animType, isHumanoid);
                     string fullPath = AnimationParams.GetDefaultFile(name, animType);
-                    AnimationParams.Create(fullPath, name, animType, type);
+                    AnimationParams.Create(fullPath, new PrefabInstance(name, ""), animType, type);
                 }
             }
             if (!VisibleSpecies.Contains(name))
@@ -2928,10 +2930,10 @@ namespace Barotrauma.CharacterEditor
                 loadBox.Buttons[1].OnClicked += (btn, data) =>
                 {
                     string fileName = Path.GetFileNameWithoutExtension(selectedFile);
-                    Identifier baseSpecies = character.GetBaseCharacterSpeciesName();
+                    PrefabInstance baseSpecies = character.GetBaseCharacterSpeciesName();
                     var ragdoll = character.IsHumanoid 
-                        ? RagdollParams.GetRagdollParams<HumanRagdollParams>(character.SpeciesName, baseSpecies, fileName, character.Prefab.ContentPackage) as RagdollParams 
-                        : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesName, baseSpecies, fileName, character.Prefab.ContentPackage);
+                        ? RagdollParams.GetRagdollParams<HumanRagdollParams>(character.SpeciesInstance, baseSpecies, fileName, character.Prefab.ContentFile.Path) as RagdollParams 
+                        : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesInstance, baseSpecies, fileName, character.Prefab.ContentFile.Path);
                     ragdoll.Reset(true);
                     GUI.AddMessage(GetCharacterEditorTranslation("RagdollLoadedFrom").Replace("[file]", selectedFile), Color.WhiteSmoke, font: GUIStyle.Font);
                     RecreateRagdoll(ragdoll);

@@ -47,7 +47,7 @@ namespace Barotrauma
         public const float MIN_SCALE = 0.1f;
         public const float MAX_SCALE = 2;
 
-        public Identifier SpeciesName { get; private set; }
+        public PrefabInstance SpeciesName { get; private set; }
 
         [Serialize("", IsPropertySaveable.Yes, description: "Default path for the limb sprite textures. Used only if the limb specific path for the limb is not defined"), Editable]
         public string Texture { get; set; }
@@ -114,7 +114,7 @@ namespace Barotrauma
         /// key2: File path
         /// value: Ragdoll parameters
         /// </summary>
-        private static readonly Dictionary<Identifier, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<Identifier, Dictionary<string, RagdollParams>>();
+        private static readonly Dictionary<PrefabInstance, Dictionary<string, RagdollParams>> allRagdolls = new Dictionary<PrefabInstance, Dictionary<string, RagdollParams>>();
 
         public List<ColliderParams> Colliders { get; private set; } = new List<ColliderParams>();
         public List<LimbParams> Limbs { get; private set; } = new List<LimbParams>();
@@ -152,52 +152,52 @@ namespace Barotrauma
             return folder.CleanUpPathCrossPlatform(correctFilenameCase: true);
         }
         
-        public static T GetDefaultRagdollParams<T>(Character character) where T : RagdollParams, new() => GetDefaultRagdollParams<T>(character.SpeciesName, character.Params, character.Prefab.ContentPackage);
+        public static T GetDefaultRagdollParams<T>(Character character) where T : RagdollParams, new() => GetDefaultRagdollParams<T>(character.SpeciesInstance, character.Params, character.Prefab.ContentFile.Path);
         
-        public static T GetDefaultRagdollParams<T>(Identifier speciesName, CharacterParams characterParams, ContentPackage contentPackage) where T : RagdollParams, new()
+        public static T GetDefaultRagdollParams<T>(PrefabInstance speciesName, CharacterParams characterParams, ContentPath contentPath) where T : RagdollParams, new()
         {
             XElement mainElement = characterParams.VariantFile?.Root ?? characterParams.MainElement;
-            return GetDefaultRagdollParams<T>(speciesName, mainElement, contentPackage);
+            return GetDefaultRagdollParams<T>(speciesName, mainElement, contentPath);
         }
         
-        public static T GetDefaultRagdollParams<T>(Identifier speciesName, XElement characterRootElement, ContentPackage contentPackage) where T : RagdollParams, new()
+        public static T GetDefaultRagdollParams<T>(PrefabInstance speciesName, XElement characterRootElement, ContentPath contentPath) where T : RagdollParams, new()
         {
-            Debug.Assert(contentPackage != null);
+            Debug.Assert(contentPath is not null);
             if (characterRootElement.IsOverride())
             {
                 characterRootElement = characterRootElement.FirstElement();
             }
-            Identifier ragdollSpecies = speciesName;
-            Identifier variantOf = characterRootElement.VariantOf();
+            PrefabInstance ragdollSpecies = speciesName;
+            PrefabInstance variantOf = characterRootElement.InheritParent();
             if (characterRootElement != null && (characterRootElement.GetChildElement("ragdolls") ?? characterRootElement.GetChildElement("ragdoll")) is XElement ragdollElement)
             {
-                if ((ragdollElement.GetAttributeContentPath("path", contentPackage) ?? ragdollElement.GetAttributeContentPath("file", contentPackage)) is ContentPath path)
+                if ((ragdollElement.GetAttributeContentPath("path", contentPath) ?? ragdollElement.GetAttributeContentPath("file", contentPath)) is ContentPath path)
                 {
-                    return GetRagdollParams<T>(speciesName, ragdollSpecies, file: path, contentPackage);
+                    return GetRagdollParams<T>(speciesName, ragdollSpecies, file: path, contentPath);
                 }
                 else if (!variantOf.IsEmpty)
                 {
-                    string folder = ragdollElement.GetAttributeContentPath("folder", contentPackage)?.Value;
+                    string folder = ragdollElement.GetAttributeContentPath("folder", contentPath)?.Value;
                     if (folder.IsNullOrEmpty() || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
                     {
                         // Folder attribute not defined or set to default -> use the ragdoll defined in the base definition file.
-                        if (CharacterPrefab.FindBySpeciesName(variantOf) is CharacterPrefab prefab)
+                        if (CharacterPrefab.Prefabs.TryGet(variantOf, out CharacterPrefab prefab))
                         {
                             ragdollSpecies = prefab.GetBaseCharacterSpeciesName(variantOf);
                         }
                     }
                 }
             }
-            else if (!variantOf.IsEmpty && CharacterPrefab.FindBySpeciesName(variantOf) is CharacterPrefab prefab)
+            else if (!variantOf.IsEmpty && CharacterPrefab.FindBySpeciesInstance(variantOf) is CharacterPrefab prefab)
             {
                 // Ragdoll element not defined -> use the ragdoll defined in the base definition file.
                 ragdollSpecies = prefab.GetBaseCharacterSpeciesName(variantOf);
             }
             // Using a null file definition means we use the default animations found in the Ragdolls folder.
-            return GetRagdollParams<T>(speciesName, ragdollSpecies, file: null, contentPackage);
+            return GetRagdollParams<T>(speciesName, ragdollSpecies, file: null, contentPath);
         }
         
-        public static T GetRagdollParams<T>(Identifier speciesName, Identifier ragdollSpecies, Either<string, ContentPath> file, ContentPackage contentPackage) where T : RagdollParams, new()
+        public static T GetRagdollParams<T>(PrefabInstance speciesName, PrefabInstance ragdollSpecies, Either<string, ContentPath> file, ContentPath in_contentPath) where T : RagdollParams, new()
         {
             Debug.Assert(!speciesName.IsEmpty);
             Debug.Assert(!ragdollSpecies.IsEmpty);
@@ -211,13 +211,13 @@ namespace Barotrauma
                 }
                 Debug.Assert(!fileName.IsNullOrWhiteSpace() || !contentPath.IsNullOrWhiteSpace());
             }
-            Debug.Assert(contentPackage != null);
+            Debug.Assert(in_contentPath is not null);
             if (!allRagdolls.TryGetValue(speciesName, out Dictionary<string, RagdollParams> ragdolls))
             {
                 ragdolls = new Dictionary<string, RagdollParams>();
                 allRagdolls.Add(speciesName, ragdolls);
             }
-            string key = fileName ?? contentPath?.Value ?? GetDefaultFileName(ragdollSpecies);
+            string key = fileName ?? contentPath?.Value ?? GetDefaultFileName(ragdollSpecies.id);
             if (ragdolls.TryGetValue(key, out RagdollParams ragdoll))
             {
                 // Already cached.
@@ -233,19 +233,19 @@ namespace Barotrauma
                 }
                 else
                 {
-                    DebugConsole.ThrowError($"[AnimationParams] Failed to load an animation {ragdollInstance} from {contentPath.Value} for the character {speciesName}. Using the default ragdoll.", contentPackage: contentPackage);
+                    DebugConsole.ThrowError($"[AnimationParams] Failed to load an animation {ragdollInstance} from {contentPath.Value} for the character {speciesName}. Using the default ragdoll.", contentPackage: in_contentPath.ContentPackage);
                 }
             }
             // Seek the default ragdoll from the character's ragdoll folder.
             string selectedFile;
-            string folder = GetFolder(ragdollSpecies);
+            string folder = GetFolder(ragdollSpecies.id);
             if (Directory.Exists(folder))
             {
                 var files = Directory.GetFiles(folder).OrderBy(f => f, StringComparer.OrdinalIgnoreCase);
                 if (files.None())
                 {
-                    DebugConsole.ThrowError($"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.", contentPackage: contentPackage);
-                    selectedFile = GetDefaultFile(ragdollSpecies);
+                    DebugConsole.ThrowError($"[RagdollParams] Could not find any ragdoll files from the folder: {folder}. Using the default ragdoll.", contentPackage: in_contentPath.ContentPackage);
+                    selectedFile = GetDefaultFile(ragdollSpecies.id);
                 }
                 else
                 {
@@ -253,7 +253,7 @@ namespace Barotrauma
                     {
                         // Files found, but none specified -> Get a matching ragdoll from the specified folder.
                         // First try to find a file that matches the default file name. If that fails, just take any file.
-                        string defaultFileName = GetDefaultFileName(ragdollSpecies);
+                        string defaultFileName = GetDefaultFileName(ragdollSpecies.id);
                         selectedFile = files.FirstOrDefault(f => f.Contains(defaultFileName, StringComparison.OrdinalIgnoreCase)) ?? files.First();
                     }
                     else
@@ -261,22 +261,22 @@ namespace Barotrauma
                         selectedFile = files.FirstOrDefault(f => IO.Path.GetFileNameWithoutExtension(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
                         if (selectedFile == null)
                         {
-                            DebugConsole.ThrowError($"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.", contentPackage: contentPackage);
-                            selectedFile = GetDefaultFile(ragdollSpecies);
+                            DebugConsole.ThrowError($"[RagdollParams] Could not find a ragdoll file that matches the name {fileName}. Using the default ragdoll.", contentPackage: in_contentPath.ContentPackage);
+                            selectedFile = GetDefaultFile(ragdollSpecies.id);
                         }
                     }   
                 }
             }
             else
             {
-                DebugConsole.ThrowError($"[RagdollParams] Invalid directory: {folder}. Using the default ragdoll.", contentPackage: contentPackage);
-                selectedFile = GetDefaultFile(ragdollSpecies);
+                DebugConsole.ThrowError($"[RagdollParams] Invalid directory: {folder}. Using the default ragdoll.", contentPackage: in_contentPath.ContentPackage);
+                selectedFile = GetDefaultFile(ragdollSpecies.id);
             }
             
             Debug.Assert(selectedFile != null);
             DebugConsole.Log($"[RagdollParams] Loading the ragdoll from {selectedFile}.");
             T r = new T();
-            if (r.Load(ContentPath.FromRaw(contentPackage, selectedFile), speciesName))
+            if (r.Load(ContentPath.FromRaw(in_contentPath, selectedFile), speciesName))
             {
                 ragdolls.TryAdd(key, r);
             }
@@ -292,7 +292,7 @@ namespace Barotrauma
         /// Creates a default ragdoll for the species using a predefined configuration.
         /// Note: Use only to create ragdolls for new characters, because this overrides the old ragdoll!
         /// </summary>
-        public static T CreateDefault<T>(string fullPath, Identifier speciesName, XElement mainElement) where T : RagdollParams, new()
+        public static T CreateDefault<T>(string fullPath, PrefabInstance speciesName, XElement mainElement) where T : RagdollParams, new()
         {
             // Remove the old ragdolls, if found.
             if (allRagdolls.ContainsKey(speciesName))
@@ -306,7 +306,7 @@ namespace Barotrauma
             {
                 doc = new XDocument(mainElement)
             };
-            var characterPrefab = CharacterPrefab.Prefabs[speciesName];
+            CharacterPrefab.Prefabs.TryGet(speciesName, out CharacterPrefab characterPrefab);
             var contentPath = ContentPath.FromRaw(characterPrefab.FilePath, fullPath);
             instance.UpdatePath(contentPath);
             instance.IsLoaded = instance.Deserialize(mainElement);
@@ -357,7 +357,7 @@ namespace Barotrauma
             });
         }
 
-        protected bool Load(ContentPath file, Identifier speciesName)
+        protected bool Load(ContentPath file, PrefabInstance speciesName)
         {
             if (Load(file))
             {
@@ -1222,7 +1222,7 @@ namespace Barotrauma
 
             public AttackParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
-                Attack = new Attack(element, ragdoll.SpeciesName.Value);
+                Attack = new Attack(element, ragdoll.SpeciesName.id.Value);
             }
 
             public override bool Deserialize(ContentXElement element = null, bool recursive = true)
@@ -1274,7 +1274,7 @@ namespace Barotrauma
 
             public DamageModifierParams(ContentXElement element, RagdollParams ragdoll) : base(element, ragdoll)
             {
-                DamageModifier = new DamageModifier(element, ragdoll.SpeciesName.Value);
+                DamageModifier = new DamageModifier(element, ragdoll.SpeciesName.id.Value);
             }
 
             public override bool Deserialize(ContentXElement element = null, bool recursive = true)

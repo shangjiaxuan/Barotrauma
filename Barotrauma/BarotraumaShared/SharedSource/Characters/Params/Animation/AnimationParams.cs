@@ -65,14 +65,14 @@ namespace Barotrauma
 
     abstract class AnimationParams : EditableParams, IMemorizable<AnimationParams>
     {
-        public Identifier SpeciesName { get; private set; }
+        public PrefabInstance SpeciesInstance { get; private set; }
         public bool IsGroundedAnimation => AnimationType is AnimationType.Walk or AnimationType.Run or AnimationType.Crouch;
         public bool IsSwimAnimation => AnimationType is AnimationType.SwimSlow or AnimationType.SwimFast;
 
         /// <summary>
         /// The cached animations of all the characters that have been loaded.
         /// </summary>
-        private static readonly Dictionary<Identifier, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<Identifier, Dictionary<string, AnimationParams>>();
+        private static readonly Dictionary<PrefabInstance, Dictionary<string, AnimationParams>> allAnimations = new Dictionary<PrefabInstance, Dictionary<string, AnimationParams>>();
 
         [Serialize(1.0f, IsPropertySaveable.Yes), Editable(DecimalCount = 2, MinValueFloat = 0, MaxValueFloat = Ragdoll.MAX_SPEED, ValueStep = 0.1f)]
         public float MovementSpeed { get; set; }
@@ -183,11 +183,11 @@ namespace Barotrauma
         
         protected static T GetAnimParams<T>(Character character, AnimationType animType, Either<string, ContentPath> file, bool throwErrors = true) where T : AnimationParams, new()
         {
-            Identifier speciesName = character.SpeciesName;
-            Identifier animSpecies = speciesName;
+            PrefabInstance speciesName = character.SpeciesInstance;
+            PrefabInstance animSpecies = speciesName;
             if (!character.VariantOf.IsEmpty)
             {
-                string folder = character.Params.VariantFile?.GetRootExcludingOverride().GetChildElement("animations")?.GetAttributeContentPath("folder", character.Prefab.ContentPackage)?.Value;
+                string folder = character.Params.VariantFile?.GetRootExcludingOverride().GetChildElement("animations")?.GetAttributeContentPath("folder", character.Prefab.ContentFile.Path)?.Value;
                 if (folder.IsNullOrEmpty() || folder.Equals("default", StringComparison.OrdinalIgnoreCase))
                 {
                     // Use the animations defined in the base definition file.
@@ -199,7 +199,7 @@ namespace Barotrauma
         
         private static readonly List<string> errorMessages = new List<string>();
 
-        private static T GetAnimParams<T>(Identifier speciesName, Identifier animSpecies, Identifier fallbackSpecies, AnimationType animType, Either<string, ContentPath> file, bool throwErrors = true) where T : AnimationParams, new()
+        private static T GetAnimParams<T>(PrefabInstance speciesName, PrefabInstance animSpecies, PrefabInstance fallbackSpecies, AnimationType animType, Either<string, ContentPath> file, bool throwErrors = true) where T : AnimationParams, new()
         {
             Debug.Assert(!speciesName.IsEmpty);
             Debug.Assert(!animSpecies.IsEmpty);
@@ -213,14 +213,14 @@ namespace Barotrauma
                 }
                 Debug.Assert(!fileName.IsNullOrWhiteSpace() || !contentPath.IsNullOrWhiteSpace());
             }
-            ContentPackage contentPackage = contentPath?.ContentPackage ?? CharacterPrefab.FindBySpeciesName(speciesName)?.ContentPackage;
+            ContentPackage contentPackage = contentPath?.ContentPackage ?? CharacterPrefab.FindBySpeciesInstance(speciesName)?.ContentPackage;
             Debug.Assert(contentPackage != null);
             if (!allAnimations.TryGetValue(speciesName, out Dictionary<string, AnimationParams> animations))
             {
                 animations = new Dictionary<string, AnimationParams>();
                 allAnimations.Add(speciesName, animations);
             }
-            string key = fileName ?? contentPath?.Value ?? GetDefaultFileName(animSpecies, animType);
+            string key = fileName ?? contentPath?.Value ?? GetDefaultFileName(animSpecies.id, animType);
             if (animations.TryGetValue(key, out AnimationParams anim) && anim.AnimationType == animType)
             {
                 // Already cached.
@@ -249,7 +249,7 @@ namespace Barotrauma
             }
             // Seek the correct animation from the character's animation folder.
             string selectedFile = null;
-            string folder = GetFolder(animSpecies);
+            string folder = GetFolder(animSpecies.id);
             if (Directory.Exists(folder))
             {
                 string[] files = Directory.GetFiles(folder);
@@ -268,7 +268,7 @@ namespace Barotrauma
                     {
                         // Files found, but none specified -> Get a matching animation from the specified folder.
                         // First try to find a file that matches the default file name. If that fails, just take any file.
-                        string defaultFileName = GetDefaultFileName(animSpecies, animType);
+                        string defaultFileName = GetDefaultFileName(animSpecies.id, animType);
                         selectedFile = filteredFiles.FirstOrDefault(path => PathMatchesFile(path, defaultFileName)) ?? filteredFiles.First();
                     }
                     else
@@ -285,7 +285,7 @@ namespace Barotrauma
             {
                 errorMessages.Add($"[AnimationParams] Invalid directory: {folder}. Using the default animation.");
             }
-            selectedFile ??= GetDefaultFile(fallbackSpecies, animType);
+            selectedFile ??= GetDefaultFile(fallbackSpecies.id, animType);
             Debug.Assert(selectedFile != null);
             if (errorMessages.None())
             {
@@ -319,7 +319,7 @@ namespace Barotrauma
 
         public static void ClearCache() => allAnimations.Clear();
 
-        public static AnimationParams Create(string fullPath, Identifier speciesName, AnimationType animationType, Type animationParamsType)
+        public static AnimationParams Create(string fullPath, PrefabInstance speciesName, AnimationType animationType, Type animationParamsType)
         {
             if (animationParamsType == typeof(HumanWalkParams))
             {
@@ -363,7 +363,7 @@ namespace Barotrauma
         /// <summary>
         /// Note: Overrides old animations, if found!
         /// </summary>
-        public static T Create<T>(string fullPath, Identifier speciesName, AnimationType animationType) where T : AnimationParams, new()
+        public static T Create<T>(string fullPath, PrefabInstance speciesName, AnimationType animationType) where T : AnimationParams, new()
         {
             if (animationType == AnimationType.NotDefined)
             {
@@ -381,9 +381,9 @@ namespace Barotrauma
                 anims.Remove(fileName);
             }
             var instance = new T();
-            XElement animationElement = new XElement(GetDefaultFileName(speciesName, animationType), new XAttribute("animationtype", animationType.ToString()));
+            XElement animationElement = new XElement(GetDefaultFileName(speciesName.id, animationType), new XAttribute("animationtype", animationType.ToString()));
             instance.doc = new XDocument(animationElement);
-            var characterPrefab = CharacterPrefab.FindBySpeciesName(speciesName);
+            CharacterPrefab.Prefabs.TryGet(speciesName , out CharacterPrefab characterPrefab);
             Debug.Assert(characterPrefab != null);
             var contentPath = ContentPath.FromRaw(characterPrefab.FilePath, fullPath);
             instance.UpdatePath(contentPath);
@@ -398,11 +398,11 @@ namespace Barotrauma
         public bool Serialize() => base.Serialize();
         public bool Deserialize() => base.Deserialize();
 
-        protected bool Load(ContentPath file, Identifier speciesName)
+        protected bool Load(ContentPath file, PrefabInstance speciesName)
         {
             if (Load(file))
             {
-                SpeciesName = speciesName;
+                SpeciesInstance = speciesName;
                 return true;
             }
             return false;
@@ -410,7 +410,7 @@ namespace Barotrauma
 
         protected override void UpdatePath(ContentPath newPath)
         {
-            if (SpeciesName == null)
+            if (SpeciesInstance == null)
             {
                 base.UpdatePath(newPath);
             }
@@ -418,7 +418,7 @@ namespace Barotrauma
             {
                 // Update the key by removing and re-adding the animation.
                 string fileName = FileNameWithoutExtension;
-                if (allAnimations.TryGetValue(SpeciesName, out Dictionary<string, AnimationParams> animations))
+                if (allAnimations.TryGetValue(SpeciesInstance, out Dictionary<string, AnimationParams> animations))
                 {
                     animations.Remove(fileName);
                 }

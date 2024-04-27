@@ -263,7 +263,7 @@ namespace Barotrauma.Networking
             FileReceiver.OnFinished += OnFileReceived;
             FileReceiver.OnTransferFailed += OnTransferFailed;
 
-            characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, Name, originalName: null)
+            characterInfo = new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""), Name, originalName: null)
             {
                 Job = null
             };

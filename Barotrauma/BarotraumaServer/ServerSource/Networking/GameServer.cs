@@ -2410,7 +2410,7 @@ namespace Barotrauma.Networking
 
                     if (client.CharacterInfo == null)
                     {
-                        client.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, client.Name);
+                        client.CharacterInfo = new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""), client.Name);
                     }
                     characterInfos.Add(client.CharacterInfo);
                     if (client.CharacterInfo.Job == null || client.CharacterInfo.Job.Prefab != client.AssignedJob.Prefab)
@@ -2427,7 +2427,7 @@ namespace Barotrauma.Networking
                     int botsToSpawn = ServerSettings.BotSpawnMode == BotSpawnMode.Fill ? ServerSettings.BotCount - characterInfos.Count : ServerSettings.BotCount;
                     for (int i = 0; i < botsToSpawn; i++)
                     {
-                        var botInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName)
+                        var botInfo = new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""))
                         {
                             TeamID = teamID
                         };
@@ -3738,7 +3738,7 @@ namespace Barotrauma.Networking
                 }
             }
 
-            sender.CharacterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, newName);
+            sender.CharacterInfo = new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""), newName);
 
             sender.CharacterInfo.RecreateHead(
                 tags: netInfo.Tags.ToImmutableHashSet(),

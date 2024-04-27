@@ -1,4 +1,4 @@
-using Barotrauma.Extensions;
+﻿using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -29,7 +29,7 @@ namespace Barotrauma
             var mainElement = doc.Root.FromContent(Path);
             bool isOverride = mainElement.IsOverride();
             if (isOverride) { mainElement = mainElement.FirstElement(); }
-            if (!CharacterPrefab.CheckSpeciesName(mainElement, this, out Identifier n)) { return; }
+            if (!CharacterPrefab.CheckSpeciesName(mainElement, this, out PrefabInstance n)) { return; }
             var prefab = new CharacterPrefab(mainElement, this);
             CharacterPrefab.Prefabs.Add(prefab, isOverride);
         }
@@ -63,18 +63,18 @@ namespace Barotrauma
             }
             var mainElement = characterPrefab.ConfigElement;
             mainElement.GetChildElements("sound").ForEach(e => RoundSound.Load(e));
-            if (!CharacterPrefab.CheckSpeciesName(mainElement, this, out Identifier speciesName)) { return; }
+            if (!CharacterPrefab.CheckSpeciesName(mainElement, this, out PrefabInstance speciesName)) { return; }
             bool humanoid = mainElement.GetAttributeBool("humanoid", false);
             RagdollParams ragdollParams;
             try
             {
                 if (humanoid)
                 {
-                    ragdollParams = RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(speciesName, mainElement, ContentPackage);
+                    ragdollParams = RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(speciesName, mainElement, mainElement.ContentPath);
                 }
                 else
                 {
-                    ragdollParams = RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(speciesName, mainElement, ContentPackage);
+                    ragdollParams = RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(speciesName, mainElement, mainElement.ContentPath);
                 }
             }
             catch (Exception e)
@@ -88,7 +88,7 @@ namespace Barotrauma
             {
                 HashSet<string> texturePaths = new HashSet<string>
                 {
-                    ContentPath.FromRaw(CharacterPrefab.Prefabs[speciesName].FilePath , ragdollParams.Texture).Value
+                    ContentPath.FromRaw(CharacterPrefab.Prefabs[speciesName.id].FilePath , ragdollParams.Texture).Value
                 };
                 foreach (RagdollParams.LimbParams limb in ragdollParams.Limbs)
                 {

@@ -722,7 +722,7 @@ namespace Barotrauma
             msg.WriteRangedInteger(Wallet.RewardDistribution, 0, 100);
             msg.WriteByte((byte)TeamID);
             msg.WriteBoolean(this is AICharacter);
-            msg.WriteIdentifier(info.SpeciesName);
+            msg.WriteIdentifier(info.SpeciesName.id);
             int msgLengthBeforeInfo = msg.LengthBytes;
             info.ServerWrite(msg);
             int infoLength = msg.LengthBytes - msgLengthBeforeInfo;

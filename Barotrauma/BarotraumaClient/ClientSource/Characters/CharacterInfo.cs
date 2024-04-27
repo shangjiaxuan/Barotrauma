@@ -568,7 +568,7 @@ namespace Barotrauma
                 }
             }
 
-            CharacterInfo ch = new CharacterInfo(speciesName, newName, originalName, jobPrefab, variant, npcIdentifier: npcId)
+            CharacterInfo ch = new CharacterInfo(new PrefabInstance(speciesName, ""), newName, originalName, jobPrefab, variant, npcIdentifier: npcId)
             {
                 ID = infoID,
                 MinReputationToHire = (factionId, minReputationToHire)
