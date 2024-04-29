@@ -596,7 +596,7 @@ namespace Barotrauma
                     WayPoint.GetRandom(SpawnType.Human, characterInfo.Job?.Prefab, submarine) ??
                     WayPoint.GetRandom(SpawnType.Human, null, submarine);
 
-            Character spawnedCharacter = Character.Create(characterInfo.SpeciesName.id, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
+            Character spawnedCharacter = Character.Create(characterInfo.SpeciesName, positionToStayIn.WorldPosition, ToolBox.RandomSeed(8), characterInfo, createNetworkEvent: false);
             spawnedCharacter.HumanPrefab = humanPrefab;
             humanPrefab.InitializeCharacter(spawnedCharacter, positionToStayIn);
             humanPrefab.GiveItems(spawnedCharacter, submarine, positionToStayIn as WayPoint, Rand.RandSync.ServerAndClient, createNetworkEvents: false);

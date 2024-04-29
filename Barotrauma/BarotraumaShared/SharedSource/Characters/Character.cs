@@ -1252,7 +1252,7 @@ namespace Barotrauma
         /// <param name="ragdoll">Ragdoll configuration file. If null, will select the default.</param>
         public static Character Create(CharacterInfo characterInfo, Vector2 position, string seed, ushort id = Entity.NullEntityID, bool isRemotePlayer = false, bool hasAi = true, RagdollParams ragdoll = null, bool spawnInitialItems = true)
         {
-            return Create(characterInfo.SpeciesName.id, position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent: true, ragdoll, spawnInitialItems);
+            return Create(characterInfo.SpeciesName, position, seed, characterInfo, id, isRemotePlayer, hasAi, createNetworkEvent: true, ragdoll, spawnInitialItems);
         }
 
         /// <summary>
