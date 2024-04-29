@@ -715,7 +715,7 @@ namespace Barotrauma
                 {
                     string errorMsg = "Character \"[name]\" had an invalid cause of death (the type of the cause of death was Affliction, but affliction was not specified).";
                     DebugConsole.ThrowError(errorMsg.Replace("[name]", characterInfo.Name));
-                    GameAnalyticsManager.AddErrorEventOnce("RoundSummary:InvalidCauseOfDeath", GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", characterInfo.SpeciesName.id.Value));
+                    GameAnalyticsManager.AddErrorEventOnce("RoundSummary:InvalidCauseOfDeath", GameAnalyticsManager.ErrorSeverity.Error, errorMsg.Replace("[name]", characterInfo.SpeciesName.Value));
                     statusText = TextManager.Get("CauseOfDeathDescription.Unknown");
                     statusColor = GUIStyle.Red;
                 }

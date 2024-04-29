@@ -238,7 +238,7 @@ namespace Barotrauma
 
         public CharacterInfoPrefab Prefab {
             get {
-                if(!CharacterPrefab.Prefabs.TryGet(SpeciesName, out CharacterPrefab prefab)){ return null; }
+                if(!CharacterPrefab.Prefabs.TryGet(SpeciesInstance, out CharacterPrefab prefab)){ return null; }
                 return prefab.CharacterInfoPrefab;
             }
         }
@@ -332,7 +332,9 @@ namespace Barotrauma
             }
         }
 
-        public PrefabInstance SpeciesName { get; }
+        public PrefabInstance SpeciesInstance { get; }
+
+        public Identifier SpeciesName => SpeciesInstance.id;
 
         /// <summary>
         /// Note: Can be null.
@@ -557,11 +559,11 @@ namespace Barotrauma
             {
                 if (ragdoll == null)
                 {
-                    PrefabInstance speciesName = SpeciesName;
+                    PrefabInstance speciesName = SpeciesInstance;
                     bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName.id == CharacterPrefab.HumanSpeciesName);
                     ragdoll = isHumanoid 
-                        ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(SpeciesName, CharacterConfigElement, CharacterConfigElement.ContentPath)
-                        : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(SpeciesName, CharacterConfigElement, CharacterConfigElement.ContentPath);
+                        ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(SpeciesInstance, CharacterConfigElement, CharacterConfigElement.ContentPath)
+                        : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(SpeciesInstance, CharacterConfigElement, CharacterConfigElement.ContentPath);
                 }
                 return ragdoll;
             }
@@ -651,7 +653,7 @@ namespace Barotrauma
         
         // Used for creating the data
         public CharacterInfo(
-            PrefabInstance speciesName,
+            PrefabInstance speciesInstance,
             string name = "",
             string originalName = "",
             Either<Job, JobPrefab> jobOrJobPrefab = null,
@@ -668,9 +670,9 @@ namespace Barotrauma
             }
             ID = idCounter;
             idCounter++;
-            SpeciesName = speciesName;
+            SpeciesInstance = speciesInstance;
             SpriteTags = new List<Identifier>();
-            CharacterPrefab.Prefabs.TryGet(SpeciesName, out CharacterPrefab prefab);
+            CharacterPrefab.Prefabs.TryGet(SpeciesInstance, out CharacterPrefab prefab);
             CharacterConfigElement = prefab?.ConfigElement;
             if (CharacterConfigElement == null) { return; }
             // TODO: support for variants
@@ -777,11 +779,11 @@ namespace Barotrauma
             AdditionalTalentPoints = infoElement.GetAttributeInt("additionaltalentpoints", 0);
             HashSet<Identifier> tags = infoElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToHashSet();
             LoadTagsBackwardsCompatibility(infoElement, tags);
-            SpeciesName = new PrefabInstance(infoElement.GetAttributeIdentifier("speciesname", ""), infoElement.ContentPackage?.Name);
+            SpeciesInstance = new PrefabInstance(infoElement.GetAttributeIdentifier("speciesname", ""), infoElement.ContentPackage?.Name);
             ContentXElement element;
-            if (!SpeciesName.IsEmpty)
+            if (!SpeciesInstance.IsEmpty)
             {
-                element = CharacterPrefab.FindBySpeciesInstance(SpeciesName)?.ConfigElement;
+                element = CharacterPrefab.FindBySpeciesInstance(SpeciesInstance)?.ConfigElement;
             }
             else
             {
