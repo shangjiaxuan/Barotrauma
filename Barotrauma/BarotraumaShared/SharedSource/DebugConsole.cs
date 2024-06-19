@@ -2567,7 +2567,7 @@ namespace Barotrauma
                     CharacterInfo characterInfo = null;
                     if (prefab.HasCharacterInfo)
                     {
-                        characterInfo = new CharacterInfo(prefab.Identifier);
+                        characterInfo = new CharacterInfo(new PrefabInstance(prefab.Identifier, ""));
                     }
                     spawnedCharacter = Character.Create(args[0], spawnPosition, ToolBox.RandomSeed(8), characterInfo);
                 }
