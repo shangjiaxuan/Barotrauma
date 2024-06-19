@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
-        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           ref: ${{ inputs.target }}
           submodules: recursive
@@ -45,7 +45,7 @@ jobs:
           tar -czf "$CI_DIR/build.tar.gz" -C Deploy/bin/content .
 
       - name: Upload tarball
-        uses: actions/upload-artifact@1746f4ab65b179e0ea60a494b83293b640dd5bba # v4.3.2
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: build
           path: ${{ env.CI_DIR }}/build.tar.gz

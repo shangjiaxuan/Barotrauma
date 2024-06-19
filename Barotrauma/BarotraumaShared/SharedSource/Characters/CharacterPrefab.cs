@@ -36,6 +36,8 @@ namespace Barotrauma
             return speciesName;
         }
 
+        public bool HasCharacterInfo { get; private set; }
+
         public void InheritFrom(CharacterPrefab parent)
         {
             ConfigElement = (this as IImplementsVariants<CharacterPrefab>).DoInherit(CharacterParams.CreateVariantXml_callback);
@@ -49,9 +51,10 @@ namespace Barotrauma
             var menuCategoryElement = ConfigElement.GetChildElement("MenuCategory");
             var pronounsElement = ConfigElement.GetChildElement("Pronouns");
 
-            if (headsElement != null)
+            HasCharacterInfo = headsElement != null || ConfigElement.GetAttributeBool(nameof(HasCharacterInfo), false);
+            if (HasCharacterInfo)
             {
-                CharacterInfoPrefab = new CharacterInfoPrefab(headsElement, varsElement, menuCategoryElement, pronounsElement);
+                CharacterInfoPrefab = new CharacterInfoPrefab(this, headsElement, varsElement, menuCategoryElement, pronounsElement);
             }
         }
 

@@ -60,6 +60,15 @@ namespace Barotrauma.Networking
         {
             get
             {
+                if (Type == ChatMessageType.Radio && Sender is Item)
+                {
+                    if (translatedText.IsNullOrEmpty())
+                    {
+                        translatedText = TextManager.Get(Text).Fallback(Text).Value;
+                    }
+
+                    return translatedText;
+                }
                 if (Type.HasFlag(ChatMessageType.Server) || Type.HasFlag(ChatMessageType.Error) || Type.HasFlag(ChatMessageType.ServerLog))
                 {
                     if (translatedText.IsNullOrEmpty())
@@ -80,8 +89,9 @@ namespace Barotrauma.Networking
         public PlayerConnectionChangeType ChangeType;
         public string IconStyle;
 
-        public Character Sender;
-        public Client SenderClient;
+        public Character SenderCharacter => Sender as Character;
+        public readonly Entity Sender;
+        public readonly Client SenderClient;
 
         public readonly string SenderName;
 
@@ -120,7 +130,7 @@ namespace Barotrauma.Networking
 
         public ChatMode ChatMode { get; set; } = ChatMode.None; 
 
-        protected ChatMessage(string senderName, string text, ChatMessageType type, Character sender, Client client, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
+        protected ChatMessage(string senderName, string text, ChatMessageType type, Entity sender, Client client, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
             Text = text;
             Type = type;
@@ -134,7 +144,7 @@ namespace Barotrauma.Networking
             customTextColor = textColor;
         }
 
-        public static ChatMessage Create(string senderName, string text, ChatMessageType type, Character sender, Client client = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
+        public static ChatMessage Create(string senderName, string text, ChatMessageType type, Entity sender, Client client = null, PlayerConnectionChangeType changeType = PlayerConnectionChangeType.None, Color? textColor = null)
         {
             return new ChatMessage(senderName, text, type, sender, client ?? GameMain.NetworkMember?.ConnectedClients?.Find(c => c.Character != null && c.Character == sender), changeType, textColor);
         }

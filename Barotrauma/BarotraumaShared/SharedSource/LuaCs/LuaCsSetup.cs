@@ -18,7 +18,7 @@ namespace Barotrauma
     class LuaCsSetupConfig
     {
         public bool EnableCsScripting = false;
-        public bool TreatForcedModsAsNormal = false;
+        public bool TreatForcedModsAsNormal = true;
         public bool PreferToUseWorkshopLuaSetup = false;
         public bool DisableErrorGUIOverlay = false;
         public bool HideUserNames

@@ -116,9 +116,9 @@ namespace Barotrauma.Items.Components
             IsActive = true;
         }
 
-        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap)
+        public override void Load(ContentXElement componentElement, bool usePrefabValues, IdRemap idRemap, bool isItemSwap)
         {
-            base.Load(componentElement, usePrefabValues, idRemap);
+            base.Load(componentElement, usePrefabValues, idRemap, isItemSwap);
             channelMemory = componentElement.GetAttributeIntArray("channelmemory", new int[ChannelMemorySize]);
             if (channelMemory.Length != ChannelMemorySize)
             {
@@ -301,7 +301,7 @@ namespace Barotrauma.Items.Components
                         {
                             if (GameMain.Client == null)
                             {
-                                GameMain.GameSession?.CrewManager?.AddSinglePlayerChatMessage(signal.source?.Name ?? "", signal.value, ChatMessageType.Radio, sender: null);
+                                GameMain.GameSession?.CrewManager?.AddSinglePlayerChatMessage(signal.source?.Name ?? "", signal.value, ChatMessageType.Radio, sender: item);
                             }
                         }
 #elif SERVER
@@ -311,7 +311,7 @@ namespace Barotrauma.Items.Components
                             if (recipientClient != null)
                             {
                                 GameMain.Server.SendDirectChatMessage(
-                                    ChatMessage.Create(signal.source?.Name ?? "", chatMsg, ChatMessageType.Radio, null), recipientClient);
+                                    ChatMessage.Create(signal.source?.Name ?? "", chatMsg, ChatMessageType.Radio, item), recipientClient);
                             }
                         }
 #endif
