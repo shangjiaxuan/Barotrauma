@@ -305,6 +305,7 @@ namespace Barotrauma
         public XElement OrderData;
 
         public bool PermanentlyDead;
+        public bool RenamingEnabled = false;
 
         private static ushort idCounter = 1;
         private const string disguiseName = "???";
@@ -811,6 +812,7 @@ namespace Barotrauma
             LoadTagsBackwardsCompatibility(infoElement, tags);
             SpeciesInstance = new PrefabInstance(infoElement.GetAttributeIdentifier("speciesname", ""), infoElement.ContentPackage?.Name);
             PermanentlyDead = infoElement.GetAttributeBool("permanentlydead", false);
+            RenamingEnabled = infoElement.GetAttributeBool("renamingenabled", false);
             ContentXElement element;
             if (!SpeciesInstance.IsEmpty)
             {
@@ -1508,7 +1510,8 @@ namespace Barotrauma
                 new XAttribute("startitemsgiven", StartItemsGiven),
                 new XAttribute("personality", PersonalityTrait?.Identifier ?? Identifier.Empty),
                 new XAttribute("lastrewarddistribution", LastRewardDistribution.Match(some: value => value, none: () => -1).ToString()),
-                new XAttribute("permanentlydead", PermanentlyDead)
+                new XAttribute("permanentlydead", PermanentlyDead),
+                new XAttribute("renamingenabled", RenamingEnabled)
             );
 
             if (HumanPrefabIds != default)
