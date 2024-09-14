@@ -284,6 +284,38 @@ namespace Barotrauma
             descriptor.RemoveMember(memberName);
         }
 
+        public static bool HasMember(object obj, string memberName)
+        {
+            if (obj == null) { throw new ScriptRuntimeException("object is nil"); }
+
+            Type type;
+            if (obj is Type)
+            {
+                type = (Type)obj;
+            }
+            else if(obj is IUserDataDescriptor descriptor)
+            {
+                type = descriptor.Type;
+
+                if (((StandardUserDataDescriptor)descriptor).HasMember(memberName))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                type = obj.GetType();
+            }
+
+            if (type.GetMember(memberName).Length == 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+
         /// <summary>
         /// See <see cref="CreateUserDataFromType"/>.
         /// </summary>

@@ -3,14 +3,21 @@
 The manual installation of the mod involves the simple task of just replacing some files in your game files, so lets get into how to do that.
 
 ## Server patch vs Client patch
-The client patch is for when when you need to install client-side support, this will provide your game with singleplayer support and some other mods that require client-side to be installed to work in multiplayer.
-The server patch will replace your Vanilla executable (the one you use by default when hosting) with the LuaCs one, this allows you to host servers with LuaCs without having the LuaCsForBarotrauma content package enabled.
-The two patches can both be used at same time, for when you need both client-side and server-side in your game.
+
+- The client patch is for when you need to install client-side + server-side support, installing the client patch will allow you to use the mod in singleplayer, provide features that require client-side in multiplayer, and allow you to host servers with LuaCs.
+
+- The server patch only affects the server files, this patch is more useful for dedicated servers, since they have don't have the client part.
+
+- Both patches will replace your server Vanilla executable (the one you use by default when hosting) with the LuaCs one, this allows you to host servers with LuaCs without having the  content package enabled or having to select the server executable.
+
+### Do NOT select the server executable after installing the patch, leave it as Vanilla, the patch replaces the Vanilla server executable. You also don't need the content package at all anymore.
+
+If you don't know which one to use, download **luacsforbarotrauma_patch_xxxxxxxxx_client.zip**. (xxxxxxxxx is your operating system)
 
 ## How to apply a patch to my game files/my dedicated server
-First you need to download the correct patch that corresponds to your platform, head over to `https://github.com/evilfactory/LuaCsForBarotrauma/releases/tag/latest` and choose which patch you want to install. For example, if i want to install both client-side and server-side on my windows machine, i'll download both `luacsforbarotrauma_patch_windows_server.zip` and `luacsforbarotrauma_patch_windows_client.zip`.
+First you need to download the correct patch that corresponds to your platform, head over to `https://github.com/evilfactory/LuaCsForBarotrauma/releases/tag/latest` and choose which patch you want to install. For example, if i want to install both client-side and server-side on my windows machine, I'll download `luacsforbarotrauma_patch_windows_client.zip`.
 
-After downloading the patch file(s) that you want to use, you will need to now find where your game files are located you can do that by:
+After downloading the patch file that you want to use, you will need to now find where your game files are located, you can do that by:
 
 1. Going to your steam library
 

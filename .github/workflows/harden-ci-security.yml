@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           ref: ${{ inputs.target }}
       - name: Ensure all actions are pinned to a specific commit
-        uses: zgosalvez/github-actions-ensure-sha-pinned-actions@40e45e738b3cad2729f599d8afc6ed02184e1dbd # v3.0.5
+        uses: zgosalvez/github-actions-ensure-sha-pinned-actions@3c16e895bb662b4d7e284f032cbe8835a57773cc # v3.0.11
