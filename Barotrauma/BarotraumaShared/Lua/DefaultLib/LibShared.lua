@@ -56,6 +56,7 @@ defaultLib["TraitorEvent"] = CreateStatic("Barotrauma.TraitorEvent", true)
 defaultLib["EventSet"] = CreateStatic("Barotrauma.EventSet", true)
 defaultLib["EventManagerSettings"] = CreateStatic("Barotrauma.EventManagerSettings", true)
 
+defaultLib["NetConfig"] = CreateStatic("Barotrauma.Networking.NetConfig")
 defaultLib["Inventory"] = CreateStatic("Barotrauma.Inventory", true)
 defaultLib["CharacterInventory"] = CreateStatic("Barotrauma.CharacterInventory", true)
 defaultLib["ItemInventory"] = CreateStatic("Barotrauma.ItemInventory", true)

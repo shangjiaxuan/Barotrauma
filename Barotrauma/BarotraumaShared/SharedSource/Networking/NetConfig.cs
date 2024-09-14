@@ -8,56 +8,56 @@ namespace Barotrauma.Networking
         public const int DefaultPort = 27015;
         public const int DefaultQueryPort = 27016;
 
-        public const int MaxPlayers = 256;
+        public static int MaxPlayers = 256;
 
-        public const int ServerNameMaxLength = 60;
-        public const int ServerMessageMaxLength = 2000;
+        public static int ServerNameMaxLength = 60;
+        public static int ServerMessageMaxLength = 2000;
 
         public const float MaxPhysicsBodyVelocity = 64.0f;
         public const float MaxPhysicsBodyAngularVelocity = 16.0f;
 
-        public const float MaxHealthUpdateInterval = 2.0f;
-        public const float MaxHealthUpdateIntervalDead = 10.0f;
+        public static float MaxHealthUpdateInterval = 2.0f;
+        public static float MaxHealthUpdateIntervalDead = 10.0f;
 
-        public const float HighPrioCharacterPositionUpdateDistance = 1000.0f;
-        public const float LowPrioCharacterPositionUpdateDistance = 10000.0f;
-        public const float HighPrioCharacterPositionUpdateInterval = 0.0f;
-        public const float LowPrioCharacterPositionUpdateInterval = 1.0f;
+        public static float HighPrioCharacterPositionUpdateDistance = 1000.0f;
+        public static float LowPrioCharacterPositionUpdateDistance = 10000.0f;
+        public static float HighPrioCharacterPositionUpdateInterval = 0.0f;
+        public static float LowPrioCharacterPositionUpdateInterval = 1.0f;
 
         //this should be higher than LowPrioCharacterPositionUpdateInterval,
         //otherwise the clients may freeze characters even though the server hasn't actually stopped sending position updates
-        public const float FreezeCharacterIfPositionDataMissingDelay = 2.0f;
-        public const float DisableCharacterIfPositionDataMissingDelay = 3.5f;
+        public static float FreezeCharacterIfPositionDataMissingDelay = 2.0f;
+        public static float DisableCharacterIfPositionDataMissingDelay = 3.5f;
 
-        public const float DeleteDisconnectedTime = 20.0f;
+        public static float DeleteDisconnectedTime = 20.0f;
 
-        public const float ItemConditionUpdateInterval = 0.15f;
-        public const float LevelObjectUpdateInterval = 0.5f;
-        public const float HullUpdateInterval = 0.5f;
-        public const float SparseHullUpdateInterval = 5.0f;
-        public const float HullUpdateDistance = 20000.0f;
+        public static float ItemConditionUpdateInterval = 0.15f;
+        public static float LevelObjectUpdateInterval = 0.5f;
+        public static float HullUpdateInterval = 0.5f;
+        public static float SparseHullUpdateInterval = 5.0f;
+        public static float HullUpdateDistance = 20000.0f;
 
-        public const int MaxEventPacketsPerUpdate = 4;
+        public static int MaxEventPacketsPerUpdate = 4;
 
         /// <summary>
         /// How long the server waits for the clients to get in sync after the round has started before kicking them
         /// </summary>
-        public const float RoundStartSyncDuration = 60.0f;
+        public static float RoundStartSyncDuration = 60.0f;
 
         /// <summary>
         /// How long the server keeps events that everyone currently synced has received
         /// </summary>
-        public const float EventRemovalTime = 15.0f;
+        public static float EventRemovalTime = 15.0f;
 
         /// <summary>
         /// If a client hasn't received an event that has been succesfully sent to someone within this time, they get kicked
         /// </summary>
-        public const float OldReceivedEventKickTime = 10.0f;
+        public static float OldReceivedEventKickTime = 10.0f;
 
         /// <summary>
         /// If a client hasn't received an event after this time, they get kicked
         /// </summary>
-        public const float OldEventKickTime = 30.0f;
+        public static float OldEventKickTime = 30.0f;
 
         /// <summary>
         /// Interpolates the positional error of a physics body towards zero.

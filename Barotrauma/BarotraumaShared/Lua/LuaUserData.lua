@@ -21,6 +21,7 @@ luaUserData.AddField = clrLuaUserData.AddField
 luaUserData.RemoveMember = clrLuaUserData.RemoveMember
 luaUserData.CreateUserDataFromDescriptor = clrLuaUserData.CreateUserDataFromDescriptor
 luaUserData.CreateUserDataFromType = clrLuaUserData.CreateUserDataFromType
+luaUserData.HasMember = clrLuaUserData.HasMember
 
 luaUserData.RegisterType = function(typeName)
 	local success, result = pcall(clrLuaUserData.RegisterType, typeName)
@@ -50,6 +51,10 @@ luaUserData.AddCallMetaTable = function (userdata)
 		error("Attempted to add a call metatable to a nil value.", 2)
 	end
 
+	if not LuaUserData.HasMember(userdata, ".ctor") then
+		error("Attempted to add a call metatable to a userdata that does not have a constructor.", 2)
+	end
+
 	debug.setmetatable(userdata, {
 		__call = function(obj, ...)
 			if userdata == nil then
@@ -68,14 +73,22 @@ luaUserData.AddCallMetaTable = function (userdata)
 	})
 end
 
-luaUserData.CreateStatic = function(typeName, addCallMethod)
+luaUserData.CreateStatic = function(typeName)
+	if type(typeName) ~= "string" then
+		error("Expected a string for typeName, got " .. type(typeName) .. ".", 2)
+	end
+
 	local success, result = pcall(clrLuaUserData.CreateStatic, typeName)
 
 	if not success then
 		error(result, 2)
 	end
 
-	if addCallMethod then
+	if result == nil then
+		return
+	end
+
+	if LuaUserData.HasMember(result, ".ctor")  then
 		luaUserData.AddCallMetaTable(result)
 	end
 

@@ -65,6 +65,8 @@ defaultLib["GUI"] = {
     SlideshowPlayer = CreateStatic("Barotrauma.SlideshowPlayer", true),
     CreditsPlayer = CreateStatic("Barotrauma.CreditsPlayer", true),
     DragHandle = CreateStatic("Barotrauma.GUIDragHandle", true),
+    ContextMenu = CreateStatic("Barotrauma.GUIContextMenu", true),
+    ContextMenuOption = CreateStatic("Barotrauma.ContextMenuOption", true),
 
     Screen = CreateStatic("Barotrauma.Screen"),
 

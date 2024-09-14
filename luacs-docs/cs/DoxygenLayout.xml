@@ -1,8 +1,14 @@
 <doxygenlayout version="1.0">
   <navindex>
-    <tab type="user" url="./index.html" title="Documentation introduction"/>
-    <tab type="user" url="../baro-server/html/index.html" title="Server class documentation"/>
-    <tab type="user" url="../baro-client/html/index.html" title="Client class documentation"/>
     <tab type="mainpage" visible="yes" title=""/>
+    <tab type="usergroup" title="Development">
+      <tab type="user" url="md_manual_inmemorymod.html" title="In-memory CSharp Mod" />
+      <tab type="user" url="md_manual_assemblymod.html" title="Assembly CSharp Mod" />
+      <tab type="user" url="md_manual_harmony.html" title="Using Harmony" />
+    </tab>
+    <tab type="usergroup" title="Generated Documentation">
+      <tab type="user" url="../baro-server/html/index.html" title="Server Documentation"/>
+      <tab type="user" url="../baro-client/html/index.html" title="Client Documentation"/>
+    </tab>
   </navindex>
 </doxygenlayout>

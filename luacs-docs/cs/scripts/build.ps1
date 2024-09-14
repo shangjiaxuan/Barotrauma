@@ -3,7 +3,7 @@ Import-Module -DisableNameChecking $PSScriptRoot/../../scripts/location.psm1
 try {
   Change-Location $PSScriptRoot/..
 
-  if ((Get-Command "doxgen" -ErrorAction SilentlyContinue) -eq $null) {
+  if ((Get-Command "doxygen" -ErrorAction SilentlyContinue) -eq $null) {
     echo "doxygen not found"
     exit 1
   }
