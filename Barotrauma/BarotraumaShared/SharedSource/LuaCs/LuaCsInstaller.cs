@@ -8,12 +8,18 @@ namespace Barotrauma
     static partial class LuaCsInstaller
     {
         private static string[] trackingFiles = new string[]
-        {
+        { 
             "Barotrauma.dll", "Barotrauma.deps.json", "Barotrauma.pdb", "BarotraumaCore.dll", "BarotraumaCore.pdb",
             "0Harmony.dll", "Mono.Cecil.dll",
             "Sigil.dll",
             "Mono.Cecil.Mdb.dll", "Mono.Cecil.Pdb.dll",
-            "Mono.Cecil.Rocks.dll", "MonoMod.Common.dll",
+            "Mono.Cecil.Rocks.dll",
+            "MonoMod.Backports.dll",
+            "MonoMod.Core.dll",
+            "MonoMod.ILHelpers.dll",
+            "MonoMod.RuntimeDetour.dll",
+            "MonoMod.Utils.dll",
+            "MonoMod.Iced.dll",
             "MoonSharp.Interpreter.dll", "MoonSharp.VsCodeDebugger.dll",
 
             "Microsoft.CodeAnalysis.dll", "Microsoft.CodeAnalysis.CSharp.dll",

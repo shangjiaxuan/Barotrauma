@@ -623,6 +623,26 @@ namespace Barotrauma
             yield return LoadProgress.Progress(1.0f);
         }
 
+        public static void CheckMissingDependencies()
+        {
+            foreach (var enabledPackage in EnabledPackages.All)
+            {
+                enabledPackage.ClearMissingDependencies();
+                enabledPackage.TryFetchUgcChildren((Steamworks.Data.PublishedFileId[]? children) =>
+                {
+                    if (children == null) { return; }
+                    var missingChildren = children
+                        .Where(childUgcItemId =>
+                            EnabledPackages.All.None(package =>
+                                package.UgcId.TryUnwrap(out var ugcId) && ugcId is SteamWorkshopId workshopId && workshopId.Value == childUgcItemId.Value));
+                    foreach (var missingChild in missingChildren)
+                    {
+                        enabledPackage.AddMissingDependency(missingChild);
+                    }
+                });
+            }
+        }
+
         public static void LogEnabledRegularPackageErrors()
         {
             foreach (var p in EnabledPackages.Regular)

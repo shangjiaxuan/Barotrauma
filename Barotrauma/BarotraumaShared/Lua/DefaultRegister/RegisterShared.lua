@@ -1,4 +1,5 @@
 local Register = LuaSetup.LuaUserData.RegisterType
+local RegisterExtension = LuaSetup.LuaUserData.RegisterExtensionType
 local RegisterBarotrauma = LuaSetup.LuaUserData.RegisterTypeBarotrauma
 
 Register("System.TimeSpan")
@@ -64,6 +65,7 @@ RegisterBarotrauma("DestructibleLevelWall")
 RegisterBarotrauma("Biome")
 RegisterBarotrauma("Map")
 RegisterBarotrauma("Networking.RespawnManager")
+RegisterBarotrauma("Networking.RespawnManager+TeamSpecificState")
 
 RegisterBarotrauma("Character")
 RegisterBarotrauma("CharacterPrefab")
@@ -280,7 +282,8 @@ RegisterBarotrauma("AIObjectiveCleanupItem")
 RegisterBarotrauma("AIObjectiveCleanupItems")
 RegisterBarotrauma("AIObjectiveCombat")
 RegisterBarotrauma("AIObjectiveContainItem")
-RegisterBarotrauma("AIObjectiveDecontainItem")
+RegisterBarotrauma("AIObjectiveDeconstructItem")
+RegisterBarotrauma("AIObjectiveDeconstructItems")
 RegisterBarotrauma("AIObjectiveEscapeHandcuffs")
 RegisterBarotrauma("AIObjectiveExtinguishFire")
 RegisterBarotrauma("AIObjectiveExtinguishFires")
@@ -471,3 +474,6 @@ LuaUserData.RemoveMember(workshopItem, "RemoveFavorite")
 LuaUserData.RemoveMember(workshopItem, "Vote")
 LuaUserData.RemoveMember(workshopItem, "GetUserVote")
 LuaUserData.RemoveMember(workshopItem, "Edit")
+
+RegisterExtension("Barotrauma.MathUtils")
+RegisterExtension("Barotrauma.XMLExtensions")

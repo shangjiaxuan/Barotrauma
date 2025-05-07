@@ -8,6 +8,7 @@ LuaSetup.LuaUserData = luaUserData
 luaUserData.IsRegistered = clrLuaUserData.IsRegistered
 luaUserData.UnregisterType = clrLuaUserData.UnregisterType
 luaUserData.RegisterGenericType = clrLuaUserData.RegisterGenericType
+luaUserData.RegisterExtensionType = clrLuaUserData.RegisterExtensionType
 luaUserData.UnregisterGenericType = clrLuaUserData.UnregisterGenericType
 luaUserData.IsTargetType = clrLuaUserData.IsTargetType
 luaUserData.TypeOf = clrLuaUserData.TypeOf

@@ -66,12 +66,3 @@ function(instance, p)
         return false
     end
 end, Hook.HookMethodType.Before)
-
-Hook.Patch("Barotrauma.Character", "DamageLimb", function(instance, p)
-    local result = Hook.Call("character.damageLimb", instance, p["afflictions"], p["attacker"], p["hitLimb"], p["worldPosition"], p["stun"], p["attackImpulse"], p["damageMultiplier"], p["allowStacking"], p["penetration"], p["shouldImplode"], p["playSound"])
-
-    if result == true then
-        p.PreventExecution = true
-        return false
-    end
-end, Hook.HookMethodType.Before)

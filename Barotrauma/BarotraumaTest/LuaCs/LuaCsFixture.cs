@@ -1,4 +1,6 @@
-﻿using Barotrauma;
+﻿extern alias Client;
+
+using Client::Barotrauma;
 using System;
 using System.Runtime.ExceptionServices;
 

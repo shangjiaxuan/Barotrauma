@@ -41,7 +41,7 @@ namespace Barotrauma.Networking
             public ConnectionInitialization InitializationStep;
             public double UpdateTime;
             public double TimeOut;
-            public int Retries;
+            public int PasswordRetries;
             public Int32? PasswordSalt;
             public bool AuthSessionStarted;
             
@@ -52,7 +52,7 @@ namespace Barotrauma.Networking
                 OwnerKey = Option.None;
                 Connection = conn;
                 InitializationStep = ConnectionInitialization.AuthInfoAndVersion;
-                Retries = 0;
+                PasswordRetries = 0;
                 PasswordSalt = null;
                 UpdateTime = Timing.TotalTime + Timing.Step * 3.0;
                 TimeOut = NetworkConnection.TimeoutThreshold;
@@ -156,8 +156,8 @@ namespace Barotrauma.Networking
                     }
                     else
                     {
-                        pendingClient.Retries++;
-                        if (serverSettings.BanAfterWrongPassword && pendingClient.Retries > serverSettings.MaxPasswordRetriesBeforeBan)
+                        pendingClient.PasswordRetries++;
+                        if (serverSettings.BanAfterWrongPassword && pendingClient.PasswordRetries > serverSettings.MaxPasswordRetriesBeforeBan)
                         {
                             const string banMsg = "Failed to enter correct password too many times";
                             BanPendingClient(pendingClient, banMsg, null);
@@ -286,7 +286,7 @@ namespace Barotrauma.Networking
                     structToSend = new ServerPeerPasswordPacket
                     {
                         Salt = GetSalt(pendingClient),
-                        RetriesLeft = Option<int>.Some(pendingClient.Retries)
+                        RetriesLeft = Option<int>.Some(pendingClient.PasswordRetries)
                     };
 
                     static Option<int> GetSalt(PendingClient client)
@@ -364,5 +364,18 @@ namespace Barotrauma.Networking
         }
         protected static void LogMalformedMessage()
             => DebugConsole.ThrowError("Received malformed message from remote peer.");
+
+        protected bool ShouldAskForPassword(ServerSettings serverSettings, NetworkConnection connection)
+        {
+            if (!serverSettings.HasPassword) { return false; }
+
+            if (GameMain.Server is { } server && server.FindAndRemoveRecentlyDisconnectedConnection(connection))
+            {
+                // do not ask passwords from clients that have recently disconnected
+                return false;
+            }
+
+            return true;
+        }
     }
 }

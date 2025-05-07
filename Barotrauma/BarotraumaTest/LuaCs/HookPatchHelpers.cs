@@ -1,4 +1,6 @@
-﻿using Barotrauma;
+﻿extern alias Client;
+
+using Client::Barotrauma;
 using MoonSharp.Interpreter;
 using System;
 using System.Collections.Concurrent;

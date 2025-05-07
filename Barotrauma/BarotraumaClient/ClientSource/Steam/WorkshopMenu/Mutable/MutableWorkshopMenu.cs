@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
+using Steamworks.Data;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -202,6 +203,7 @@ namespace Barotrauma.Steam
 			ContentPackageManager.EnabledPackages.SetRegular(items);
 			PopulateInstalledModLists(forceRefreshEnabled: true, refreshDisabled: true);
             ContentPackageManager.LogEnabledRegularPackageErrors();
+
             enabledCoreDropdown.ButtonTextColor =
                 EnabledCorePackage.HasAnyErrors
                     ? GUIStyle.Red

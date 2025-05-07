@@ -533,12 +533,19 @@ namespace Barotrauma
 
                     int i = 0;
                     bool matchingElementFound = false;
+                    bool cleared = false;
                     foreach (var subElement in element.Elements())
                     {
                         if (replacementSubElement.Name.ToString().Equals("clear", StringComparison.OrdinalIgnoreCase))
                         {
                             matchingElementFound = true;
                             elementsToRemove.AddRange(element.Elements());
+                            //add all the other elements defined after <Clear>
+                            foreach (var elementAfterClear in replacementSubElement.ElementsAfterSelf())
+                            {
+                                element.Add(elementAfterClear);
+                            }
+                            cleared = true;
                             break;
                         }
                         if (!subElement.Name.ToString().Equals(replacementSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase)) { continue; }
@@ -564,6 +571,9 @@ namespace Barotrauma
                     {
                         element.Add(replacementSubElement);
                     }
+                    //this element cleared all the subelements from the base xml and potentially added new elements after the <Clear>,
+                    //no need to handle any other subelements here
+                    if (cleared) { break; }
                 }
                 elementsToRemove.ForEach(e => e.Remove());
             }

@@ -44,6 +44,21 @@ LuaUserData.RegisterType = function (typeName)
     return result
 end
 
+local originalRegisterGenericType = LuaUserData.RegisterType
+LuaUserData.RegisterGenericType = function (typeName, ...)
+    if not (CanBeReRegistered(typeName) and LuaUserData.IsRegistered(typeName)) and not IsAllowed(typeName) then
+        error("Couldn't register generic type " .. typeName .. ".", 2)
+    end
+
+    local success, result = pcall(originalRegisterGenericType, typeName, ...)
+
+	if not success then
+		error(result, 2)
+	end
+
+    return result
+end
+
 local originalCreateStatic = LuaUserData.CreateStatic
 LuaUserData.CreateStatic = function (typeName, addCallMethod)
     if not (CanBeReRegistered(typeName) and LuaUserData.IsRegistered(typeName)) and not IsAllowed(typeName) then

@@ -1,4 +1,6 @@
-﻿using Barotrauma;
+﻿extern alias Client;
+
+using Client::Barotrauma;
 using Microsoft.Xna.Framework;
 using MoonSharp.Interpreter;
 using System;

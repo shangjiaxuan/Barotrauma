@@ -72,7 +72,7 @@ namespace Barotrauma
             get
             {
 #if SERVER
-                return Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) == Directory.GetCurrentDirectory();
+                return Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) != Directory.GetCurrentDirectory();
 #else
                 return false; // unnecessary but just keeps things clear that this is NOT for client stuff
 #endif
@@ -420,9 +420,6 @@ namespace Barotrauma
             UserData.RegisterType<LuaUserData>();
             UserData.RegisterType<LuaCsPerformanceCounter>();
             UserData.RegisterType<IUserDataDescriptor>();
-
-            UserData.RegisterExtensionType(typeof(MathUtils));
-            UserData.RegisterExtensionType(typeof(XMLExtensions));
 
             Lua.Globals["printerror"] = (DynValue o) => { LuaCsLogger.LogError(o.ToString(), LuaCsMessageOrigin.LuaMod); };
 

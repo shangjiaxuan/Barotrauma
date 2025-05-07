@@ -1,11 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Barotrauma.Extensions;
+using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
 using System.Xml.Linq;
-using Barotrauma.Extensions;
 
 namespace Barotrauma
 {
@@ -54,24 +52,6 @@ namespace Barotrauma
                         contentPackage: element?.ContentPackage);
                     return;
                 }
-
-                /*
-                if (AfflictionPrefab.Prefabs.ContainsKey(identifier))
-                {
-                    if (overriding)
-                    {
-                        DebugConsole.NewMessage(
-                            $"Overriding an affliction or a buff with the identifier '{identifier}' using the file '{Path}'",
-                            Color.MediumPurple);
-                    }
-                    else
-                    {
-                        DebugConsole.ThrowError(
-                            $"Duplicate affliction: '{identifier}' defined in {elementName} of '{Path}'", 
-                            contentPackage: element?.ContentPackage);
-                        return;
-                    }
-                }*/
 
                 var type = afflictionTypes.FirstOrDefault(t =>
                                t.Name == elementName

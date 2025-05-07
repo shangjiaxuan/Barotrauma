@@ -14,6 +14,7 @@ namespace Barotrauma
         {
             RegisterAction<Item>();
             RegisterAction<Character>();
+            RegisterAction<Character, Character>();
             RegisterAction<Entity>();
             RegisterAction<float>();
             RegisterAction();

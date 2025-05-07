@@ -160,7 +160,7 @@ namespace Barotrauma.Networking
             {
                 try
                 {
-                    Directory.CreateDirectory(SavePath);
+                    Directory.CreateDirectory(SavePath, catchUnauthorizedAccessExceptions: false);
                 }
                 catch (Exception e)
                 {
@@ -182,12 +182,11 @@ namespace Barotrauma.Networking
 
             try
             {
-                File.WriteAllLines(filePath, unsavedLines.Select(l => l.Text.SanitizedValue));
+                File.WriteAllLines(filePath, unsavedLines.Select(l => l.Text.SanitizedValue), catchUnauthorizedAccessExceptions: false);
             }
             catch (Exception e)
             {
                 DebugConsole.ThrowError("Saving the server log to " + filePath + " failed", e);
-                return;
             }
         }
     }

@@ -307,6 +307,25 @@ namespace Barotrauma
         public bool PermanentlyDead;
         public bool RenamingEnabled = false;
 
+        private BotStatus botStatus = BotStatus.ActiveService;
+        
+        public BotStatus BotStatus
+        {
+            get => botStatus;
+            set
+            {
+                botStatus = value;
+                if (botStatus == BotStatus.ActiveService && character == null)
+                {
+                    //no character yet -> spawn is pending
+                    PendingSpawnToActiveService = true;
+                }
+            }
+        }
+
+        public bool IsOnReserveBench => BotStatus == BotStatus.ReserveBench;
+        public bool PendingSpawnToActiveService;
+
         private static ushort idCounter = 1;
         private const string disguiseName = "???";
 
@@ -318,7 +337,18 @@ namespace Barotrauma
         public LocalizedString Title;
 
         public (Identifier NpcSetIdentifier, Identifier NpcIdentifier) HumanPrefabIds;
-
+        
+        private HumanPrefab _humanPrefab;
+        public HumanPrefab HumanPrefab
+        {
+            get
+            {
+                if (HumanPrefabIds == default) { return null; }
+                _humanPrefab ??= NPCSet.Get(HumanPrefabIds.NpcSetIdentifier, HumanPrefabIds.NpcIdentifier);
+                return _humanPrefab;
+            }
+        }
+        
         public string DisplayName
         {
             get
@@ -348,18 +378,54 @@ namespace Barotrauma
 
         public Identifier SpeciesName => SpeciesInstance.id;
 
+        private Character character;
         /// <summary>
         /// Note: Can be null.
         /// </summary>
-        public Character Character;
-        
+        public Character Character
+        {
+            get => character;
+            set
+            {
+                character = value;
+                if (character != null) 
+                { 
+                    //character spawned -> spawn no longer pending
+                    PendingSpawnToActiveService = false;
+                }
+            }
+
+        }
+
         public Job Job;
-        
+
         public int Salary;
 
         public int ExperiencePoints { get; private set; }
 
+        private int talentRefundPoints;
+
+        /// <summary>
+        /// How many times the player is eligible to refund talents
+        /// </summary>
+        public int TalentRefundPoints
+        {
+            get => talentRefundPoints;
+            set => talentRefundPoints = MathHelper.Max(value, 0);
+        }
+
         public HashSet<Identifier> UnlockedTalents { get; private set; } = new HashSet<Identifier>();
+
+        private int talentResetCount;
+
+        /// <summary>
+        /// How many times have the characters' talents been reset?
+        /// </summary>
+        public int TalentResetCount
+        {
+            get => talentResetCount;
+            set => talentResetCount = MathHelper.Max(value, 0);
+        }
 
         public (Identifier factionId, float reputation) MinReputationToHire;
 
@@ -717,7 +783,9 @@ namespace Barotrauma
                 SetAttachments(randSync);
                 SetColors(randSync);
 
-                Job = job ?? ((jobPrefab == null) ? Job.Random(Rand.RandSync.Unsynced) : new Job(jobPrefab, randSync, variant));
+                Job = job ?? ((jobPrefab == null) ? 
+                    Job.Random(isPvP: false, Rand.RandSync.Unsynced) : 
+                    new Job(jobPrefab, isPvP: false, randSync, variant));
 
                 if (!string.IsNullOrEmpty(name))
                 {
@@ -734,6 +802,8 @@ namespace Barotrauma
             }
             OriginalName = !string.IsNullOrEmpty(originalName) ? originalName : Name;
 
+            TalentRefundPoints = CharacterConfigElement.GetAttributeInt("refundpoints", 0);
+
             int loadedLastRewardDistribution = CharacterConfigElement.GetAttributeInt("lastrewarddistribution", -1);
             if (loadedLastRewardDistribution >= 0)
             {
@@ -749,6 +819,13 @@ namespace Barotrauma
             GetName(randSync, out string name);
 
             return name;
+        }
+
+        public void SetNameBasedOnJob()
+        {
+            if (Job == null) { return; }
+            Name = Job.Name.Value;
+            OriginalName = Name;
         }
 
         public static Color SelectRandomColor(in ImmutableArray<(Color Color, float Commonness)> array, Rand.RandSync randSync)
@@ -808,10 +885,12 @@ namespace Barotrauma
             Salary = infoElement.GetAttributeInt("salary", 1000);
             ExperiencePoints = infoElement.GetAttributeInt("experiencepoints", 0);
             AdditionalTalentPoints = infoElement.GetAttributeInt("additionaltalentpoints", 0);
+            TalentResetCount = infoElement.GetAttributeInt(nameof(talentResetCount), 0);
             HashSet<Identifier> tags = infoElement.GetAttributeIdentifierArray("tags", Array.Empty<Identifier>()).ToHashSet();
             LoadTagsBackwardsCompatibility(infoElement, tags);
             SpeciesInstance = new PrefabInstance(infoElement.GetAttributeIdentifier("speciesname", ""), infoElement.ContentPackage?.Name);
             PermanentlyDead = infoElement.GetAttributeBool("permanentlydead", false);
+            BotStatus = infoElement.GetAttributeBool(nameof(IsOnReserveBench), false) ? BotStatus.ReserveBench : BotStatus.ActiveService;
             RenamingEnabled = infoElement.GetAttributeBool("renamingenabled", false);
             ContentXElement element;
             if (!SpeciesInstance.IsEmpty)
@@ -1056,6 +1135,7 @@ namespace Barotrauma
 
         public string ReplaceVars(string str)
         {
+            if (Head == null) { return str; }
             return Prefab.ReplaceVars(str, Head.Preset);
         }
 
@@ -1263,7 +1343,7 @@ namespace Barotrauma
 
         partial void LoadAttachmentSprites();
         
-        public int CalculateSalary()
+        public int CalculateSalary(int baseSalary = 0, float salaryMultiplier = 1.0f)
         {
             if (Name == null || Job == null) { return 0; }
 
@@ -1273,25 +1353,25 @@ namespace Barotrauma
                 salary += (int)(skill.Level * skill.PriceMultiplier);
             }
 
-            return (int)(salary * Job.Prefab.PriceMultiplier);
+            return (int)(baseSalary + (salary * Job.Prefab.PriceMultiplier * salaryMultiplier));
         }
 
         /// <summary>
         /// Increases the characters skill at a rate proportional to their current skill. 
         /// If you want to increase the skill level by a specific amount instead, use <see cref="IncreaseSkillLevel"/>
         /// </summary>
-        public void ApplySkillGain(Identifier skillIdentifier, float baseGain, bool gainedFromAbility = false, float maxGain = 2f)
+        public void ApplySkillGain(Identifier skillIdentifier, float baseGain, bool gainedFromAbility = false, float maxGain = 2f, bool forceNotification = false)
         {
             float skillLevel = Job.GetSkillLevel(skillIdentifier);
             // The formula is too generous on low skill levels, hence the minimum divider.
             float skillDivider = MathF.Pow(Math.Max(skillLevel, 15f), SkillSettings.Current.SkillIncreaseExponent);
-            IncreaseSkillLevel(skillIdentifier, Math.Min(baseGain / skillDivider, maxGain), gainedFromAbility);
+            IncreaseSkillLevel(skillIdentifier, Math.Min(baseGain / skillDivider, maxGain), gainedFromAbility, forceNotification);
         }
 
         /// <summary>
         /// Increase the skill by a specific amount. Talents may affect the actual, final skill increase.
         /// </summary>
-        public void IncreaseSkillLevel(Identifier skillIdentifier, float increase, bool gainedFromAbility = false)
+        public void IncreaseSkillLevel(Identifier skillIdentifier, float increase, bool gainedFromAbility = false, bool forceNotification = false)
         {
             if (Job == null || (GameMain.NetworkMember != null && GameMain.NetworkMember.IsClient) || Character == null) { return; }
 
@@ -1321,14 +1401,14 @@ namespace Barotrauma
                 }
             }
 
-            OnSkillChanged(skillIdentifier, prevLevel, newLevel);
+            OnSkillChanged(skillIdentifier, prevLevel, newLevel, forceNotification);
         }
 
         private static readonly ImmutableDictionary<Identifier, StatTypes> skillGainStatValues = new Dictionary<Identifier, StatTypes>
         {
             { new("helm"), StatTypes.HelmSkillGainSpeed },
-            { new("medical"), StatTypes.WeaponsSkillGainSpeed },
-            { new("weapons"), StatTypes.MedicalSkillGainSpeed },
+            { new("weapons"), StatTypes.WeaponsSkillGainSpeed },
+            { new("medical"), StatTypes.MedicalSkillGainSpeed },
             { new("electrical"), StatTypes.ElectricalSkillGainSpeed },
             { new("mechanical"), StatTypes.MechanicalSkillGainSpeed }
         }.ToImmutableDictionary();
@@ -1343,7 +1423,7 @@ namespace Barotrauma
             return increase;
         }
 
-        public void SetSkillLevel(Identifier skillIdentifier, float level)
+        public void SetSkillLevel(Identifier skillIdentifier, float level, bool forceNotification = false)
         {
             if (Job == null) { return; }
 
@@ -1351,17 +1431,17 @@ namespace Barotrauma
             if (skill == null)
             {
                 Job.IncreaseSkillLevel(skillIdentifier, level, increasePastMax: false);
-                OnSkillChanged(skillIdentifier, 0.0f, level);
+                OnSkillChanged(skillIdentifier, 0.0f, level, forceNotification);
             }
             else
             {
                 float prevLevel = skill.Level;
                 skill.Level = level;
-                OnSkillChanged(skillIdentifier, prevLevel, skill.Level);
+                OnSkillChanged(skillIdentifier, prevLevel, skill.Level, forceNotification);
             }
         }
 
-        partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel);
+        partial void OnSkillChanged(Identifier skillIdentifier, float prevLevel, float newLevel, bool forceNotification);
 
         public void GiveExperience(int amount)
         {
@@ -1446,10 +1526,11 @@ namespace Barotrauma
                 experienceRequired += ExperienceRequiredPerLevel(level);
                 level++;
             }
-            return level;
+
+            return Math.Max(level, 0);
         }
 
-        private static int ExperienceRequiredPerLevel(int level)
+        public static int ExperienceRequiredPerLevel(int level)
         {
             return BaseExperienceRequired + AddedExperienceRequiredPerLevel * level;
         }
@@ -1457,6 +1538,43 @@ namespace Barotrauma
         partial void OnExperienceChanged(int prevAmount, int newAmount);
 
         partial void OnPermanentStatChanged(StatTypes statType);
+
+        public void RefundTalents()
+        {
+            if (TalentRefundPoints <= 0) { return; }
+
+            //e.g. talents from endocrine booster or extra talents some special NPC has
+            var talentsFromOutsideTree = GetUnlockedTalentsOutsideTree().ToList();
+
+            UnlockedTalents.Clear();
+            SavedStatValues.Clear();
+            Character?.ResetTalents(talentPointReduction: talentResetCount);
+            TalentRefundPoints--;
+            talentResetCount++;
+
+            //it's simpler to just remove everything first and then reapply the "extra" talents than to
+            //try determining which talent the resistances, ability flags etc came from and only remove specific ones
+            if (Character == null)
+            {
+                talentsFromOutsideTree.ForEach(talentId => UnlockedTalents.Add(talentId));
+            }
+            else
+            {
+                talentsFromOutsideTree.ForEach(talentId => Character.GiveTalent(talentId, addingFirstTime: true));
+            }
+
+            GameMain.NetworkMember?.CreateEntityEvent(Character, new Character.ConfirmRefundEventData());
+        }
+
+        public void AddRefundPoints(int newRefundPoints)
+        {
+            TalentRefundPoints += newRefundPoints;
+#if SERVER
+            GameMain.NetworkMember?.CreateEntityEvent(Character, new Character.UpdateRefundPointsEventData());
+#elif CLIENT
+            ShowTalentResetPopupOnOpen = true;
+#endif
+        }
 
         public void Rename(string newName)
         {
@@ -1500,6 +1618,7 @@ namespace Barotrauma
                 new XAttribute("salary", Salary),
                 new XAttribute("experiencepoints", ExperiencePoints),
                 new XAttribute("additionaltalentpoints", AdditionalTalentPoints),
+                new XAttribute(nameof(talentResetCount), TalentResetCount),
                 new XAttribute("hairindex", Head.HairIndex),
                 new XAttribute("beardindex", Head.BeardIndex),
                 new XAttribute("moustacheindex", Head.MoustacheIndex),
@@ -1509,8 +1628,10 @@ namespace Barotrauma
                 new XAttribute("facialhaircolor", XMLExtensions.ColorToString(Head.FacialHairColor)),
                 new XAttribute("startitemsgiven", StartItemsGiven),
                 new XAttribute("personality", PersonalityTrait?.Identifier ?? Identifier.Empty),
+                new XAttribute("refundpoints", TalentRefundPoints),
                 new XAttribute("lastrewarddistribution", LastRewardDistribution.Match(some: value => value, none: () => -1).ToString()),
                 new XAttribute("permanentlydead", PermanentlyDead),
+                new XAttribute(nameof(IsOnReserveBench), IsOnReserveBench),
                 new XAttribute("renamingenabled", RenamingEnabled)
             );
 
@@ -1610,7 +1731,7 @@ namespace Barotrauma
                     targetAvailableInNextLevel = 
                         !isOutside && 
                         GameMain.GameSession?.Campaign is not { SwitchedSubsThisRound: true } && 
-                        (isOnConnectedLinkedSub || entitySub == Submarine.MainSub);
+                        (isOnConnectedLinkedSub || (Submarine.MainSub != null && entitySub == Submarine.MainSub));
                     if (!targetAvailableInNextLevel)
                     {
                         if (!order.Prefab.CanBeGeneralized)
@@ -1645,7 +1766,7 @@ namespace Barotrauma
                 }
                 if (order.TargetSpatialEntity?.Submarine is Submarine targetSub)
                 {
-                    if (targetSub == Submarine.MainSub)
+                    if (Submarine.MainSub != null && targetSub == Submarine.MainSub)
                     {
                         orderElement.Add(new XAttribute("onmainsub", true));
                     }

@@ -94,9 +94,9 @@ namespace Barotrauma.Items.Components
             set
             {
                 if (isOn == value && IsActive == value) { return; }
-
                 IsActive = isOn = value;
-                SetLightSourceState(value, value ? lightBrightness : 0.0f);
+                bool isLightOn = isOn && item.Condition > 0;
+                SetLightSourceState(isLightOn, isLightOn ? lightBrightness : 0.0f);
                 OnStateChanged();
             }
         }
@@ -198,6 +198,13 @@ namespace Barotrauma.Items.Components
             set;
         }
 
+        [Serialize("0,0", IsPropertySaveable.No, description: "Offset of the light from the position of the item (in pixels).")]
+        public Vector2 LightOffset
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// Returns true if the red component of the light is twice as bright as the blue and green. Can be used by StatusEffects.
         /// </summary>
@@ -259,7 +266,6 @@ namespace Barotrauma.Items.Components
 #endif
 
             IsActive = IsOn;
-            item.AddTag("light");
         }
 
         public override void OnItemLoaded()
@@ -305,16 +311,16 @@ namespace Barotrauma.Items.Components
                 (statusEffectLists == null || !statusEffectLists.ContainsKey(ActionType.OnActive)) &&
                 (IsActiveConditionals == null || IsActiveConditionals.Count == 0))
             {
-                if (item.body == null || item.body.Enabled || 
-                    (item.ParentInventory is ItemInventory itemInventory && !itemInventory.Container.HideItems))
-                {
-                    lightBrightness = 1.0f;
-                    SetLightSourceState(true, lightBrightness);
-                }
-                else
+                PhysicsBody body = ParentBody ?? item.body;
+                if ((body == null || !body.Enabled) && !IsVisibleInInventory())
                 {
                     lightBrightness = 0.0f;
                     SetLightSourceState(false, 0.0f);
+                }
+                else
+                {
+                    lightBrightness = 1.0f;
+                    SetLightSourceState(true, lightBrightness);
                 }
                 isOn = true;
                 SetLightSourceTransformProjSpecific();
@@ -326,6 +332,24 @@ namespace Barotrauma.Items.Components
             else
             {
                 base.IsActive = true;
+            }
+        }
+
+        /// <summary>
+        /// Is the item currently in an inventory, and visible in that inventory? E.g. held by a character or on a shelf that shows the contained items.
+        /// </summary>
+        /// <returns></returns>
+        private bool IsVisibleInInventory()
+        {
+            if (item.GetRootInventoryOwner() is Character ownerCharacter && item.RootContainer?.GetComponent<Holdable>() is not { IsActive: true })
+            {
+                //if the item is in a character inventory, the light should only be visible if the character is holding the item
+                //(not if it's e.q. inside a wearable item, or in a rifle worn on the back)
+                return false;
+            }
+            else
+            {
+                return item.FindParentInventory(static it => it is ItemInventory { Container.HideItems: true }) == null;
             }
         }
 
@@ -344,20 +368,10 @@ namespace Barotrauma.Items.Components
 #endif
 
 
-            bool visibleInContainer;
+            bool isVisibleInInventory = IsVisibleInInventory();
             var ownerCharacter = item.GetRootInventoryOwner() as Character;
-            if (ownerCharacter != null && item.RootContainer?.GetComponent<Holdable>() is not { IsActive: true })
-            {
-                //if the item is in a character inventory, the light should only be visible if the character is holding the item
-                //(not if it's e.q. inside a wearable item, or in a rifle worn on the back)
-                visibleInContainer = false;
-            }
-            else
-            {
-                visibleInContainer = item.FindParentInventory(static it => it is ItemInventory { Container.HideItems: true }) == null;
-            }
 
-            if ((item.Container != null && !visibleInContainer && ownerCharacter == null) || 
+            if ((item.Container != null && !isVisibleInInventory && ownerCharacter == null) || 
                 (ownerCharacter != null && ownerCharacter.InvisibleTimer > 0.0f))
             {
                 lightBrightness = 0.0f;
@@ -367,7 +381,7 @@ namespace Barotrauma.Items.Components
             SetLightSourceTransformProjSpecific();
 
             PhysicsBody body = ParentBody ?? item.body;
-            if (body != null && !body.Enabled && !visibleInContainer)
+            if ((body == null || !body.Enabled) && !isVisibleInInventory)
             {
                 lightBrightness = 0.0f;
                 SetLightSourceState(false, 0.0f);

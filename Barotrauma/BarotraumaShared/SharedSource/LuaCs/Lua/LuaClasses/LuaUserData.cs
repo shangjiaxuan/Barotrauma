@@ -23,6 +23,18 @@ namespace Barotrauma
             return UserData.RegisterType(type);
         }
 
+        public static void RegisterExtensionType(string typeName)
+        {
+            Type type = GetType(typeName);
+
+            if (type == null)
+            {
+                throw new ScriptRuntimeException($"tried to register a type that doesn't exist: {typeName}.");
+            }
+
+            UserData.RegisterExtensionType(type);
+        }
+
         public static bool IsRegistered(string typeName)
         {
             Type type = GetType(typeName);

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Barotrauma.Extensions;
 using Microsoft.Xna.Framework;
 using System;
@@ -82,6 +82,7 @@ namespace Barotrauma
                     ShowOffensiveServerPrompt = true,
                     TutorialSkipWarning = true,
                     CorpseDespawnDelay = 600,
+                    CorpseDespawnDelayPvP = 60,
                     CorpsesPerSubDespawnThreshold = 5,
 #if OSX
                     UseDualModeSockets = false,
@@ -159,6 +160,7 @@ namespace Barotrauma
             public bool ShowOffensiveServerPrompt;
             public bool TutorialSkipWarning;
             public int CorpseDespawnDelay;
+            public int CorpseDespawnDelayPvP;
             public int CorpsesPerSubDespawnThreshold;
             public bool UseDualModeSockets;
             public bool DisableInGameHints;
@@ -186,10 +188,11 @@ namespace Barotrauma
                 {
                     GraphicsSettings gfxSettings = new GraphicsSettings
                     {
+                        Display = 0,
                         RadialDistortion = true,
                         InventoryScale = 1.0f,
                         LightMapScale = 1.0f,
-                        VisibleLightLimit = 50,
+                        VisibleLightLimit = 100,
                         TextScale = 1.0f,
                         HUDScale = 1.0f,
                         Specularity = true,
@@ -216,6 +219,7 @@ namespace Barotrauma
                     return retVal;
                 }
 
+                public int Display;
                 public int Width;
                 public int Height;
                 public bool VSync;
@@ -306,6 +310,7 @@ namespace Barotrauma
                     new Dictionary<InputType, KeyOrMouse>()
                     {
                         { InputType.Run, Keys.LeftShift },
+                        { InputType.ToggleRun, Keys.None },
                         { InputType.Attack, Keys.R },
                         { InputType.Crouch, Keys.LeftControl },
                         { InputType.Grab, Keys.G },
@@ -522,6 +527,10 @@ namespace Barotrauma
 
         public static void Init()
         {
+            // Ensure the save folder exists early. Otherwise the game will crash on macOS,
+            // attempting to read the non-existent folder in SafeIO.CanWrite() when saving initial user config.
+            SaveUtil.EnsureSaveFolderExists();
+            
             XDocument? currentConfigDoc = null;
 
             if (File.Exists(PlayerConfigPath))
@@ -533,6 +542,7 @@ namespace Barotrauma
             {
                 currentConfig = Config.FromElement(currentConfigDoc.Root ?? throw new NullReferenceException("Config XML element is invalid: document is null."));
 #if CLIENT
+                MainMenuScreen.DismissedNotifications = currentConfigDoc.Root.GetAttributeIdentifierArray(nameof(MainMenuScreen.DismissedNotifications), defaultValue: Array.Empty<Identifier>()).ToHashSet();
                 ServerListFilters.Init(currentConfigDoc.Root.GetChildElement("serverfilters"));
                 MultiplayerPreferences.Init(
                     currentConfigDoc.Root.GetChildElement("player"),
@@ -564,7 +574,8 @@ namespace Barotrauma
             bool setGraphicsMode =
                 resolutionChanged ||
                 currentConfig.Graphics.VSync != newConfig.Graphics.VSync ||
-                currentConfig.Graphics.DisplayMode != newConfig.Graphics.DisplayMode;
+                currentConfig.Graphics.DisplayMode != newConfig.Graphics.DisplayMode ||
+                currentConfig.Graphics.Display != newConfig.Graphics.Display;
 
 #if CLIENT
             bool keybindsChanged = false;
@@ -650,6 +661,8 @@ namespace Barotrauma
             }
 
 #if CLIENT
+            root.Add(new XAttribute(nameof(MainMenuScreen.DismissedNotifications), string.Join(',', MainMenuScreen.DismissedNotifications.Select(n => n.Value))));
+
             XElement serverFiltersElement = new XElement("serverfilters"); root.Add(serverFiltersElement);
             ServerListFilters.Instance.SaveTo(serverFiltersElement);
 

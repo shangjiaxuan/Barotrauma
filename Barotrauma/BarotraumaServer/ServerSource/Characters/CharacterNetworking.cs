@@ -85,7 +85,8 @@ namespace Barotrauma
 
         partial void UpdateNetInput()
         {
-            if (!(this is AICharacter) || IsRemotePlayer)
+            //non-ai character (a character that was previously controlled by a player) or a remote player (which can be an AI character controlled by a player)
+            if (this is not AICharacter || IsRemotePlayer)
             {
                 if (!CanMove)
                 {
@@ -298,17 +299,12 @@ namespace Barotrauma
                         Kill(causeOfDeath.type, causeOfDeath.affliction);
                     }
                     break;
+                case EventType.ConfirmTalentRefund:
+                    if (!CanManageTalents(c)) { return; }
+                    Info?.RefundTalents();
+                    break;
                 case EventType.UpdateTalents:
-                    if (c.Character != this)
-                    {
-                        if (!IsBot || !c.HasPermission(ClientPermissions.ManageBotTalents))
-                        {
-#if DEBUG
-                            DebugConsole.Log("Received a character update message from a client who's not controlling the character");
-#endif
-                            return;
-                        }
-                    }
+                    if (!CanManageTalents(c)) { return; }
 
                     // get the full list of talents from the player, only give the ones
                     // that are not already given (or otherwise not viable)
@@ -335,6 +331,22 @@ namespace Barotrauma
                         DebugConsole.AddWarning($"Failed to unlock talents: the amount of unlocked talents doesn't match (client: {talentCount}, server: {talentSelection.Count})");
                     }
                     break;
+            }
+
+            bool CanManageTalents(Client client)
+            {
+                if (client.Character != this)
+                {
+                    if (client.TeamID != TeamID || !IsBot || !client.HasPermission(ClientPermissions.ManageBotTalents) || client.Spectating)
+                    {
+#if DEBUG
+                        DebugConsole.Log("A client tried to manage talents of a character they don't control or have permission to manage");
+#endif
+                        return false;
+                    }
+                }
+
+                return true;
             }
         }
 
@@ -381,8 +393,15 @@ namespace Barotrauma
                 tempBuffer.WriteBoolean(shoot);
                 tempBuffer.WriteBoolean(use);
 
-                tempBuffer.WriteBoolean(AnimController is HumanoidAnimController { Crouching: true });
-                
+                if (AnimController is HumanoidAnimController humanAnim)
+                {
+                    tempBuffer.WriteBoolean(humanAnim.Crouching);
+                }
+                else if (AnimController is FishAnimController fishAnim)
+                {
+                    tempBuffer.WriteBoolean(fishAnim.Reverse);
+                }
+
                 tempBuffer.WriteBoolean(attack);
 
                 Vector2 relativeCursorPos = cursorPosition - AimRefPosition;
@@ -413,20 +432,27 @@ namespace Barotrauma
             tempBuffer.WriteSingle(SimPosition.Y);
             float MaxVel = NetConfig.MaxPhysicsBodyVelocity;
             AnimController.Collider.LinearVelocity = new Vector2(
-                MathHelper.Clamp(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel),
-                MathHelper.Clamp(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel));
+                NetConfig.Quantize(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel, 12),
+                NetConfig.Quantize(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel, 12));
             tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.X, -MaxVel, MaxVel, 12);
             tempBuffer.WriteRangedSingle(AnimController.Collider.LinearVelocity.Y, -MaxVel, MaxVel, 12);
 
-            bool fixedRotation = AnimController.Collider.FarseerBody.FixedRotation || !AnimController.Collider.PhysEnabled;
+            AnimController.TargetMovement = new Vector2(
+                NetConfig.Quantize(AnimController.TargetMovement.X, -Ragdoll.MAX_SPEED, Ragdoll.MAX_SPEED, 12),
+                NetConfig.Quantize(AnimController.TargetMovement.Y, -Ragdoll.MAX_SPEED, Ragdoll.MAX_SPEED, 12));
+            tempBuffer.WriteRangedSingle(AnimController.TargetMovement.X, -Ragdoll.MAX_SPEED, Ragdoll.MAX_SPEED, 12);
+            tempBuffer.WriteRangedSingle(AnimController.TargetMovement.Y, -Ragdoll.MAX_SPEED, Ragdoll.MAX_SPEED, 12);
+
+            bool fixedRotation = AnimController.Collider.FarseerBody.FixedRotation;
             tempBuffer.WriteBoolean(fixedRotation);
             if (!fixedRotation)
             {
                 tempBuffer.WriteSingle(AnimController.Collider.Rotation);
-                float MaxAngularVel = NetConfig.MaxPhysicsBodyAngularVelocity;
-                AnimController.Collider.AngularVelocity = NetConfig.Quantize(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel, 8);
-                tempBuffer.WriteRangedSingle(MathHelper.Clamp(AnimController.Collider.AngularVelocity, -MaxAngularVel, MaxAngularVel), -MaxAngularVel, MaxAngularVel, 8);
+                tempBuffer.WriteSingle(AnimController.Collider.AngularVelocity);
             }
+
+
+            tempBuffer.WriteBoolean(AnimController.IgnorePlatforms);
 
             bool writeStatus = healthUpdateTimer <= 0.0f;
             tempBuffer.WriteBoolean(writeStatus);
@@ -467,21 +493,19 @@ namespace Barotrauma
                     break;
                 case CharacterStatusEventData statusEventData:
                     WriteStatus(msg, statusEventData.ForceAfflictionData);
+                    msg.WriteBoolean(GodMode);
                     break;
-                case UpdateSkillsEventData _:
-                    if (Info?.Job == null)
+                case UpdateSkillsEventData updateSkillsData:
+                    if (Info?.Job is { } job)
                     {
-                        msg.WriteByte((byte)0);
+                        msg.WriteIdentifier(updateSkillsData.SkillIdentifier);
+                        msg.WriteBoolean(updateSkillsData.ForceNotification);
+                        //don't use Character.GetSkillLevel here, because it applies all the temporary boosts from items and afflictions on the skill level
+                        msg.WriteSingle(job.GetSkillLevel(updateSkillsData.SkillIdentifier));
                     }
                     else
                     {
-                        var skills = Info.Job.GetSkills();
-                        msg.WriteByte((byte)skills.Count());
-                        foreach (Skill skill in skills)
-                        {
-                            msg.WriteIdentifier(skill.Identifier);
-                            msg.WriteSingle(skill.Level);
-                        }
+                        msg.WriteIdentifier(Identifier.Empty);
                     }
                     break;
                 case IAttackEventData attackEventData:
@@ -505,7 +529,14 @@ namespace Barotrauma
                     }
                     break;
                 case AssignCampaignInteractionEventData _:
-                    msg.WriteByte((byte)CampaignInteractionType);
+
+                    bool canClientInteract = true;
+                    if (CampaignInteractionType == CampaignMode.InteractionType.Talk &&
+                        ActiveConversation != null)
+                    {
+                        canClientInteract = ActiveConversation.CanClientStartConversation(c);
+                    }
+                    msg.WriteByte((byte)(canClientInteract ? CampaignInteractionType : CampaignMode.InteractionType.None));
                     msg.WriteBoolean(RequireConsciousnessForCustomInteract);
                     break;
                 case ObjectiveManagerStateEventData objectiveManagerStateEventData:
@@ -559,6 +590,7 @@ namespace Barotrauma
                     break;
                 case UpdateExperienceEventData _:
                     msg.WriteInt32(Info.ExperiencePoints);
+                    msg.WriteInt32(info.AdditionalTalentPoints);
                     break;
                 case UpdateTalentsEventData _:
                     msg.WriteUInt16((ushort)characterTalents.Count);
@@ -569,9 +601,16 @@ namespace Barotrauma
                     }
                     break;
                 case UpdateMoneyEventData _:
-                    msg.WriteInt32(GameMain.GameSession.Campaign.GetWallet(c).Balance);
+                    msg.WriteInt32(Wallet?.Balance ?? 0);
+                    break;
+                case UpdateRefundPointsEventData when Info is { } i:
+                    msg.WriteInt32(i.TalentRefundPoints);
+                    break;
+                case ConfirmRefundEventData:
+                    // No data
                     break;
                 case UpdatePermanentStatsEventData updatePermanentStatsEventData:
+
                     StatTypes statType = updatePermanentStatsEventData.StatType;
                     if (Info == null)
                     {
@@ -648,6 +687,7 @@ namespace Barotrauma
             {
                 CharacterHealth.ServerWrite(msg);
             }
+
             if (AnimController?.LimbJoints == null)
             {
                 //0 limbs severed
@@ -703,7 +743,7 @@ namespace Barotrauma
                 return;
             }
 
-            Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this);
+            Client ownerClient = GameMain.Server.ConnectedClients.Find(c => c.Character == this && (!c.SpectateOnly || !GameMain.Server.ServerSettings.AllowSpectating));
             if (ownerClient != null)
             {
                 msg.WriteBoolean(true);
