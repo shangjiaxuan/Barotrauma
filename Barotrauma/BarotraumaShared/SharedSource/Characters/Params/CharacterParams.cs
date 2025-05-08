@@ -242,13 +242,13 @@ namespace Barotrauma
             }
             if (!MainElement.InheritParent().IsEmpty)
             {
+
                 VariantFile = new XDocument(doc);
-#warning TODO: determine that CreateVariantXML is equipped to do this
-#warning TODO: preprocess xml according to inheritance tree (XPath), for now it seems result is unused.
-                XElement newRoot = (CharacterPrefab.FindBySpeciesInstance(MainElement.InheritParent()) as IImplementsVariants<CharacterPrefab>).DoInherit(CreateVariantXml_callback);
-                var oldElement = MainElement;
-                var parentElement = (XContainer)oldElement.Parent ?? doc; oldElement.Remove();
-                parentElement.Add(newRoot);
+                #warning TODO: determine that CreateVariantXML is equipped to do this
+                XElement newRoot = (CharacterPrefab.FindBySpeciesInstance(
+                        CharacterPrefab.ParseName(MainElement.Element, File)) as IImplementsVariants<CharacterPrefab>).DoInherit(CreateVariantXml_callback);
+                OriginalElement = MainElement;
+                MainElement.Element.ReplaceWith(newRoot);
             }
             IsLoaded = Deserialize(MainElement);
             OriginalElement = new XElement(MainElement).FromContent(Path);

@@ -52,7 +52,7 @@ namespace Barotrauma
                 return rootElement;
             }
         }
-        
+
         public ContentXElement OriginalElement { get; protected set; }
 
         protected ContentXElement CreateElement(string name, params object[] attrs)
@@ -95,8 +95,9 @@ namespace Barotrauma
                     contentPackage: file.ContentPackage);
                 return false;
             }
+
             IsLoaded = Deserialize(MainElement);
-            OriginalElement = new XElement(MainElement).FromContent(MainElement.ContentPath);
+            OriginalElement = new XElement(rootElement).FromContent(MainElement.ContentPath);
             return IsLoaded;
         }
 

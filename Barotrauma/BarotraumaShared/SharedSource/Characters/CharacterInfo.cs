@@ -643,8 +643,8 @@ namespace Barotrauma
                     PrefabInstance speciesName = SpeciesInstance;
                     bool isHumanoid = CharacterConfigElement.GetAttributeBool("humanoid", speciesName.id == CharacterPrefab.HumanSpeciesName);
                     ragdoll = isHumanoid 
-                        ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(SpeciesInstance, CharacterConfigElement, CharacterConfigElement.ContentPath)
-                        : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(SpeciesInstance, CharacterConfigElement, CharacterConfigElement.ContentPath);
+                        ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(SpeciesInstance, CharacterConfigElement, CharacterConfigElement.ContentPackage)
+                        : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(SpeciesInstance, CharacterConfigElement, CharacterConfigElement.ContentPackage);
                 }
                 return ragdoll;
             }
@@ -905,7 +905,9 @@ namespace Barotrauma
             }
             if (element == null) { return; }
             // TODO: support for variants
-            CharacterConfigElement = element;
+            {
+                CharacterConfigElement = element;
+            }
             HasSpecifierTags = ElementHasSpecifierTags(CharacterConfigElement);
             if (HasSpecifierTags)
             {

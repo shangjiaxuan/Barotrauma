@@ -1592,7 +1592,7 @@ namespace Barotrauma
                 if (ragdollParams == null && ((prefab as IImplementsVariants<CharacterPrefab>).InheritParent.IsEmpty || (prefab as IImplementsVariants<CharacterPrefab>).InheritParent.id == prefab.Identifier))
                 {
                     Identifier name = Params.UseHuskAppendage ? nonHuskedSpeciesName : speciesName;
-                    ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(new PrefabInstance(name, Prefab.ContentPackage.Name), Params, Prefab.ContentFile.Path) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(new PrefabInstance(name, Prefab.ContentPackage.Name), Params, Prefab.ContentFile.Path);
+                    ragdollParams = IsHumanoid ? RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(new PrefabInstance(name, ""), Params, Prefab.ContentPackage) : RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(new PrefabInstance(name, ""), Params, Prefab.ContentPackage);
                 }
                 if (Params.HasInfo && info == null)
                 {

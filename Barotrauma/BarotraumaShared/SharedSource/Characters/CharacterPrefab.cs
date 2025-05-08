@@ -106,7 +106,7 @@ namespace Barotrauma
             ParseConfigElement();
         }
 
-        public static PrefabInstance ParseName(XElement element, CharacterFile file)
+        public static PrefabInstance ParseName(XElement element, ContentFile file)
         {
             string name = element.GetAttributeString("name", null);
             if (!string.IsNullOrEmpty(name))

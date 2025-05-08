@@ -260,17 +260,23 @@ namespace Barotrauma
         {
             Stack<ContentXElement> preprocessed = new Stack<ContentXElement>();
             var last_elem = originalElement;
-            foreach(var it in InheritHistory)
+            if (InheritHistory.Any())
             {
-                preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>)!.originalElement, false));
-                last_elem = preprocessed.Peek();
+                foreach (var it in InheritHistory)
+                {
+                    preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>)!.originalElement, false));
+                    last_elem = preprocessed.Peek();
+                }
+                ContentXElement previous = preprocessed.Pop();
+                while (preprocessed.Any())
+                {
+                    previous = preprocessed.Pop().CreateVariantXML(previous, create_callback);
+                }
+                return originalElement.CreateVariantXML(previous, create_callback);
             }
-            ContentXElement previous = preprocessed.Pop();
-            while (preprocessed.Any())
-            {
-                previous = preprocessed.Pop().CreateVariantXML(previous, create_callback);
+            else {
+                return originalElement;
             }
-            return originalElement.CreateVariantXML(previous, create_callback);
         }
     }
 

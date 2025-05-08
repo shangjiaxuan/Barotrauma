@@ -70,11 +70,11 @@ namespace Barotrauma
             {
                 if (humanoid)
                 {
-                    ragdollParams = RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(speciesName, mainElement, mainElement.ContentPath);
+                    ragdollParams = RagdollParams.GetDefaultRagdollParams<HumanRagdollParams>(speciesName, mainElement.Element, mainElement.ContentPackage);
                 }
                 else
                 {
-                    ragdollParams = RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(speciesName, mainElement, mainElement.ContentPath);
+                    ragdollParams = RagdollParams.GetDefaultRagdollParams<FishRagdollParams>(speciesName, mainElement.Element, mainElement.ContentPackage);
                 }
             }
             catch (Exception e)

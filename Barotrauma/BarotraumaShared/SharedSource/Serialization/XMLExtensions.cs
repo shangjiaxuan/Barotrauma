@@ -184,7 +184,8 @@ namespace Barotrauma
         // added for compatiblity with c# mods that target lua and have their own content management. AKA More Level Content, etc.
         public static ContentPath GetAttributeContentPath(this XElement element, string name, ContentPackage contentPackage)
         {
-            DebugConsole.AddWarning("Using GetAttributeContentPath with ContentPackage on xpath. Will not evaluate path changes in inheritance!");
+            // ragdoll logic uses this legitmately
+            // DebugConsole.AddWarning("Using GetAttributeContentPath with ContentPackage on xpath. Will not evaluate path changes in inheritance!");
             return GetAttributeContentPath(element, name, ContentPath.FromRaw(contentPackage, ""));
         }
 
