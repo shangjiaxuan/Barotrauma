@@ -169,13 +169,13 @@ namespace Barotrauma
                 string dir;
                 if (IsVanilla(parent))
                 {
-                    dir = "";
+                    dir = ".";
                 }
                 else
                 {
                     dir = parent.Dir;
                 }
-                EvaluateRelativePath("", dir, IsVanilla(parent));
+                EvaluateRelativePath(dir, dir, IsVanilla(parent));
             }
         }
 

@@ -511,7 +511,7 @@ namespace Barotrauma
                     else
                     {
                         //2. check if the character file defines the texture directly
-                        texturePath = character.Params.VariantFile?.GetRootExcludingOverride()?.GetAttributeContentPath("texture", character.Prefab.ContentPackage);
+                        texturePath = character.Params.MainElement.GetAttributeContentPath("texture");
                     }
                     
                     //3. check if the base prefab defines the texture
@@ -525,7 +525,9 @@ namespace Barotrauma
                         texturePath = parentRagdollParams.OriginalElement?.GetAttributeContentPath("texture");
                     }
                     //3. "default case", get the texture from this character's XML
-                    texturePath ??= ContentPath.FromRaw(spriteParams.Element.ContentPath ?? character.Prefab.ConfigElement.ContentPath, spriteParams.GetTexturePath());
+                    ContentPath relative = spriteParams.Element.ContentPath ?? character.Prefab.ConfigElement.ContentPath;
+                    string tex_path = spriteParams.GetTexturePath();
+                    texturePath ??= ContentPath.FromRaw(relative, tex_path);
                     path = GetSpritePath(texturePath);
                 }
                 else

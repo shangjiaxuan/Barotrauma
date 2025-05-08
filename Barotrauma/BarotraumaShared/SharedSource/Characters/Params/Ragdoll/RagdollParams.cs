@@ -142,6 +142,7 @@ namespace Barotrauma
         public static string GetFolder(PrefabInstance speciesName)
         {
             CharacterPrefab prefab = CharacterPrefab.FindBySpeciesInstance(speciesName);
+
             if (prefab?.ConfigElement == null)
             {
                 DebugConsole.ThrowError($"Failed to find config file for '{speciesName}'");
@@ -166,7 +167,8 @@ namespace Barotrauma
 
         public static T GetDefaultRagdollParams<T>(PrefabInstance speciesName, CharacterParams characterParams, ContentPackage contentPackage) where T : RagdollParams, new()
         {
-            XElement mainElement = characterParams.VariantFile?.Root ?? characterParams.MainElement;
+            // use resolved element if available
+            XElement mainElement = characterParams.MainElement ?? characterParams.VariantFile?.Root;
             return GetDefaultRagdollParams<T>(speciesName, mainElement, contentPackage);
         }
 
