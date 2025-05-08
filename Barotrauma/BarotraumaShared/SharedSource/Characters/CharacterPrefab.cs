@@ -63,7 +63,7 @@ namespace Barotrauma
             Group = ConfigElement.GetAttributeIdentifier(nameof(Group), Identifier.Empty);
         }
 
-        private readonly ContentXElement originalElement;
+        public ContentXElement originalElement { get; }
         public ContentXElement ConfigElement { get; private set; }
 
         public CharacterInfoPrefab CharacterInfoPrefab { get; private set; }

@@ -234,7 +234,7 @@ namespace Barotrauma
             } 
         }
 
-        public XElement originalElement{ get; }
+        public ContentXElement originalElement { get; }
 
         public ContentXElement ConfigElement { get; }
 
@@ -259,10 +259,10 @@ namespace Barotrauma
         public ContentXElement DoInherit(VariantExtensions.VariantXMLChecker create_callback)
         {
             Stack<ContentXElement> preprocessed = new Stack<ContentXElement>();
-            var last_elem = originalElement.FromContent((this as T)!.FilePath);
+            var last_elem = originalElement;
             foreach(var it in InheritHistory)
             {
-                preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>)!.originalElement.FromContent(it.ContentFile.Path), false));
+                preprocessed.Push(last_elem.PreprocessInherit((it as IImplementsVariants<T>)!.originalElement, false));
                 last_elem = preprocessed.Peek();
             }
             ContentXElement previous = preprocessed.Pop();
@@ -270,7 +270,7 @@ namespace Barotrauma
             {
                 previous = preprocessed.Pop().CreateVariantXML(previous, create_callback);
             }
-            return originalElement.FromContent((this as T)!.ContentFile.Path).CreateVariantXML(previous, create_callback);
+            return originalElement.CreateVariantXML(previous, create_callback);
         }
     }
 
@@ -388,7 +388,7 @@ namespace Barotrauma
             }
         }
 
-        public delegate void VariantXMLChecker(XElement originalElement, XElement variantElement, XElement result);
+        public delegate void VariantXMLChecker(XElement newElement, ContentXElement variantElement, ContentXElement originalElement);
 
 
         public static ContentXElement PreprocessInherit(this ContentXElement variantElement, ContentXElement baseElement, bool is_post_process) {
@@ -619,7 +619,9 @@ namespace Barotrauma
                 }
             }
 
-            create_callback?.Invoke(newElement.Element,variantElement.Element,baseElement.Element);
+            if (create_callback != null) {
+                create_callback.Invoke(newElement.Element, variantElement, baseElement);
+            }
             return newElement;
         }
     }

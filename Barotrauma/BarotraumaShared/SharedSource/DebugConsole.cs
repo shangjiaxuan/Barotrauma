@@ -2940,7 +2940,7 @@ namespace Barotrauma
             else if (isHuman)
             {
                 int variant = job != null ? Rand.Range(0, job.Variants, Rand.RandSync.ServerAndClient) : 0;
-                CharacterInfo characterInfo = new CharacterInfo(CharacterPrefab.HumanSpeciesName, jobOrJobPrefab: job, variant: variant);
+                CharacterInfo characterInfo = new CharacterInfo(new PrefabInstance(CharacterPrefab.HumanSpeciesName, ""), jobOrJobPrefab: job, variant: variant);
                 Entity.Spawner.AddCharacterToSpawnQueue(CharacterPrefab.HumanSpeciesName, spawnPosition, characterInfo, onSpawn: newCharacter =>
                 {
                     SetTeamAndCrew(newCharacter);
@@ -2951,7 +2951,7 @@ namespace Barotrauma
             }
             else if (CharacterPrefab.FindBySpeciesName(args[0].ToIdentifier()) is { } prefab)
             {
-                Entity.Spawner.AddCharacterToSpawnQueue(args[0].ToIdentifier(), spawnPosition, prefab.HasCharacterInfo ? new CharacterInfo(prefab.Identifier) : null, onSpawn: newCharacter =>
+                Entity.Spawner.AddCharacterToSpawnQueue(args[0].ToIdentifier(), spawnPosition, prefab.HasCharacterInfo ? new CharacterInfo(new PrefabInstance(prefab.Identifier, "")) : null, onSpawn: newCharacter =>
                 {
                     SetTeamAndCrew(newCharacter);
                 });

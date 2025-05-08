@@ -86,7 +86,7 @@ namespace Barotrauma
 
             if (monsterPrefabs.Any())
             {
-                var characterParams = new CharacterParams(monsterPrefabs.First().character);
+                var characterParams = new CharacterParams(monsterPrefabs.First().character.ContentFile as CharacterFile);
                 description = description.Replace("[monster]",
                     TextManager.Get("character." + characterParams.SpeciesTranslationOverride).Fallback(
                     TextManager.Get("character." + characterParams.SpeciesName)));

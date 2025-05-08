@@ -2942,8 +2942,8 @@ namespace Barotrauma.CharacterEditor
                     string fileName = Path.GetFileNameWithoutExtension(selectedFile);
                     PrefabInstance baseSpecies = character.GetBaseCharacterSpeciesName();
                     var ragdoll = character.IsHumanoid 
-                        ? RagdollParams.GetRagdollParams<HumanRagdollParams>(character.SpeciesInstance, baseSpecies, fileName, character.Prefab.ContentFile.Path) as RagdollParams 
-                        : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesInstance, baseSpecies, fileName, character.Prefab.ContentFile.Path);
+                        ? RagdollParams.GetRagdollParams<HumanRagdollParams>(character.SpeciesInstance, baseSpecies, character.Prefab.ContentFile.Path) as RagdollParams 
+                        : RagdollParams.GetRagdollParams<FishRagdollParams>(character.SpeciesInstance, baseSpecies, character.Prefab.ContentFile.Path);
                     ragdoll.Reset(true);
                     GUI.AddMessage(GetCharacterEditorTranslation("RagdollLoadedFrom").Replace("[file]", selectedFile), Color.WhiteSmoke, font: GUIStyle.Font);
                     RecreateRagdoll(ragdoll);

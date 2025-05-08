@@ -176,9 +176,9 @@ namespace Barotrauma
         /// </returns>
         public AIParams AI { get; private set; }
 
-        public CharacterParams(CharacterPrefab prefab)
+        public CharacterParams(CharacterFile file)
         {
-            characterPrefab = prefab;
+            File = file;
             Load();
         }
 
@@ -193,7 +193,7 @@ namespace Barotrauma
             }
         }
 
-        public static XElement CreateVariantXml(ContentXElement variantXML, ContentXElement baseXML)
+        public static void CreateVariantXml_callback(XElement newXml, ContentXElement variantXML, ContentXElement baseXML)
         {
             XElement variantAi = variantXML.GetChildElement("ai");
             XElement baseAi = baseXML.GetChildElement("ai");
@@ -233,7 +233,7 @@ namespace Barotrauma
         
         public bool Load()
         {
-            UpdatePath(characterPrefab.ContentFile.Path);
+            UpdatePath(File.Path);
             doc = XMLExtensions.TryLoadXml(Path);
             if (MainElement == null)
             {
@@ -245,7 +245,7 @@ namespace Barotrauma
                 VariantFile = new XDocument(doc);
 #warning TODO: determine that CreateVariantXML is equipped to do this
 #warning TODO: preprocess xml according to inheritance tree (XPath), for now it seems result is unused.
-                XElement newRoot = (characterPrefab as IImplementsVariants<CharacterPrefab>).DoInherit(CreateVariantXml_callback);
+                XElement newRoot = (CharacterPrefab.FindBySpeciesInstance(MainElement.InheritParent()) as IImplementsVariants<CharacterPrefab>).DoInherit(CreateVariantXml_callback);
                 var oldElement = MainElement;
                 var parentElement = (XContainer)oldElement.Parent ?? doc; oldElement.Remove();
                 parentElement.Add(newRoot);
@@ -1022,7 +1022,7 @@ namespace Barotrauma
                 return new XElement("target",
                             new XAttribute("tag", tag),
                             new XAttribute("state", state),
-                            new XAttribute("priority", priority)).FromContent(character.characterPrefab.FilePath);
+                            new XAttribute("priority", priority)).FromContent(character.File.Path);
             }
         }
 

@@ -518,7 +518,7 @@ namespace Barotrauma
         /// </summary>
         public bool IsOverride => Prefabs.IsOverride(this);
 
-        private readonly ContentXElement originalElement;
+        public ContentXElement originalElement { get; }
         public ContentXElement ConfigElement { get; private set; }
 
         public ImmutableArray<DeconstructItem> DeconstructItems { get; private set; }
@@ -1598,7 +1598,7 @@ namespace Barotrauma
 			ConfigElement = (this as IImplementsVariants<ItemPrefab>).DoInherit(CheckXML);
 			ParseConfigElement(parent);
 
-            void CheckXML(XElement originalElement, XElement variantElement, XElement result)
+            void CheckXML(XElement originalElement, ContentXElement variantElement, ContentXElement result)
             {
                 //if either the parent or the variant are non-vanilla, assume the error is coming from that package
                 var packageToLog = parent.ContentPackage != GameMain.VanillaContent ? parent.ContentPackage : ContentPackage;

@@ -658,7 +658,7 @@ namespace Barotrauma
             }
         }
 
-        public string ConfigPath => Params.characterPrefab.ContentFile.Path.Value;
+        public string ConfigPath => Params.File.Path.Value;
 
         public float Mass
         {
@@ -1434,7 +1434,7 @@ namespace Barotrauma
 
             Properties = SerializableProperty.GetProperties(this);
 
-            Params = new CharacterParams(prefab);
+            Params = new CharacterParams(prefab.ContentFile as CharacterFile);
 
             Info = characterInfo;
 

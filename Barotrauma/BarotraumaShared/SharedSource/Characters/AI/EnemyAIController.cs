@@ -309,7 +309,7 @@ namespace Barotrauma
             
             if (aiElements.Count == 0)
             {
-                DebugConsole.ThrowError("Error in file \"" + c.Params.characterPrefab.ContentFile + "\" - no AI element found.",
+                DebugConsole.ThrowError("Error in file \"" + c.Params.File + "\" - no AI element found.",
                     contentPackage: c.Prefab?.ContentPackage);
                 outsideSteering = new SteeringManager(this);
                 insideSteering = new IndoorsSteeringManager(this, false, false);
