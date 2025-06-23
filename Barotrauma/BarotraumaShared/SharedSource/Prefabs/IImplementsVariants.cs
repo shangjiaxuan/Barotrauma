@@ -532,6 +532,18 @@ namespace Barotrauma
                 {
                     ReplaceAttribute(element, attribute);
                 }
+
+                //collect the names of the elements that we want to remove all instances of
+                //(e.g. if a variant wants to remove all fabrication recipes)
+                List<Identifier> elementNamesToRemove = new List<Identifier>();
+                foreach (var subElement in replacement.Elements())
+                {
+                    if (subElement.Name.ToString().Equals("clearall", StringComparison.OrdinalIgnoreCase))
+                    {
+                        elementNamesToRemove.AddRange(subElement.Elements().Select(e => e.Name.ToIdentifier()));
+                    }
+                }
+
                 foreach (XElement replacementSubElement in replacement.Elements())
                 {
                     int index = replacement.Elements().ToList().FindAll(e => e.Name.ToString().Equals(replacementSubElement.Name.ToString(), StringComparison.OrdinalIgnoreCase)).IndexOf(replacementSubElement);
@@ -542,7 +554,17 @@ namespace Barotrauma
                     bool cleared = false;
                     foreach (var subElement in element.Elements())
                     {
-                        if (replacementSubElement.Name.ToString().Equals("clear", StringComparison.OrdinalIgnoreCase))
+                        if (elementNamesToRemove.Contains(subElement.NameAsIdentifier())) 
+                        {
+                            if (!elementsToRemove.Contains(subElement)) { elementsToRemove.Add(subElement); }
+                            matchingElementFound = true;
+                            continue; 
+                        }
+                        if (replacementSubElement.Name.ToString().Equals("clearall", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+                        else if (replacementSubElement.Name.ToString().Equals("clear", StringComparison.OrdinalIgnoreCase))
                         {
                             matchingElementFound = true;
                             elementsToRemove.AddRange(element.Elements());
