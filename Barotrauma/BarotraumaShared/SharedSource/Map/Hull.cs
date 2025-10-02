@@ -401,7 +401,11 @@ namespace Barotrauma
             private set;
         }
 
-        private readonly HashSet<int> pendingSectionUpdates = new HashSet<int>();
+
+        /// <summary>
+        /// Note that sector != section: a sector is a group of <see cref="BackgroundSectionsPerNetworkEvent"/> sections that are updated together in a single network event.
+        /// </summary>
+        private readonly HashSet<int> pendingSectorUpdates = new HashSet<int>();
 
         public int xBackgroundMax, yBackgroundMax;
 
@@ -413,8 +417,8 @@ namespace Barotrauma
             }
         }
 
-        private const int sectorWidth = 4;
-        private const int sectorHeight = 4;
+        private const int SectionWidth = 4;
+        private const int SectionHeight = 4;
 
         private const float minColorStrength = 0.0f;
         private const float maxColorStrength = 0.7f;
@@ -785,7 +789,7 @@ namespace Barotrauma
         #region Shared network write
         private void SharedStatusWrite(IWriteMessage msg)
         {
-            msg.WriteRangedSingle(MathHelper.Clamp(waterVolume / Volume, 0.0f, 1.5f), 0.0f, 1.5f, 8);
+            msg.WriteSingle(waterVolume);
 
             System.Diagnostics.Debug.Assert(FireSources.Count <= MaxFireSources, $"Too many fire sources ({FireSources.Count}) in hull {ID} (max {MaxFireSources}).");
             msg.WriteRangedInteger(Math.Min(FireSources.Count, MaxFireSources), 0, MaxFireSources);
@@ -808,7 +812,7 @@ namespace Barotrauma
             int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
             int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
             msg.WriteRangedInteger(sectorToUpdate, 0, BackgroundSections.Count - 1);
-            for (int i = start; i < end; i++)
+            for (int i = start; i <= end; i++)
             {
                 msg.WriteRangedSingle(BackgroundSections[i].ColorStrength, 0.0f, 1.0f, 8);
                 msg.WriteUInt32(BackgroundSections[i].Color.PackedValue);
@@ -833,7 +837,7 @@ namespace Barotrauma
 
         private void SharedStatusRead(IReadMessage msg, out float newWaterVolume, out NetworkFireSource[] newFireSources)
         {
-            newWaterVolume = msg.ReadRangedSingle(0.0f, 1.5f, 8) * Volume;
+            newWaterVolume = msg.ReadSingle();
 
             int fireSourceCount = msg.ReadRangedInteger(0, MaxFireSources);
             newFireSources = new NetworkFireSource[fireSourceCount];
@@ -859,12 +863,12 @@ namespace Barotrauma
             }
         }
         
-        private void SharedBackgroundSectionRead(IReadMessage msg, Action<BackgroundSectionNetworkUpdate> action, out int sectorToUpdate)
+        private void SharedBackgroundSectionRead(IReadMessage msg, Action<BackgroundSectionNetworkUpdate> action, out int sectionToUpdate)
         {
-            sectorToUpdate = msg.ReadRangedInteger(0, BackgroundSections.Count - 1);
-            int start = sectorToUpdate * BackgroundSectionsPerNetworkEvent;
-            int end = Math.Min((sectorToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
-            for (int i = start; i < end; i++)
+            sectionToUpdate = msg.ReadRangedInteger(0, BackgroundSections.Count - 1);
+            int start = sectionToUpdate * BackgroundSectionsPerNetworkEvent;
+            int end = Math.Min((sectionToUpdate + 1) * BackgroundSectionsPerNetworkEvent, BackgroundSections.Count - 1);
+            for (int i = start; i <= end; i++)
             {
                 float colorStrength = msg.ReadRangedSingle(0.0f, 1.0f, 8);
                 Color color = new Color(msg.ReadUInt32());
@@ -1269,6 +1273,23 @@ namespace Barotrauma
             return null;
         }
 
+        /// <summary>
+        /// Recursively find all the hulls linked to the specified hull.
+        /// </summary>
+        public void GetLinkedHulls(List<Hull> linkedHulls, bool includeHiddenHulls = false)
+        {
+            foreach (var linkedEntity in linkedTo)
+            {
+                if (linkedEntity is Hull linkedHull)
+                {
+                    if (linkedHulls.Contains(linkedHull)) { continue; }
+                    if (!includeHiddenHulls && linkedHull.IsHidden) { continue; }
+                    linkedHulls.Add(linkedHull);
+                    linkedHull.GetLinkedHulls(linkedHulls, includeHiddenHulls);
+                }
+            }
+        }
+
         public static void DetectItemVisibility(Character c=null)
         {
             if (c==null)
@@ -1443,14 +1464,14 @@ namespace Barotrauma
             BackgroundSections = new List<BackgroundSection>(xBackgroundMax * yBackgroundMax);
 
             int sections = xBackgroundMax * yBackgroundMax;
-            float xSectors = xBackgroundMax / (float)sectorWidth;
+            float xSectors = xBackgroundMax / (float)SectionWidth;
 
             for (int y = 0; y < yBackgroundMax; y++)
             {
                 for (int x = 0; x < xBackgroundMax; x++)
                 {
                     ushort index = (ushort)BackgroundSections.Count;
-                    int sector = (int)Math.Floor(index / (float)sectorWidth - xSectors * y) + y / sectorHeight * (int)Math.Ceiling(xSectors);
+                    int sector = (int)Math.Floor(index / (float)SectionWidth - xSectors * y) + y / SectionHeight * (int)Math.Ceiling(xSectors);
                     BackgroundSections.Add(new BackgroundSection(new Rectangle(x * sectionWidth, y * -sectionHeight, sectionWidth, sectionHeight), index, (ushort)y));
                 }
             }
@@ -1485,6 +1506,12 @@ namespace Barotrauma
             if (yIndex < 0 || yIndex >= yBackgroundMax) { return null; }
 
             return BackgroundSections[xIndex + yIndex * xBackgroundMax];
+        }
+
+        public Vector2 GetBackgroundSectionWorldPos(BackgroundSection backgroundSection)
+        {
+            Vector2 subOffset = Submarine == null ? Vector2.Zero : Submarine.Position;
+            return Rect.Location.ToVector2() + subOffset + new Vector2(backgroundSection.Rect.X, backgroundSection.Rect.Y);
         }
 
         public IEnumerable<BackgroundSection> GetBackgroundSectionsViaContaining(Rectangle rectArea)
@@ -1556,7 +1583,7 @@ namespace Barotrauma
             if (sectionUpdated && GameMain.NetworkMember != null && requiresUpdate)
             {
                 networkUpdatePending = true;
-                pendingSectionUpdates.Add((int)Math.Floor(section.Index / (float)BackgroundSectionsPerNetworkEvent));
+                pendingSectorUpdates.Add((int)Math.Floor(section.Index / (float)BackgroundSectionsPerNetworkEvent));
 #if CLIENT
                 serverUpdateDelay = 0.5f;
 #endif
