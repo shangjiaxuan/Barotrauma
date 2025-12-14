@@ -47,11 +47,11 @@ namespace Barotrauma
         public const string VersionFile = "luacsversion.txt";
 
 #if WINDOWS
-        public static ContentPackageId LuaForBarotraumaId = new SteamWorkshopId(2856758496);
+        public static ContentPackageId LuaForBarotraumaId = new SteamWorkshopId(2959879186);
 #elif LINUX
-        public static ContentPackageId LuaForBarotraumaId = new SteamWorkshopId(2856758496);
+        public static ContentPackageId LuaForBarotraumaId = new SteamWorkshopId(2959879186);
 #elif OSX
-        public static ContentPackageId LuaForBarotraumaId = new SteamWorkshopId(2856758496);
+        public static ContentPackageId LuaForBarotraumaId = new SteamWorkshopId(2959879186);
 #endif
 
         public static ContentPackageId CsForBarotraumaId = new SteamWorkshopId(2795927223);
