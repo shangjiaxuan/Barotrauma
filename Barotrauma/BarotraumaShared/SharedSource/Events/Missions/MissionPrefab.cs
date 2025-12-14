@@ -197,24 +197,62 @@ namespace Barotrauma
 
         public LocationTypeChange LocationTypeChangeOnCompleted;
 
-        private readonly ContentXElement originalElement;
+        public ContentXElement originalElement { get; }
+
         public ContentXElement ConfigElement { get; private set; }
 
-        public Identifier VariantOf { get; }
+        public PrefabInstance VariantOf { get; }
         public MissionPrefab ParentPrefab { get; set; }
+
+        public MissionPrefab FindByPrefabInstance(PrefabInstance instance)
+        {
+            Prefabs.TryGet(instance, out MissionPrefab res);
+            return res;
+        }
+
+        public MissionPrefab GetPrevious(Identifier identifier)
+        {
+            MissionPrefab res;
+            if (identifier != Identifier)
+            {
+                if (Prefabs.Any(p => p.Identifier == identifier))
+                {
+                    res = Prefabs[identifier];
+                }
+                else
+                {
+                    res = null;
+                }
+            }
+            else
+            {
+                if (Prefabs.AllPrefabs.Any(p => p.Key == identifier))
+                {
+                    string best_effort_package_id = ContentPackage.GetBestEffortId();
+                    res = Prefabs.AllPrefabs.Where(p => p.Key == identifier)
+                        .Single().Value
+                        .GetPrevious(best_effort_package_id);
+                }
+                else
+                {
+                    res = null;
+                }
+            }
+            return res;
+        }
 
         public MissionPrefab(ContentXElement element, MissionsFile file) : base(file, element.GetAttributeIdentifier("identifier", ""))
         {
             ConfigElement = originalElement = element;
 
-            VariantOf = element.VariantOf();
+            VariantOf = element.InheritParent();
             if (!VariantOf.IsEmpty) { return; } // Don't read the XML until the PrefabCollection loads the parent.
             ParseConfigElement();
         }
 
         public void InheritFrom(MissionPrefab parent)
         {
-            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement);
+            ConfigElement = originalElement.CreateVariantXML(parent.ConfigElement, null);
             ParseConfigElement(parent);
         }
 
