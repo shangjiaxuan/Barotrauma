@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<infotexts language="English" nowhitespace="false" translatedname="English">
+  <LuaCsForBarotraumaXPathPreview.SettingsMenu.ModControlsButton>Mod Controls Settings</LuaCsForBarotraumaXPathPreview.SettingsMenu.ModControlsButton>
+  <LuaCsForBarotraumaXPathPreview.SettingsMenu.ModGameplayButton>Mod Gameplay Settings</LuaCsForBarotraumaXPathPreview.SettingsMenu.ModGameplayButton>
+  <!-- Settings -->
+  <!-- Is Cs Enabled-->
+  <LuaCsForBarotraumaXPathPreview.CsRunPolicy.DisplayName>Are C# Mods Allowed</LuaCsForBarotraumaXPathPreview.CsRunPolicy.DisplayName>
+  <LuaCsForBarotraumaXPathPreview.CsRunPolicy.Tooltip>Should unsandboxed scripts and dlls be allowed to run.</LuaCsForBarotraumaXPathPreview.CsRunPolicy.Tooltip>
+  <LuaCsForBarotraumaXPathPreview.CsRunPolicy.DisplayCategory>General</LuaCsForBarotraumaXPathPreview.CsRunPolicy.DisplayCategory>
+  <!-- Use Caching -->
+  <LuaCsForBarotraumaXPathPreview.UseCaching.DisplayName>Use Pre-Caching</LuaCsForBarotraumaXPathPreview.UseCaching.DisplayName>
+  <LuaCsForBarotraumaXPathPreview.UseCaching.Tooltip>Should mod files be preloaded to speed up loading. Should only be turned off if you have mods that have issues with this.</LuaCsForBarotraumaXPathPreview.UseCaching.Tooltip>
+  <LuaCsForBarotraumaXPathPreview.UseCaching.DisplayCategory>General</LuaCsForBarotraumaXPathPreview.UseCaching.DisplayCategory>
+  <!-- Hide Usernames In Logs-->
+  <LuaCsForBarotraumaXPathPreview.HideUserNamesInLogs.DisplayName>Hide Local OS Account Name In Logs</LuaCsForBarotraumaXPathPreview.HideUserNamesInLogs.DisplayName>
+  <LuaCsForBarotraumaXPathPreview.HideUserNamesInLogs.Tooltip>If true, will replace your OS account name with 'USERNAME' in log files' paths.</LuaCsForBarotraumaXPathPreview.HideUserNamesInLogs.Tooltip>
+  <LuaCsForBarotraumaXPathPreview.HideUserNamesInLogs.DisplayCategory>General</LuaCsForBarotraumaXPathPreview.HideUserNamesInLogs.DisplayCategory>
+</infotexts>
