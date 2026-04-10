@@ -2,29 +2,29 @@
 	<Target Name="CopyPublicizedFilesOnBuild" AfterTargets="Build">
         <Copy
                 SourceFiles="$(TargetDir)\Publicized\BarotraumaCore.dll"
-                DestinationFiles="$(TargetDir)\LocalMods\LuaCsForBarotraumaXPath\Publicized\BarotraumaCore.dll"
+                DestinationFiles="$(TargetDir)\LocalMods\LuaCsForBarotraumaXPathPreview\Publicized\BarotraumaCore.dll"
         />
         <Copy Condition="$(DefineConstants.Contains('CLIENT'))"
               SourceFiles="$(TargetDir)\Publicized\Barotrauma.dll"
-              DestinationFiles="$(TargetDir)\LocalMods\LuaCsForBarotraumaXPath\Publicized\Barotrauma.dll"
+              DestinationFiles="$(TargetDir)\LocalMods\LuaCsForBarotraumaXPathPreview\Publicized\Barotrauma.dll"
         />
         <Copy   Condition="$(DefineConstants.Contains('SERVER'))"
                 SourceFiles="$(TargetDir)\Publicized\DedicatedServer.dll"
-                DestinationFiles="$(TargetDir)\LocalMods\LuaCsForBarotraumaXPath\Publicized\DedicatedServer.dll"
+                DestinationFiles="$(TargetDir)\LocalMods\LuaCsForBarotraumaXPathPreview\Publicized\DedicatedServer.dll"
         />
     </Target>
     <Target Name="CopyPublicizedFilesOnPublish" AfterTargets="Publish">
         <Copy
                 SourceFiles="$(PublishDir)\Publicized\BarotraumaCore.dll"
-                DestinationFiles="$(PublishDir)\LocalMods\LuaCsForBarotraumaXPath\Publicized\BarotraumaCore.dll"
+                DestinationFiles="$(PublishDir)\LocalMods\LuaCsForBarotraumaXPathPreview\Publicized\BarotraumaCore.dll"
         />
         <Copy   Condition="$(DefineConstants.Contains('CLIENT'))"
                 SourceFiles="$(PublishDir)\Publicized\Barotrauma.dll"
-                DestinationFiles="$(PublishDir)\LocalMods\LuaCsForBarotraumaXPath\Publicized\Barotrauma.dll"
+                DestinationFiles="$(PublishDir)\LocalMods\LuaCsForBarotraumaXPathPreview\Publicized\Barotrauma.dll"
         />
         <Copy   Condition="$(DefineConstants.Contains('SERVER'))"
                 SourceFiles="$(PublishDir)\Publicized\DedicatedServer.dll"
-                DestinationFiles="$(PublishDir)\LocalMods\LuaCsForBarotraumaXPath\Publicized\DedicatedServer.dll"
+                DestinationFiles="$(PublishDir)\LocalMods\LuaCsForBarotraumaXPathPreview\Publicized\DedicatedServer.dll"
         />
     </Target>
 </Project>

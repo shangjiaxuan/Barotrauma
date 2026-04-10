@@ -46,7 +46,7 @@ namespace Barotrauma
                 }
 
 #if WINDOWS
-                File.WriteAllText("LuaDedicatedServer.bat", $"\"%LocalAppData%/Daedalic Entertainment GmbH/Barotrauma/WorkshopMods/Installed/2795927223/Binary/DedicatedServer.exe\"");
+                File.WriteAllText("LuaDedicatedServer.bat", $"\"%LocalAppData%/Daedalic Entertainment GmbH/Barotrauma/WorkshopMods/Installed/2959879186/Binary/DedicatedServer.exe\"");
 #endif
             }
             catch (UnauthorizedAccessException e)

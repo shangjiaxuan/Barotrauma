@@ -25,7 +25,7 @@ namespace Barotrauma
     partial class LuaCsSetup : IDisposable, IEventScreenSelected, IEventEnabledPackageListChanged, 
         IEventReloadAllPackages
     {
-        public const string PackageId = "LuaCsForBarotraumaXPath";
+        public const string PackageId = "LuaCsForBarotraumaXPathPreview";
 
         private static LuaCsSetup _luaCsSetup;
         public static LuaCsSetup Instance => _luaCsSetup ??= new LuaCsSetup();
