@@ -25,7 +25,7 @@ namespace Barotrauma
     partial class LuaCsSetup : IDisposable, IEventScreenSelected, IEventEnabledPackageListChanged, 
         IEventReloadAllPackages
     {
-        public const string PackageId = "LuaCsForBarotrauma";
+        public const string PackageId = "LuaCsForBarotraumaXPath";
 
         private static LuaCsSetup _luaCsSetup;
         public static LuaCsSetup Instance => _luaCsSetup ??= new LuaCsSetup();
@@ -455,12 +455,12 @@ namespace Barotrauma
                 PackageManagementService.Dispose();
                 // TODO: Add all missing services.
                 //NetworkingService.Dispose();
+                _servicesProvider.DisposeAndReset();
                 EventService.Dispose();
                 
                 _eventService = null;
                 _game = null;
                 PerformanceCounter =  null;
-                _servicesProvider.DisposeAndReset();
             }
             catch (Exception e)
             {

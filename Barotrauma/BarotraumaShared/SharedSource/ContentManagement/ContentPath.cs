@@ -63,7 +63,20 @@ namespace Barotrauma
                             .Replace(string.Format(OtherModDirFmt, ugcId.StringRepresentation), modPath, StringComparison.OrdinalIgnoreCase);
                     }
                 }
-                var allPackages = ContentPackageManager.AllPackages;
+                else if (!(ContentPackage is null) && IsVanilla(ContentPackage) && (otherMods.Count > 0 || RawValue.Contains(ModDirStr)))
+                {
+                    DebugConsole.Log($"ContentPath: {RawValue} is vanilla path with moddir, wierd.");
+                    string modPath = "";
+                    cachedValue = cachedValue
+                        .Replace(ModDirStr, modPath, StringComparison.OrdinalIgnoreCase)
+                        .Replace(string.Format(OtherModDirFmt, ContentPackage.Name), modPath, StringComparison.OrdinalIgnoreCase);
+                    if (ContentPackage.UgcId.TryUnwrap(out var ugcId))
+                    {
+                        cachedValue = cachedValue
+                            .Replace(string.Format(OtherModDirFmt, ugcId.StringRepresentation), modPath, StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+                    var allPackages = ContentPackageManager.AllPackages;
 #if CLIENT
                 if (GameMain.ModDownloadScreen?.DownloadedPackages != null) { allPackages = allPackages.Concat(GameMain.ModDownloadScreen.DownloadedPackages); }
 #endif
@@ -282,8 +295,7 @@ namespace Barotrauma
             {
                 newRaw.cachedValue = prevCreatedRaw.Value;
             }
-            prevCreatedRaw = newRaw;*/
-            return newRaw;
+            prevCreatedRaw = newRaw;
         }*/
 
         public static ContentPath FromRaw(ContentPackage? contentPackage, string? rawValue)
