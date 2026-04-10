@@ -61,3 +61,6 @@ Deploy/DeployAll/PrivateKey.*
 
 #Rider
 *.DotSettings.user
+
+!Barotrauma/BarotraumaShared/LocalMods/LuaCsForBarotraumaXPath/
+!Barotrauma/BarotraumaShared/LocalMods/LuaCsForBarotraumaXPathPreview/

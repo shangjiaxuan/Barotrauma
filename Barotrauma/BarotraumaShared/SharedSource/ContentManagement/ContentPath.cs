@@ -65,8 +65,8 @@ namespace Barotrauma
                 }
                 else if (!(ContentPackage is null) && IsVanilla(ContentPackage) && (otherMods.Count > 0 || RawValue.Contains(ModDirStr)))
                 {
-                    DebugConsole.Log($"ContentPath: {RawValue} is vanilla path with moddir, wierd.");
-                    string modPath = "";
+                    DebugConsole.NewMessage($"ContentPath: {RawValue} is vanilla path with moddir, wierd.");
+                    string modPath = Path.GetDirectoryName(ContentPackage.Path)!;
                     cachedValue = cachedValue
                         .Replace(ModDirStr, modPath, StringComparison.OrdinalIgnoreCase)
                         .Replace(string.Format(OtherModDirFmt, ContentPackage.Name), modPath, StringComparison.OrdinalIgnoreCase);
