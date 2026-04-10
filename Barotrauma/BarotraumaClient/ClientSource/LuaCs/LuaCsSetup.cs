@@ -1,75 +1,218 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Text;
+using Barotrauma.CharacterEditor;
+using Barotrauma.LuaCs;
+using Barotrauma.LuaCs.Data;
+using Barotrauma.Networking;
+using Microsoft.Xna.Framework;
+
+// ReSharper disable ObjectCreationAsStatement
 
 namespace Barotrauma
 {
     partial class LuaCsSetup
     {
-        public void AddToGUIUpdateList()
+        private bool _isClientPromptActive;
+        private bool _isCsEnabledForSession = false;
+        
+        public void CheckRunConditionalHostingCsEnabled(Action onReadyToRun)
         {
-            if (!GameMain.LuaCs.Config.DisableErrorGUIOverlay)
+            var res = ReadyToRunNoPrompt();
+            if (res.ShouldRun)
             {
-                LuaCsLogger.AddToGUIUpdateList();
+                onReadyToRun?.Invoke();
+                return;
             }
+            
+            DisplayCsModsPromptClient(res.Item2, (selectedYes) =>
+            {
+                if (selectedYes)
+                {
+                    onReadyToRun?.Invoke();
+                }
+            });
         }
 
-        public void CheckInitialize()
+        private (bool ShouldRun, ImmutableArray<ContentPackage> PromptPackages) ReadyToRunNoPrompt()
+        {            
+            if (this.IsCsEnabled)
+            {
+                return (true, ImmutableArray<ContentPackage>.Empty);
+            }
+
+            if (!ShouldPromptForCs)
+            {
+                return (true, ImmutableArray<ContentPackage>.Empty);
+            }
+
+            ImmutableArray<ContentPackage> contentPackages = PackageManagementService.GetLoadedAssemblyPackages()
+                .Where(p => p.Name != PackageId)
+                .ToImmutableArray();
+
+            return (contentPackages.IsEmpty, contentPackages);
+        }
+
+        partial void CheckReadyToRun(Action onReadyToRun)
         {
-            List<ContentPackage> csharpMods = new List<ContentPackage>();
-            foreach (ContentPackage cp in ContentPackageManager.EnabledPackages.All)
+            var res = ReadyToRunNoPrompt();
+            if (res.ShouldRun)
             {
-                if (Directory.Exists(cp.Dir + "/CSharp") || Directory.Exists(cp.Dir + "/bin"))
-                {
-                    csharpMods.Add(cp);
-                }
+                onReadyToRun?.Invoke();
+                return;
             }
-
-            if (csharpMods.Count == 0 || ShouldRunCs)
+            
+            if (GameMain.Client?.ClientPeer is P2POwnerPeer)
             {
-                Initialize();
+                SetCsPolicyAndContinue(true);
                 return;
             }
 
-            StringBuilder sb = new StringBuilder();
-
-            foreach (ContentPackage cp in csharpMods)
+            DisplayCsModsPromptClient(res.PromptPackages, (selectedYes) =>
             {
-                if (cp.UgcId.TryUnwrap(out ContentPackageId id))
-                {
-                    sb.AppendLine($"- {cp.Name} ({id})");
-                }
-                else
-                {
-                    sb.AppendLine($"- {cp.Name} (Not On Workshop)");
-                }
-            }
-
-            if (GameMain.Client == null || GameMain.Client.IsServerOwner)
-            {
-                new GUIMessageBox("", $"You have CSharp mods enabled but don't have the CSharp Scripting enabled, those mods might not work, go to the Main Menu, click on LuaCs Settings and check Enable CSharp Scripting.\n\n{sb}");
-                Initialize();
+                SetCsPolicyAndContinue(selectedYes);
                 return;
+            });
+
+            void SetCsPolicyAndContinue(bool csSessionExecutionPolicy)
+            {
+                var prevRunState = this.CurrentRunState;
+                if (CurrentRunState >= RunState.Running)
+                {
+                    SetRunState(RunState.LoadedNoExec);
+                }
+                this._isCsEnabledForSession = csSessionExecutionPolicy;
+                CoroutineManager.Invoke(() =>
+                {
+                    if (CurrentRunState != prevRunState)
+                    {
+                        SetRunState(prevRunState);
+                    }
+                    onReadyToRun?.Invoke();
+                }, 0f);
+            }
+        }
+        
+        void DisplayCsModsPromptClient(ImmutableArray<ContentPackage> contentPackages, Action<bool> onSelection)
+        {
+            if (_isClientPromptActive) { return; }
+
+            _isClientPromptActive = true;
+
+            GUIMessageBox messageBox = new GUIMessageBox(
+                TextManager.Get("warning"),
+                relativeSize: new Vector2(0.3f, 0.55f),
+                minSize: new Point(400, 500),
+                text: string.Empty,
+                buttons: []);
+
+            GUILayoutGroup msgBoxLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.75f), messageBox.Content.RectTransform), isHorizontal: false, childAnchor: Anchor.TopCenter)
+            {
+                RelativeSpacing = 0.01f,
+                Stretch = true
+            };
+
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0.0f), msgBoxLayout.RectTransform), "The following mods contain CSharp code",
+                font: GUIStyle.SubHeadingFont, wrap: true, textAlignment: Alignment.Center);
+
+            GUIListBox packageListBox = new GUIListBox(new RectTransform(new Vector2(1.0f, 0.4f), msgBoxLayout.RectTransform))
+            {
+                CurrentSelectMode = GUIListBox.SelectMode.None
+            };
+
+            foreach (ContentPackage package in contentPackages)
+            {
+                GUIFrame packageFrame = new GUIFrame(new RectTransform(new Vector2(1.0f, 0.15f), packageListBox.Content.RectTransform), style: "ListBoxElement");
+                new GUITextBlock(new RectTransform(new Vector2(1f, 1f), packageFrame.RectTransform), package.Name);
             }
 
-            GUIMessageBox msg = new GUIMessageBox(
-                "Confirm",
-                $"This server has the following CSharp mods installed: \n{sb}\nDo you wish to run them? Cs mods are not sandboxed so make sure you trust these mods.",
-                new LocalizedString[2] { "Run", "Don't Run" });
-
-            msg.Buttons[0].OnClicked = (GUIButton button, object obj) =>
+            new GUITextBlock(new RectTransform(new Vector2(1.0f, 0f), msgBoxLayout.RectTransform), "C# mods are not sandboxed, meaning that they have unrestrictive access to your computer, please make sure you trust these mods before you continue. If you are not hosting a server, selecting cancel will only run Lua mods.", wrap: true)
             {
-                Initialize(true);
-                msg.Close();
-                return true;
+                Wrap = true
             };
 
-            msg.Buttons[1].OnClicked = (GUIButton button, object obj) =>
+            GUILayoutGroup buttonLayout = new GUILayoutGroup(new RectTransform(new Vector2(1f, 0.25f), messageBox.Content.RectTransform, Anchor.BottomCenter), isHorizontal: false, childAnchor: Anchor.TopCenter);
+
+            new GUIButton(new RectTransform(new Vector2(0.8f, 0.0f), buttonLayout.RectTransform), "Continue")
             {
-                Initialize();
-                msg.Close();
-                return true;
+                TextBlock = { AutoScaleHorizontal = true },
+                OnClicked = (btn, userdata) =>
+                {
+                    _isClientPromptActive = false;
+                    onSelection(true);
+                    messageBox.Close();
+                    return true;
+                }
             };
+
+            new GUIButton(new RectTransform(new Vector2(0.8f, 0.0f), buttonLayout.RectTransform), "Cancel")
+            {
+                OnClicked = (btn, userdata) =>
+                {
+                    _isClientPromptActive = false;
+                    onSelection(false);
+                    messageBox.Close();
+                    return true;
+                }
+            };
+        }
+
+        private void SetupServicesProviderClient(IServicesProvider serviceProvider)
+        {
+            serviceProvider.RegisterServiceType<IUIStylesService, UIStylesService>(ServiceLifetime.Singleton);
+            // supplied via factory
+            //serviceProvider.RegisterServiceType<IUIStylesCollection, UIStylesCollection>(ServiceLifetime.Transient);
+            serviceProvider.RegisterServiceType<IParserServiceAsync<ResourceParserInfo, IStylesResourceInfo>, ModConfigFileParserService>(ServiceLifetime.Transient);
+            serviceProvider.RegisterServiceType<IUIStylesCollection.IFactory, UIStylesCollection.Factory>(ServiceLifetime.Transient);
+            serviceProvider.RegisterServiceType<ISettingsMenuSystem, SettingsMenuSystem>(ServiceLifetime.Singleton);
+        }
+
+        /// <summary>
+        /// Handles changes in game states tracked by screen changes.
+        /// </summary>
+        /// <param name="screen">The new game screen.</param>
+        public partial void OnScreenSelected(Screen screen)
+        {
+            /*Note: This logic needs to be run after the triggering event so that recursion scenarios (ie. resetting the EventService)
+             do not occur, so we delay it by one game tick.*/
+            CoroutineManager.Invoke(() =>
+            {
+                switch (screen)
+                {
+                    // menus and navigation states
+                    case MainMenuScreen:
+                    case ModDownloadScreen:
+                    case ServerListScreen:
+                        SetRunState(RunState.Unloaded);
+                        SetRunState(RunState.LoadedNoExec);
+                        break;
+                    // running lobby or editor states
+                    case CampaignEndScreen:
+                    case CharacterEditorScreen:
+                    case EventEditorScreen:
+                    case GameScreen:
+                    case LevelEditorScreen:
+                    case NetLobbyScreen:
+                    case ParticleEditorScreen:
+                    case RoundSummaryScreen:
+                    case SpriteEditorScreen:
+                    case SubEditorScreen:
+                    case TestScreen: // notes: TestScreen is a Linux edge case editor screen and is deprecated.
+                        CheckReadyToRun(() =>
+                        {
+                            SetRunState(RunState.Running);
+                        });
+                        break;
+                    default:
+                        Logger.LogError(
+                            $"{nameof(LuaCsSetup)}: Received an unknown screen {screen?.GetType().Name ?? "'null screen'"}. Retarding load state to 'unloaded'.");
+                        SetRunState(RunState.Unloaded);
+                        break;
+                }
+            }, delay: 0f); // min is one tick delay.
         }
     }
 }

@@ -13,6 +13,7 @@ using System.Xml.Linq;
 using MoonSharp.Interpreter;
 using System.Net;
 using Barotrauma.Extensions;
+using Barotrauma.LuaCs.Events;
 
 namespace Barotrauma
 {
@@ -33,8 +34,6 @@ namespace Barotrauma
             }
             set { world = value; }
         }
-
-        public static LuaCsSetup LuaCs;
 
         public static GameServer Server;
         public static NetworkMember NetworkMember
@@ -112,6 +111,8 @@ namespace Barotrauma
             GameScreen = new GameScreen();
 
             MainThread = Thread.CurrentThread;
+
+            LuaCsSetup.Instance.GetType();
         }
 
         public void Init()
@@ -130,8 +131,6 @@ namespace Barotrauma
             NetLobbyScreen = new NetLobbyScreen();
 
             CheckContentPackage();
-
-            LuaCs = new LuaCsSetup();
         }
 
 
@@ -242,6 +241,9 @@ namespace Barotrauma
                     case "-pipes":
                         //handled in TryStartChildServerRelay
                         i += 2;
+                        break;
+                    case "-lenienthandshake":
+                        NetConfig.UseLenientHandshake = true;
                         break;
                 }
             }
@@ -364,12 +366,16 @@ namespace Barotrauma
                     TaskPool.Update();
                     CoroutineManager.Update(paused: false, (float)Timing.Step);
 
-                    GameMain.LuaCs.Update();
                     performanceCounterTimer.Stop();
-                    if (GameMain.LuaCs.PerformanceCounter.EnablePerformanceCounter)
+                    if (LuaCsSetup.Instance.PerformanceCounterService.EnablePerformanceCounter)
                     {
-                        GameMain.LuaCs.PerformanceCounter.UpdateElapsedTime = (double)performanceCounterTimer.ElapsedTicks / Stopwatch.Frequency;
+                        LuaCsSetup.Instance.PerformanceCounterService.AddElapsedTicks(new SimplePerformanceData("Update", performanceCounterTimer.ElapsedTicks));
                     }
+                    if (LuaCsSetup.Instance.PerformanceCounter.EnablePerformanceCounter)
+                    {
+                        LuaCsSetup.Instance.PerformanceCounter.UpdateElapsedTime = (double)performanceCounterTimer.ElapsedTicks / Stopwatch.Frequency;
+                    }
+                    
                     performanceCounterTimer.Reset();
 
                     Timing.Accumulator -= Timing.Step;
@@ -452,7 +458,17 @@ namespace Barotrauma
         public void Exit()
         {
             ShouldRun = false;
-            GameMain.LuaCs.Stop();
+            try
+            {
+                if (LuaCsSetup.Instance is not null)
+                {
+                    LuaCsSetup.Instance.Dispose();
+                }
+            }
+            catch (Exception e)
+            {
+                DebugConsole.ThrowError($"Error while disposing of LuaCsForBarotrauma: {e.Message} | {e.StackTrace}");
+            }
         }
     }
 }

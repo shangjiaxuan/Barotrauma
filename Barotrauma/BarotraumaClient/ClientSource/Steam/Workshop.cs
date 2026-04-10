@@ -23,13 +23,27 @@ namespace Barotrauma.Steam
                 "submarine",
                 "item",
                 "monster",
-                "art",
                 "mission",
+                "outpost",
+                "beaconstation",
+                "wreck",
+                "ruin",
+                "weapons",
+                "medical",
+                "equipment",
+                "art",
                 "event set",
                 "total conversion",
+                "gamemode",
+                "gameplaymechanics",
                 "environment",
                 "item assembly",
                 "language",
+                "qol",
+                "clientside",
+                "serverside",
+                "outdated",
+                "library"
             }.ToIdentifiers().ToImmutableArray();
             
             public class ItemThumbnail : IDisposable
@@ -113,10 +127,14 @@ namespace Barotrauma.Steam
 
                     string? thumbnailUrl = item.PreviewImageUrl;
                     if (thumbnailUrl.IsNullOrWhiteSpace()) { return null; }
-                    var client = new RestClient(thumbnailUrl);
-                    var request = new RestRequest(".", Method.GET);
+                    var client = RestFactory.CreateClient(thumbnailUrl);
+                    var request = RestFactory.CreateRequest(".");
                     IRestResponse response = await client.ExecuteAsync(request, cancellationToken);
-                    if (response is { StatusCode: System.Net.HttpStatusCode.OK, ResponseStatus: ResponseStatus.Completed })
+                    if (response.ErrorException != null)
+                    {
+                        DebugConsole.NewMessage($"Connection error: Failed to load workshop item thumbnail for {item.Id} ({response.ErrorException.Message}).");
+                    }
+                    else if (response is { StatusCode: System.Net.HttpStatusCode.OK, ResponseStatus: ResponseStatus.Completed })
                     {
                         using var dataStream = new System.IO.MemoryStream();
                         await dataStream.WriteAsync(response.RawBytes, cancellationToken);

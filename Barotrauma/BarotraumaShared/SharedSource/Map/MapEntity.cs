@@ -697,7 +697,7 @@ namespace Barotrauma
                 {
                     foreach (Item item in Item.ItemList)
                     {
-                        if (GameMain.LuaCs.Game.UpdatePriorityItems.Contains(item)) { continue; }
+                        if (LuaCsSetup.Instance.Game.UpdatePriorityItems.Contains(item)) { continue; }
                         lastUpdatedItem = item;
                         item.Update(deltaTime * MapEntityUpdateInterval, cam);
                     }
@@ -712,7 +712,7 @@ namespace Barotrauma
                 }
             }
 
-            foreach (var item in GameMain.LuaCs.Game.UpdatePriorityItems)
+            foreach (var item in LuaCsSetup.Instance.Game.UpdatePriorityItems)
             {
                 if (item.Removed) continue;
 

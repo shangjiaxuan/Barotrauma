@@ -99,7 +99,7 @@ namespace Barotrauma.Items.Components
             }
         }
         
-        [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position where the contained items get drawn at (offset from the upper left corner of the sprite in pixels).")]
+        [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The position where the contained items get drawn at. In the case of items with a physics body, the offset is from the center of the body, on items without one from the top-left corner of the sprite. In pixels.")]
         public Vector2 ItemPos { get; set; }
 
         [Serialize("0.0,0.0", IsPropertySaveable.No, description: "The interval at which the contained items are spaced apart from each other (in pixels).")]
@@ -425,7 +425,7 @@ namespace Barotrauma.Items.Components
 
         partial void InitProjSpecific(ContentXElement element);
 
-        public void OnItemContained(Item containedItem)
+        public void OnItemContained(Item containedItem, bool triggerOnInsertedEffects = true)
         {
             int index = Inventory.FindIndex(containedItem);
             RelatedItem relatedItem = null;
@@ -444,14 +444,20 @@ namespace Barotrauma.Items.Components
                             ActiveContainedItem activeContainedItem = new(containedItem, effect, containableItem.ExcludeBroken, containableItem.ExcludeFullCondition, containableItem.BlameEquipperForDeath);
                             activeContainedItems.Add(activeContainedItem);
 
-                            if (!ShouldApplyEffects(activeContainedItem) || item.Submarine is { Loading: true} || initializingLoadedItems || 
-                                containedItem.OnInsertedEffectsApplied) 
-                            { 
-                                continue; 
+                            if (triggerOnInsertedEffects)
+                            {
+                                if (!ShouldApplyEffects(activeContainedItem) || item.Submarine is { Loading: true} || initializingLoadedItems || 
+                                    containedItem.OnInsertedEffectsApplied) 
+                                { 
+                                    continue; 
+                                }
+                                activeContainedItem.StatusEffect.Apply(ActionType.OnInserted, deltaTime: 1, item, targets);
                             }
-                            activeContainedItem.StatusEffect.Apply(ActionType.OnInserted, deltaTime: 1, item, targets);
                         }
-                        containedItem.OnInsertedEffectsApplied = true;
+                        if (triggerOnInsertedEffects)
+                        {
+                            containedItem.OnInsertedEffectsApplied = true;
+                        }
                     }
                 }
             }
@@ -1087,21 +1093,25 @@ namespace Barotrauma.Items.Components
             {
                 if (item.body == null)
                 {
+                    //if the item is a holdable item currently attached to a wall (i.e. normally has a physics body, but the body is now disabled),
+                    //we must position the contained items using the center as the origin since the item positions have been configured with the assumption the item has a body
+                    bool isAttachedHoldable = item.GetComponent<Holdable>() is { Attached: true };
+                    bool useCenterAsOrigin = isAttachedHoldable;
                     if (flippedX)
                     {
                         transformedItemPos.X = -transformedItemPos.X;
-                        transformedItemPos.X += item.Rect.Width;
+                        if (!useCenterAsOrigin) { transformedItemPos.X += item.Rect.Width; }
                         transformedItemInterval.X = -transformedItemInterval.X;
                         transformedItemIntervalHorizontal.X = -transformedItemIntervalHorizontal.X;
                     }
                     if (flippedY)
                     {
                         transformedItemPos.Y = -transformedItemPos.Y;
-                        transformedItemPos.Y -= item.Rect.Height;
+                        if (!useCenterAsOrigin) { transformedItemPos.Y -= item.Rect.Height; }
                         transformedItemInterval.Y = -transformedItemInterval.Y;
                         transformedItemIntervalVertical.Y = -transformedItemIntervalVertical.Y;
                     }
-                    transformedItemPos += new Vector2(item.Rect.X, item.Rect.Y);
+                    transformedItemPos += useCenterAsOrigin ? item.Position : new Vector2(item.Rect.X, item.Rect.Y);
                     if (drawPosition)
                     {
                         if (item.Submarine != null) { transformedItemPos += item.Submarine.DrawPosition; }

@@ -35,9 +35,28 @@ namespace Barotrauma
                 { typeof(Vector4), (str, defVal) => ParseVector4(str) },
                 { typeof(Rectangle), (str, defVal) => ParseRect(str, true) }
             }.ToImmutableDictionary();
+        
+        /// <summary>
+        /// Check if the given value equals to the default value of the property. 
+        /// Takes into account that certain default values (e.g. Vectors and other values that aren't compile-time constants) are defined as strings.
+        /// </summary>
+        public static bool DefaultValueEquals(object defaultValue, object value)
+        {
+            //if the value is given as a string, check if there's a converter for the type of the default value and attempt converting
+            if (defaultValue != null && value is string valueAsString &&
+                Converters.TryGetKey(defaultValue.GetType(), out Type type))
+            {
+                return Equals(Converters[type].Invoke(valueAsString, defaultValue), defaultValue);
+            }
+            //other way around: default values is given as a string, check if there's a converter for the type of the value
+            else if (value != null && defaultValue is string defaultValueAsString &&
+                    Converters.TryGetKey(value.GetType(), out Type type2))
+            {
+                return Equals(Converters[type2].Invoke(defaultValueAsString, value), value);
+            }
+            return Equals(value, defaultValue);
+        }
 
-        // should never use contentpathfromuri for internal parsing after mod refactor, workshop mods are NOT in subdirectory of current working dir, and will create "../../.." or even
-        // be on different filesystem roots ("C:\" and "D:\")
         public static string ParseContentPathFromUri(this XObject element)
             => !string.IsNullOrWhiteSpace(element.BaseUri)
                 ? System.IO.Path.GetRelativePath(Environment.CurrentDirectory, element.BaseUri.CleanUpPath())
