@@ -183,11 +183,15 @@ namespace Barotrauma
                 switch (screen)
                 {
                     // menus and navigation states
-                    case MainMenuScreen:
                     case ModDownloadScreen:
                     case ServerListScreen:
                         SetRunState(RunState.Unloaded);
                         SetRunState(RunState.LoadedNoExec);
+                        break;
+                    case MainMenuScreen:
+                        SetRunState(RunState.Unloaded);
+                        SetRunState(RunState.LoadedNoExec);
+                        SetRunState(RunState.Running);
                         break;
                     // running lobby or editor states
                     case CampaignEndScreen:
